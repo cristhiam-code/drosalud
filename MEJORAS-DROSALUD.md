@@ -45,3 +45,15 @@ Conservar el diseño y los flujos actuales de ventas, recibos, catálogo, client
 - Revisar políticas y esquema antes de cualquier cambio sobre tablas actuales.
 - Probar los flujos con datos de prueba en un entorno separado.
 - Presentar los cambios para aprobación antes de integrarlos.
+
+## Vinculación del costo real con la venta
+
+La rama incorpora en el formulario de compras la opción de asociar una solicitud a un recibo y a una línea concreta del recibo. Al guardar un costo real unitario con esa línea seleccionada, la aplicación llama a la función transaccional `aplicar_costo_real_compra()`, que actualiza el costo real de la línea, recalcula la ganancia almacenada del recibo por la diferencia de costo y marca la compra como comprada. Los reportes por producto usan `costo_real_unitario` cuando existe y conservan `precio_compra` como respaldo para ventas antiguas.
+
+Para probarlo en un proyecto Supabase separado, ejecutar en este orden:
+1. `supabase-migration-proveedores-compras.sql`
+2. `supabase-migration-costo-real.sql`
+
+La segunda migración agrega columnas opcionales y una función RPC. No rellena ni recalcula ventas históricas. Si una compra no se vincula a una línea de recibo, su costo real queda como dato de la compra y no cambia la ganancia de ningún recibo.
+
+**Pendiente de validación:** probar permisos RLS, compra con recibo, compra posterior, edición repetida del costo, anulación y descuento de recibos, y coherencia de reportes. La base actual tiene políticas amplias para tablas antiguas; esta rama no pretende resolver la separación multiusuario de esas tablas. No ejecutar en producción hasta probar con datos ficticios y revisar el resultado.
