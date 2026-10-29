@@ -628,12 +628,18 @@ sb.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY')showReset()});
  ],p));$n('#neg-save').onclick=()=>run(()=>saveProvider(id));}
  async function saveBuy(id){
   const uid=await owner(),v=k=>$n('#nf-'+k).value.trim(),n=k=>v(k)===''?null:Number(v(k));
-  const row={owner_id:uid,producto_nombre:v('producto_nombre'),cantidad:n('cantidad')||1,proveedor_id:v('proveedor_id')||null,costo_estimado:n('costo_estimado'),costo_real:(v('recibo_item_id')&&n('costo_real')!==null)?null:n('costo_real'),estado:v('estado'),notas:v('notas'),recibo_id:v('recibo_id')||null,recibo_item_id:v('recibo_item_id')||null};
+  const costoReal=n('costo_real'), reciboItemId=v('recibo_item_id')||null, reciboId=v('recibo_id')||null;
+  const anterior=buys.find(x=>x.id===id);
+  if(anterior?.recibo_item_id && anterior.costo_real!=null &&
+     (anterior.recibo_item_id!==reciboItemId || anterior.recibo_id!==reciboId)){
+   throw new Error('Esta compra ya actualizó la ganancia de un recibo. No cambies el recibo ni la línea vinculada; edita únicamente el costo real.');
+  }
+  const row={owner_id:uid,producto_nombre:v('producto_nombre'),cantidad:n('cantidad')||1,proveedor_id:v('proveedor_id')||null,costo_estimado:n('costo_estimado'),costo_real:reciboItemId?null:costoReal,estado:v('estado'),notas:v('notas'),recibo_id:reciboId,recibo_item_id:reciboItemId};
   if(!row.producto_nombre)throw new Error('Escribe el medicamento.');
   if(id){const res=await sb.from('compras_pendientes').update(row).eq('id',id).eq('owner_id',uid);if(res.error)throw res.error}
   else {const {data,error}=await sb.from('compras_pendientes').insert(row).select().single();if(error)throw error;id=data.id}
-  if(row.costo_real!==null&&row.recibo_item_id){
-   const {error}=await sb.rpc('aplicar_costo_real_compra',{p_compra_id:id,p_recibo_item_id:row.recibo_item_id,p_costo_real:row.costo_real});
+  if(costoReal!==null&&reciboItemId){
+   const {error}=await sb.rpc('aplicar_costo_real_compra',{p_compra_id:id,p_recibo_item_id:reciboItemId,p_costo_real:costoReal});
    if(error)throw error;
   }
   $n('#modal').hidden=true;await load();
