@@ -235,6 +235,11 @@ nav button{font-size:.78rem}
  <div id="hres" hidden></div>
  <button class="btn alt full" id="xlsH" style="margin-top:12px">Descargar este período en Excel</button>
 </section>
+<section id="v-cot" hidden>
+ <p class="mut sm">Cotizaciones guardadas en la nube. Puedes abrirlas para volver a enviarlas.</p>
+ <input id="coq" type="search" placeholder="Buscar por cliente o número" autocomplete="off">
+ <div id="colist"></div>
+</section>
 <section id="v-neg" hidden>
  <div class="sum" id="neg-kpi"></div>
  <div class="seg"><button data-neg-tab="pend" aria-pressed="true">Por conseguir</button><button data-neg-tab="prov" aria-pressed="false">Proveedores</button></div>
@@ -302,6 +307,7 @@ nav button{font-size:.78rem}
  <button data-v="cat">Catálogo</button>
  <button data-v="cli">Clientes</button>
  <button data-v="his">Historial</button>
+ <button data-v="cot">Cotizaciones</button>
  <button data-v="aju">Ajustes</button>
  <button data-v="neg">Negocio</button>
 </nav>
@@ -320,7 +326,7 @@ const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u03
 const money=n=>'$'+Math.round(n).toLocaleString('es-CO');
 const DEF={m:25,r:100,biz:'DROGUERIA DROSALUD.SAS',nit:'900.109.443-0',ciu:'Cúcuta',tel:'3112581564',dir:'',msg:'Gracias por su compra',nota:'Resolución de facturación electrónica N° 1845101586525 de 2025-11-12. Vigencia 24 meses.',sHora:true,sCed:true,sTel:true,sPago:true,big:false,sLogo:true,mMin:10,cotDias:3,cotNota:'Precios sujetos a cambio y disponibilidad.',respDias:30,breb:'3112581564',pagoTitular:'',pagoCot:true,pagoRec:'siempre',qrTexto:'',qrImg:'',vendedorDef:'',msgRetomar:'Hola {nombre}, ¿cómo estás? Te escribimos de Drosalud. Hace un tiempo no sabemos de ti, ¿te ayudamos con algo? Tu salud, nuestra prioridad.'};
 const VERSION='2026-10-28.7';
-let P=[],C=[],H=[],cart=[],savingVenta=false,cfg={...DEF},draft=null;
+let P=[],C=[],H=[],CO=[],cart=[],savingVenta=false,savingCotizacion=false,cfg={...DEF},draft=null;
 const LOGO={c:new Image(),b:new Image()};LOGO.c.src='logo.png';LOGO.b.src='logo-bw.png';
 async function loadCfg(){try{const{data,error}=await sb.from('ajustes').select('datos').eq('id',1).maybeSingle();if(error)throw error;cfg={...DEF,...((data&&data.datos)||{})}}catch(e){console.error(e);if(/Failed to fetch|NetworkError|Load failed|fetch failed/i.test(String(e&&e.message)))throw e;toast('No se pudieron cargar los ajustes (¿falta crear la tabla ajustes?)')}}
 async function saveCfgDb(d){const{error}=await sb.from('ajustes').upsert({id:1,datos:d,actualizado_en:new Date().toISOString()});if(error)throw error;cfg={...DEF,...d}}
@@ -336,7 +342,10 @@ if(/JWT|expired|not authenticated|invalid claim/i.test(m))return 'Tu sesión ven
 if(/42P01|42703|PGRST20[45]|does not exist|schema cache/i.test(c+' '+m))return 'Falta ejecutar el SQL de la última actualización en Supabase.';
 return 'Error: '+m};
 async function go(f){try{await f()}catch(e){console.error(e);const m=msgErr(e);if(/sesión venció/.test(m))showLogin();toast(m)}}
-function cotizar(){if(!cart.length){toast('Agrega al menos un producto');return}const k=calc(),r={cot:true,creado_en:new Date().toISOString(),cliente_nombre:$('#cli').value.trim()||null,vendedor:($('#vend').value||'').trim()||null,cliente_telefono:$('#tel').value.trim()||null,descuento:k.ds,domicilio:k.dm,total:k.total},it=cart.map(i=>({nombre:i.n,cantidad:i.q,precio_venta:i.p}));showRec(r,it)}
+async function cotizar(){if(savingCotizacion)return;if(!cart.length){toast('Agrega al menos un producto');return}savingCotizacion=true;const ventaItems=cart.map(i=>({...i}));try{const{data,error:eu}=await sb.auth.getUser();if(eu)throw eu;if(!data||!data.user)throw new Error('No hay una sesión activa. Inicia sesión nuevamente.');const nm=$('#cli').value.trim(),tel=$('#tel').value.trim(),ced=$('#ced').value.trim(),vend=($('#vend').value||'').trim(),k=calc();const cliente=C.find(x=>norm(x.nombre)===norm(nm));const vence=new Date();vence.setDate(vence.getDate()+(+cfg.cotDias||3));const valida=vence.getFullYear()+'-'+String(vence.getMonth()+1).padStart(2,'0')+'-'+String(vence.getDate()).padStart(2,'0');const{data:co,error:e1}=await sb.from('cotizaciones_venta').insert({owner_id:data.user.id,cliente_id:cliente?cliente.id:null,cliente_nombre:nm||null,cliente_cedula:ced||null,cliente_telefono:tel||null,vendedor:vend||null,descuento:k.ds,domicilio:k.dm,subtotal:k.st,total:k.total,estado:'pendiente',valida_hasta:valida}).select().single();if(e1)throw e1;const it=ventaItems.map(i=>({cotizacion_id:co.id,producto_id:i.pid||null,nombre:i.n,cantidad:i.q,precio_compra:i.c,precio_venta:i.p}));const{error:e2}=await sb.from('cotizacion_venta_items').insert(it);if(e2){const{error:ed}=await sb.from('cotizaciones_venta').delete().eq('id',co.id);if(ed)console.error('No se pudo revertir la cotización incompleta',ed);throw e2}CO.unshift(co);showRec({...co,cot:true},ventaItems.map(i=>({nombre:i.n,cantidad:i.q,precio_venta:i.p})));}finally{savingCotizacion=false}}
+async function loadCotizaciones(){const{data,error}=await sb.from('cotizaciones_venta').select('*').order('creado_en',{ascending:false}).order('numero',{ascending:false}).limit(500);if(error)throw error;CO=data||[];renderCotizaciones()}
+function renderCotizaciones(){const q=norm($('#coq').value),L=CO.filter(r=>!q||norm((r.cliente_nombre||'')+' '+r.numero).includes(q));$('#colist').innerHTML=L.length?L.map(r=>'<button class="row" data-cotid="'+r.id+'"><span class="nm">Cotización '+pad(r.numero)+(r.cliente_nombre?' · '+esc(tcase(r.cliente_nombre)):'')+'<small>'+esc(fmt(r.creado_en))+' · '+esc(r.estado)+(r.valida_hasta?' · válida hasta '+esc(fd(r.valida_hasta)):'')+'</small></span><span class="pr">'+money(r.total)+'</span></button>').join(''):'<p class="mut">No hay cotizaciones guardadas.</p>'}
+async function abrirCotizacion(r){const{data,error}=await sb.from('cotizacion_venta_items').select('*').eq('cotizacion_id',r.id).order('id');if(error)throw error;showRec({...r,cot:true},(data||[]).map(i=>({nombre:i.nombre,cantidad:i.cantidad,precio_venta:i.precio_venta})));}
 async function loadAllSafe(){try{await loadAll();$('#net').hidden=true}catch(e){console.error(e);$('#net').hidden=false;$('#net').innerHTML='<span>'+esc(msgErr(e))+'</span><button id="retry">Reintentar</button>'}}
 let lastVer=0;async function checkVer(){lastVer=Date.now();try{const t=await(await fetch('index.html',{cache:'no-store'})).text(),m=t.match(/const VERSION='([^']+)'/);if(m&&m[1]!==VERSION){$('#upd').hidden=false;$('#upd').innerHTML='<span>Hay una versión nueva de la app</span><button id="upb">Actualizar</button>'}}catch(e){}}
 async function actualizar(){try{const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(e){}location.reload()}
@@ -349,8 +358,8 @@ const pad=n=>String(n).padStart(4,'0');
 async function loadAll(){await loadCfg();if(!cfg.primerUso){try{await saveCfgDb({...cfg,primerUso:new Date().toISOString()})}catch(e){}}rBk();iniVend();P=await all('productos','nombre');idx();C=await all('clientes','nombre');H=[];$('#imp').hidden=P.length>0;$('#cls').innerHTML=C.map(c=>`<option value="${esc(c.nombre)}">`).join('');rRes();rCart();rCat();rCli();rHis();loadTop()}
 async function start(){$('#spl').hidden=true;$('#lg').hidden=true;$('#rsx').hidden=true;$('#app').hidden=false;const{data}=await sb.auth.getUser();$('#who').textContent=data&&data.user?'Sesión: '+data.user.email:'';await loadAllSafe();checkVer()}
 function showLogin(){$('#spl').hidden=true;$('#app').hidden=true;$('#rsx').hidden=true;$('#lg').hidden=false;try{const e=localStorage.getItem('lastEmail');if(e&&!$('#em').value){$('#em').value=e;$('#pw').focus()}}catch(x){}}
-const TT={venta:'Recibo',cat:'Catálogo',cli:'Clientes',his:'Historial',aju:'Ajustes'};
-function show(v){['venta','cat','cli','his','aju'].forEach(k=>{$('#v-'+k).hidden=k!==v});document.querySelectorAll('#nav button').forEach(b=>b.setAttribute('aria-current',b.dataset.v===v));$('#ttl').textContent=TT[v];if(v==='aju')fillAju();if(v==='his')go(loadHis);if(v==='cli')loadCST().catch(()=>{});window.scrollTo(0,0)}
+const TT={venta:'Recibo',cat:'Catálogo',cli:'Clientes',his:'Historial',cot:'Cotizaciones',aju:'Ajustes'};
+function show(v){['venta','cat','cli','his','cot','aju'].forEach(k=>{$('#v-'+k).hidden=k!==v});document.querySelectorAll('#nav button').forEach(b=>b.setAttribute('aria-current',b.dataset.v===v));$('#ttl').textContent=TT[v]||'Negocio';if(v==='aju')fillAju();if(v==='his')go(loadHis);if(v==='cli')loadCST().catch(()=>{});if(v==='cot')go(loadCotizaciones);window.scrollTo(0,0)}
 function rRes(){rTop();const q=$('#q').value.trim(),b=$('#res');if(!q){b.innerHTML='';return}const a=find(q,20);b.innerHTML=a.length?a.map(p=>`<button class="row" data-add="${p.id}"><span class="nm">${esc(p.nombre)}<small>${esc(p.laboratorio)}</small></span><span class="pr">${money(pv(p))}<small>compra ${money(p.precio_compra)}</small></span></button>`).join(''):'<p class="mut">No hay resultados. Agrégalo en Catálogo.</p>'}
 function calc(){const st=cart.reduce((s,i)=>s+i.p*i.q,0),g=cart.reduce((s,i)=>s+(i.p-i.c)*i.q,0),ds=Math.max(0,+$('#dsc').value||0),dm=Math.max(0,+$('#dom').value||0);return{st,ds,dm,total:Math.max(0,st-ds+dm),gan:g-ds}}
 function rCart(){const b=$('#cart');b.innerHTML=cart.length?cart.map((i,k)=>`<div class="item"><div class="top"><span>${esc(i.n)}</span><button class="rm" data-rm="${k}" aria-label="Quitar">✕</button></div><div class="ctl"><div class="step"><button data-dec="${k}" aria-label="Menos">−</button><span>${i.q}</span><button data-inc="${k}" aria-label="Más">+</button></div><label class="pp">$<input type="number" inputmode="numeric" data-pr="${k}" value="${i.p}" aria-label="Precio de venta"></label><span class="lt">${money(i.p*i.q)}</span></div><small class="mut">Compra ${money(i.c)} · ganas ${money((i.p-i.c)*i.q)}${warnM(i.p,i.c)}</small></div>`).join(''):'<p class="mut">Busca un producto y tócalo para agregarlo.</p>';const k=calc(),n=cart.reduce((s,i)=>s+i.q,0);$('#tot').textContent=money(k.total);$('#gn').textContent=cart.length?'Ganancia: '+money(k.gan):'';const e=$('#bg');e.hidden=!n;e.textContent=n;rVue(k)}
@@ -368,7 +377,7 @@ const fd=t=>new Date(t).toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit
 const titulo=r=>r.cot?'COTIZACIÓN':'RECIBO DE VENTA N° '+pad(r.numero);
 const tcase=s=>{s=String(s||'').trim();if(!s)return s;const sm=new Set(['de','del','la','las','los','el','y','e']),up=s===s.toUpperCase()&&s!==s.toLowerCase();return s.split(/\s+/).map((w,i)=>{const lw=w.toLowerCase();if(up||w===lw||(w===w.toUpperCase()&&w.length>3)){return i&&sm.has(lw)?lw:lw.charAt(0).toUpperCase()+lw.slice(1)}return w}).join(' ')};
 const head=()=>[cfg.nit,cfg.ciu,cfg.tel?'Teléfonos: '+cfg.tel:'',cfg.dir].filter(Boolean);
-function infoLines(r){if(r.cot){const a=['Fecha: '+fd(r.creado_en)];if(r.vendedor)a.push('Vendedor: '+r.vendedor);if(r.cliente_nombre)a.push('Cliente: '+tcase(r.cliente_nombre));a.push('Válida hasta: '+fd(new Date(r.creado_en).getTime()+(+cfg.cotDias||3)*864e5));return a}const a=['Fecha: '+fd(r.creado_en)+(cfg.sHora?'   Hora: '+ft(r.creado_en):'')];if(r.vendedor)a.push('Vendedor: '+r.vendedor);if(r.cliente_nombre)a.push('Cliente: '+tcase(r.cliente_nombre));if(cfg.sCed&&r.cliente_cedula)a.push('C.C./Nit: '+r.cliente_cedula);if(cfg.sTel&&r.cliente_telefono)a.push('Teléfono: '+r.cliente_telefono);if(r.cliente_direccion)a.push('Dirección: '+r.cliente_direccion);return a}
+function infoLines(r){if(r.cot){const a=['Fecha: '+fd(r.creado_en)];if(r.vendedor)a.push('Vendedor: '+r.vendedor);if(r.cliente_nombre)a.push('Cliente: '+tcase(r.cliente_nombre));a.push('Válida hasta: '+fd(r.valida_hasta||new Date(r.creado_en).getTime()+(+cfg.cotDias||3)*864e5));return a}const a=['Fecha: '+fd(r.creado_en)+(cfg.sHora?'   Hora: '+ft(r.creado_en):'')];if(r.vendedor)a.push('Vendedor: '+r.vendedor);if(r.cliente_nombre)a.push('Cliente: '+tcase(r.cliente_nombre));if(cfg.sCed&&r.cliente_cedula)a.push('C.C./Nit: '+r.cliente_cedula);if(cfg.sTel&&r.cliente_telefono)a.push('Teléfono: '+r.cliente_telefono);if(r.cliente_direccion)a.push('Dirección: '+r.cliente_direccion);return a}
 function payLines(r){return r.forma_pago==='Efectivo'&&+r.recibido>0?[['ENTREGA',money(+r.recibido)],['VUELTOS',money(+r.recibido-+r.total)]]:[]}
 function extLines(r,it){const e=[],st=sub(it),ds=+r.descuento||0,dm=+r.domicilio||0;if(ds||dm){e.push(['SUB TOTAL',money(st)]);if(ds)e.push(['DESCUENTOS','-'+money(ds)]);if(dm)e.push(['DOMICILIO',money(dm)])}return e}
 function txt(r,it){const L=['*'+cfg.biz+'*',...head(),'',titulo(r),...(r.anulado?['** ANULADO **']:[]),...infoLines(r),''];it.forEach(i=>L.push(`${i.cantidad} × ${i.nombre} — ${money(i.precio_venta*i.cantidad)}`+(i.cantidad>1?` (${money(i.precio_venta)} c/u)`:'')));const ex=extLines(r,it);if(ex.length){L.push('');ex.forEach(e=>L.push(e[0][0]+e[0].slice(1).toLowerCase()+': '+e[1]))}L.push('','*'+(r.cot?'TOTAL':'TOTAL A PAGAR')+': '+money(r.total)+'*');if(cfg.sPago&&r.forma_pago)L.push('Forma de pago: '+r.forma_pago);payLines(r).forEach(e=>L.push(e[0][0]+e[0].slice(1).toLowerCase()+': '+e[1]));if(mostrarPago(r)){L.push('','Paga con Bre-B');if(cfg.breb)L.push('Llave: '+cfg.breb);if(cfg.pagoTitular)L.push(cfg.pagoTitular);if(r.cot)L.push('Valor a pagar: '+money(r.total))}const mm=r.cot?'Gracias por su interés':cfg.msg,nn=r.cot?cfg.cotNota:cfg.nota;if(mm)L.push('',mm);if(nn)L.push('',nn);return L.join('\n')}
@@ -542,7 +551,8 @@ if(id==='tgp'){const q=$('#pw');q.type=q.type==='password'?'text':'password';t.t
 if(id==='fgt')return go(doForgot);
 if(id==='rsok')return go(doReset);
 if(id==='upb')return actualizar();
-if(id==='cot')return cotizar();
+if(id==='cot')return go(cotizar);
+if(d.cotid){const r=CO.find(x=>x.id===d.cotid);if(r)return go(()=>abrirCotizacion(r))}
 if(d.rcc){const r=CR.find(x=>x.id===d.rcc);return go(()=>abrirRec(r))}
 if(id==='hmore'){hisShown+=100;return rHis()}
 if(id==='lowm'){catLow=true;return rCat()}
@@ -567,6 +577,7 @@ if(id==='rf')return loadAllSafe();
 if(id==='out')return go(async()=>{await sb.auth.signOut();P=[];C=[];H=[];cart=[];showLogin()});
 });
 $('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeM()});
+$('#coq').addEventListener('input',renderCotizaciones);
 $('#q').addEventListener('input',rRes);
 $('#q2').addEventListener('input',rCat);
 $('#cli').addEventListener('input',()=>{const c=C.find(x=>norm(x.nombre)===norm($('#cli').value));if(c){if(c.telefono)$('#tel').value=c.telefono;$('#dircli').value=c.direccion||'';if(c.cedula)$('#ced').value=c.cedula}});
