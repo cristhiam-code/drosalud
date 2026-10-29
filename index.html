@@ -607,7 +607,7 @@ sb.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY')showReset()});
  function render(){
   const open=buys.filter(x=>!['entregado','cancelado'].includes(x.estado));
   $n('#neg-kpi').innerHTML='<div>Solicitudes abiertas<b>'+open.length+'</b></div><div>Compras registradas<b>'+buys.filter(x=>x.costo_real!=null).length+'</b></div>';
-  $n('#neg-provider-list').innerHTML=providers.length?providers.map(p=>'<div class="item"><div class="top"><span>'+escN(p.nombre)+'</span><span class="mut">'+(p.activo?'Activo':'Inactivo')+'</span></div><p class="sm mut">'+[p.contacto,p.telefono,p.whatsapp,p.email].filter(Boolean).map(escN).join(' · ')+'</p>'+(p.notas?'<p class="sm">'+escN(p.notas)+'</p>':'')+'<button class="btn alt full" data-neg-edit-provider="'+p.id+'">Editar proveedor</button></div>').join(''):'<p class="mut">Todavía no tienes proveedores registrados.</p>';
+  $n('#neg-provider-list').innerHTML=providers.length?providers.map(p=>'<div class="item"><div class="top"><span>'+escN(p.nombre)+'</span><span class="mut">'+(p.activo?'Activo':'Inactivo')+'</span></div><p class="sm mut">'+[p.contacto,p.telefono,p.whatsapp,p.email].filter(Boolean).map(escN).join(' · ')+'</p>'+(p.notas?'<p class="sm">'+escN(p.notas)+'</p>':'')+'<div class="acts"><button class="btn alt full" data-neg-edit-provider="'+p.id+'">Editar proveedor</button><button class="btn bad full" data-neg-delete-provider="'+p.id+'">Eliminar proveedor</button></div></div>').join(''):'<p class="mut">Todavía no tienes proveedores registrados.</p>';
   $n('#neg-buy-list').innerHTML=buys.length?buys.map(b=>{
    const p=providers.find(x=>x.id===b.proveedor_id),qs=quotes.filter(q=>q.compra_id===b.id);
    return '<div class="item"><div class="top"><span>'+escN(b.producto_nombre)+'</span><span>'+escN(b.estado)+'</span></div><p class="sm mut">Cantidad: '+b.cantidad+' · '+(p?escN(p.nombre):'Sin proveedor asignado')+'</p><p class="sm">Costo estimado: '+(b.costo_estimado==null?'—':moneyN(b.costo_estimado))+' · Costo real: '+(b.costo_real==null?'Pendiente':moneyN(b.costo_real))+'</p><p class="sm mut">'+qs.length+' cotización(es)</p><div class="acts"><button class="btn alt full" data-neg-quote="'+b.id+'">Registrar cotización</button><button class="btn alt full" data-neg-edit-buy="'+b.id+'">Actualizar compra</button></div></div>'
@@ -619,8 +619,26 @@ sb.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY')showReset()});
   const uid=await owner(),v=k=>$n('#nf-'+k).value.trim();
   const row={owner_id:uid,nombre:v('nombre'),contacto:v('contacto'),telefono:v('telefono'),whatsapp:v('whatsapp'),email:v('email'),notas:v('notas'),activo:v('activo')==='true'};
   if(!row.nombre)throw new Error('Escribe el nombre del proveedor.');
+  const clean=s=>String(s||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  const phone=s=>String(s||'').replace(/\\D/g,'');
+  const duplicate=providers.find(p=>p.id!==id&&(
+   clean(p.nombre)===clean(row.nombre)||
+   (phone(row.telefono).length>=7&&phone(p.telefono)===phone(row.telefono))||
+   (phone(row.whatsapp).length>=7&&(phone(p.whatsapp)===phone(row.whatsapp)||phone(p.telefono)===phone(row.whatsapp)))||
+   (phone(row.telefono).length>=7&&phone(p.whatsapp)===phone(row.telefono))
+  ));
+  if(duplicate)throw new Error('Este proveedor ya está registrado ('+duplicate.nombre+'). Busca el registro existente y edítalo; no crees otro.');
   const res=id?await sb.from('proveedores').update(row).eq('id',id).eq('owner_id',uid):await sb.from('proveedores').insert(row);
   if(res.error)throw res.error;$n('#modal').hidden=true;await load();
+ }
+ async function deleteProvider(id){
+  const uid=await owner(),p=providers.find(x=>x.id===id);if(!p)return;
+  const hasBuys=buys.some(x=>x.proveedor_id===id),hasQuotes=quotes.some(x=>x.proveedor_id===id);
+  if(hasBuys||hasQuotes)throw new Error('No se puede eliminar '+p.nombre+' porque tiene compras o cotizaciones asociadas. Edítalo y cámbialo a Inactivo para conservar el historial.');
+  if(!confirm('¿Eliminar definitivamente al proveedor "'+p.nombre+'"? Esta acción no se puede deshacer.'))return;
+  const {error}=await sb.from('proveedores').delete().eq('id',id).eq('owner_id',uid);
+  if(error)throw error;
+  await load();
  }
  function providerForm(id){const p=providers.find(x=>x.id===id)||{};modal(form(id?'Editar proveedor':'Nuevo proveedor',[
   {key:'nombre',label:'Nombre del proveedor',required:true},{key:'contacto',label:'Persona de contacto'},{key:'telefono',label:'Teléfono'},{key:'whatsapp',label:'WhatsApp'},{key:'email',label:'Correo',type:'email'},{key:'notas',label:'Notas'},
@@ -700,6 +718,7 @@ sb.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY')showReset()});
   if(b.id==='neg-new-provider'){providerForm();return}
   if(b.id==='neg-new-buy'){buyForm();return}
   if(b.dataset.negEditProvider){providerForm(b.dataset.negEditProvider);return}
+  if(b.dataset.negDeleteProvider){run(()=>deleteProvider(b.dataset.negDeleteProvider));return}
   if(b.dataset.negEditBuy){buyForm(b.dataset.negEditBuy);return}
   if(b.dataset.negQuote){quoteForm(b.dataset.negQuote);return}
  },true);
