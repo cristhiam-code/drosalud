@@ -589,9 +589,8 @@ sb.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY')showReset()});
 
 <script>
 (()=>{
- const $n=s=>document.querySelector(s), moneyN=n=>'
-</html>
-+Math.round(Number(n)||0).toLocaleString('es-CO');
+ const $n=s=>document.querySelector(s), moneyN=n=>'$'+Math.round(Number(n)||0).toLocaleString('es-CO'); 
++Math.round(Number(n)||0).toLocaleString('es-CO')
  let tab='pend',providers=[],buys=[],quotes=[];
  const escN=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  async function owner(){const {data,error}=await sb.auth.getUser();if(error)throw error;if(!data.user)throw new Error('Inicia sesión nuevamente.');return data.user.id}
