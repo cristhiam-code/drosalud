@@ -124,3 +124,6 @@ $$;
 
 revoke all on function public.guardar_compra_con_costo_real(uuid,text,integer,uuid,numeric,text,text,uuid,uuid,numeric) from public;
 grant execute on function public.guardar_compra_con_costo_real(uuid,text,integer,uuid,numeric,text,text,uuid,uuid,numeric) to authenticated;
+
+-- La interfaz ya utiliza la función atómica; elimina la RPC anterior de dos pasos.
+drop function if exists public.aplicar_costo_real_compra(uuid, uuid, numeric);
