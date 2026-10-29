@@ -53,8 +53,11 @@ button{cursor:pointer;border:0;background:none}
 .gain{color:var(--gain);font-weight:600}
 .acts{display:grid;gap:10px;margin-top:12px}
 nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:5}
-nav button{flex:1;padding:14px 4px;font-weight:600;color:var(--mut);position:relative}
+nav button{flex:1;min-width:0;padding:12px 4px;font-weight:600;color:var(--mut);position:relative}
 nav button[aria-current="true"]{color:var(--pri);font-weight:800;box-shadow:inset 0 3px 0 var(--pri)}
+#more-menu{position:fixed;right:12px;bottom:calc(62px + env(safe-area-inset-bottom,0px));width:min(230px,calc(100vw - 24px));padding:8px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.18);z-index:8}
+#more-menu button{display:block;width:100%;padding:13px 12px;text-align:left;border-radius:9px;font-weight:600}
+#more-menu button:active,#more-menu button:focus-visible{background:var(--soft);color:var(--pri)}
 .bdg{background:var(--pri);color:var(--pri-ink);border-radius:99px;font-size:.72rem;padding:1px 7px;margin-left:4px}
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:10;overflow-y:auto}
 #sheet{background:var(--bg);width:100%;max-width:640px;border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:94%;overflow-y:auto}
@@ -302,14 +305,17 @@ nav button{font-size:.78rem}
  <p class="mut sm" id="ver"></p>
 </section>
 </main>
-<nav id="nav">
- <button data-v="venta" aria-current="true">Recibo<span class="bdg" id="bg" hidden></span></button>
- <button data-v="cat">Catálogo</button>
- <button data-v="cli">Clientes</button>
+<div id="more-menu" hidden aria-label="Más opciones">
  <button data-v="his">Historial</button>
  <button data-v="cot">Cotizaciones</button>
  <button data-v="aju">Ajustes</button>
  <button data-v="neg">Negocio</button>
+</div>
+<nav id="nav" aria-label="Navegación principal">
+ <button data-v="venta" aria-current="true">Recibo<span class="bdg" id="bg" hidden></span></button>
+ <button data-v="cat">Catálogo</button>
+ <button data-v="cli">Clientes</button>
+ <button data-v="mas" aria-expanded="false">Más <span aria-hidden="true">☰</span></button>
 </nav>
 </div>
 <div id="modal" hidden><div id="sheet" role="dialog" aria-modal="true"></div></div>
@@ -359,7 +365,7 @@ async function loadAll(){await loadCfg();if(!cfg.primerUso){try{await saveCfgDb(
 async function start(){$('#spl').hidden=true;$('#lg').hidden=true;$('#rsx').hidden=true;$('#app').hidden=false;const{data}=await sb.auth.getUser();$('#who').textContent=data&&data.user?'Sesión: '+data.user.email:'';await loadAllSafe();checkVer()}
 function showLogin(){$('#spl').hidden=true;$('#app').hidden=true;$('#rsx').hidden=true;$('#lg').hidden=false;try{const e=localStorage.getItem('lastEmail');if(e&&!$('#em').value){$('#em').value=e;$('#pw').focus()}}catch(x){}}
 const TT={venta:'Recibo',cat:'Catálogo',cli:'Clientes',his:'Historial',cot:'Cotizaciones',aju:'Ajustes'};
-function show(v){['venta','cat','cli','his','cot','aju'].forEach(k=>{$('#v-'+k).hidden=k!==v});document.querySelectorAll('#nav button').forEach(b=>b.setAttribute('aria-current',b.dataset.v===v));$('#ttl').textContent=TT[v]||'Negocio';if(v==='aju')fillAju();if(v==='his')go(loadHis);if(v==='cli')loadCST().catch(()=>{});if(v==='cot')go(loadCotizaciones);window.scrollTo(0,0)}
+function show(v){['venta','cat','cli','his','cot','aju'].forEach(k=>{$('#v-'+k).hidden=k!==v});$('#more-menu').hidden=true;$('#nav [data-v="mas"]').setAttribute('aria-expanded','false');document.querySelectorAll('#nav button').forEach(b=>{if(b.dataset.v!=='mas')b.setAttribute('aria-current',String(b.dataset.v===v));else b.setAttribute('aria-current',String(!['venta','cat','cli'].includes(v)))});$('#ttl').textContent=TT[v]||'Negocio';if(v==='aju')fillAju();if(v==='his')go(loadHis);if(v==='cli')loadCST().catch(()=>{});if(v==='cot')go(loadCotizaciones);window.scrollTo(0,0)}
 function rRes(){rTop();const q=$('#q').value.trim(),b=$('#res');if(!q){b.innerHTML='';return}const a=find(q,20);b.innerHTML=a.length?a.map(p=>`<button class="row" data-add="${p.id}"><span class="nm">${esc(p.nombre)}<small>${esc(p.laboratorio)}</small></span><span class="pr">${money(pv(p))}<small>compra ${money(p.precio_compra)}</small></span></button>`).join(''):'<p class="mut">No hay resultados. Agrégalo en Catálogo.</p>'}
 function calc(){const st=cart.reduce((s,i)=>s+i.p*i.q,0),g=cart.reduce((s,i)=>s+(i.p-i.c)*i.q,0),ds=Math.max(0,+$('#dsc').value||0),dm=Math.max(0,+$('#dom').value||0);return{st,ds,dm,total:Math.max(0,st-ds+dm),gan:g-ds}}
 function rCart(){const b=$('#cart');b.innerHTML=cart.length?cart.map((i,k)=>`<div class="item"><div class="top"><span>${esc(i.n)}</span><button class="rm" data-rm="${k}" aria-label="Quitar">✕</button></div><div class="ctl"><div class="step"><button data-dec="${k}" aria-label="Menos">−</button><span>${i.q}</span><button data-inc="${k}" aria-label="Más">+</button></div><label class="pp">$<input type="number" inputmode="numeric" data-pr="${k}" value="${i.p}" aria-label="Precio de venta"></label><span class="lt">${money(i.p*i.q)}</span></div><small class="mut">Compra ${money(i.c)} · ganas ${money((i.p-i.c)*i.q)}${warnM(i.p,i.c)}</small></div>`).join(''):'<p class="mut">Busca un producto y tócalo para agregarlo.</p>';const k=calc(),n=cart.reduce((s,i)=>s+i.q,0);$('#tot').textContent=money(k.total);$('#gn').textContent=cart.length?'Ganancia: '+money(k.gan):'';const e=$('#bg');e.hidden=!n;e.textContent=n;rVue(k)}
@@ -536,6 +542,7 @@ let hp=[];try{hp=await all('historial_precios','creado_en')}catch(e){}add('Histo
 const day=t=>new Date(t).toISOString().slice(0,10),hoy=day(Date.now());let fn;if(scope==='todo')fn=`drosalud-respaldo-${hoy}.xlsx`;else{const[a,b]=rango();fn=`drosalud-ventas-${day(a)}-a-${day(new Date(Math.min(b.getTime()-864e5,Date.now())))}.xlsx`}
 XLSX.writeFile(wb,fn,{cellDates:true});if(scope==='todo'){try{await saveCfgDb({...cfg,ultimoRespaldo:new Date().toISOString()});rBk()}catch(e){}}toast('Excel descargado')}
 document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;const d=t.dataset,id=t.id;
+if(d.v==='mas'){const m=$('#more-menu'),open=m.hidden;m.hidden=!open;t.setAttribute('aria-expanded',String(open));return}
 if(d.v)return show(d.v);
 if(d.hv)return setHV(d.hv);
 if(id==='retry')return loadAllSafe();
@@ -724,7 +731,7 @@ sb.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY')showReset()});
  function setTab(t){tab=t;$n('#neg-pend').hidden=t!=='pend';$n('#neg-prov').hidden=t!=='prov';document.querySelectorAll('[data-neg-tab]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.negTab===t)))}
  document.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
-  if(b.dataset.v==='neg'){e.preventDefault();e.stopImmediatePropagation();document.querySelectorAll('main section[id^="v-"]').forEach(s=>s.hidden=true);$n('#v-neg').hidden=false;document.querySelectorAll('#nav button').forEach(x=>x.removeAttribute('aria-current'));b.setAttribute('aria-current','true');$n('#ttl').textContent='Gestión del negocio';run(load);return}
+  if(b.dataset.v==='neg'){e.preventDefault();e.stopImmediatePropagation();document.querySelectorAll('main section[id^="v-"]').forEach(s=>s.hidden=true);$n('#v-neg').hidden=false;$n('#more-menu').hidden=true;$n('#nav [data-v="mas"]').setAttribute('aria-expanded','false');document.querySelectorAll('#nav button').forEach(x=>x.setAttribute('aria-current',String(x.dataset.v==='mas')));$n('#ttl').textContent='Gestión del negocio';run(load);window.scrollTo(0,0);return}
   if(b.dataset.negTab){setTab(b.dataset.negTab);return}
   if(b.id==='neg-new-provider'){providerForm();return}
   if(b.id==='neg-new-buy'){buyForm();return}
