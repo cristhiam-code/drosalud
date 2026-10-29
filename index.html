@@ -630,7 +630,7 @@ sb.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY')showReset()});
  ],p));$n('#neg-save').onclick=()=>run(()=>saveProvider(id));}
  async function saveBuy(id){
   const uid=await owner(),v=k=>$n('#nf-'+k).value.trim(),n=k=>v(k)===''?null:Number(v(k));
-  const row={owner_id:uid,producto_nombre:v('producto_nombre'),cantidad:n('cantidad')||1,proveedor_id:v('proveedor_id')||null,costo_estimado:n('costo_estimado'),costo_real:n('costo_real'),estado:v('estado'),notas:v('notas'),recibo_id:v('recibo_id')||null,recibo_item_id:v('recibo_item_id')||null};
+  const row={owner_id:uid,producto_nombre:v('producto_nombre'),cantidad:n('cantidad')||1,proveedor_id:v('proveedor_id')||null,costo_estimado:n('costo_estimado'),costo_real:(v('recibo_item_id')&&n('costo_real')!==null)?null:n('costo_real'),estado:v('estado'),notas:v('notas'),recibo_id:v('recibo_id')||null,recibo_item_id:v('recibo_item_id')||null};
   if(!row.producto_nombre)throw new Error('Escribe el medicamento.');
   if(id){const res=await sb.from('compras_pendientes').update(row).eq('id',id).eq('owner_id',uid);if(res.error)throw res.error}
   else {const {data,error}=await sb.from('compras_pendientes').insert(row).select().single();if(error)throw error;id=data.id}
