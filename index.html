@@ -497,7 +497,7 @@ function setHV(v){hv=v;document.querySelectorAll('.seg button').forEach(b=>b.set
 const hisValid=()=>hisFiltered().filter(r=>!r.anulado);
 async function rResumen(){const L=hisValid(),box=$('#hres');if(!L.length){box.innerHTML='<p class="mut">No hay ventas en este período.</p>';return}
 box.innerHTML='<p class="mut">Calculando…</p>';const it=await itemsDe(L),T=L.reduce((a,r)=>a+Number(r.total),0),G=L.reduce((a,r)=>a+Number(r.ganancia),0),D=L.reduce((a,r)=>a+Number(r.domicilio||0),0),base=T-D;
-const mp=new Map();it.forEach(i=>{const o=mp.get(i.nombre)||{n:i.nombre,u:0,v:0,g:0};o.u+=i.cantidad;o.v+=i.precio_venta*i.cantidad;o.g+=(i.precio_venta-i.precio_compra)*i.cantidad;mp.set(i.nombre,o)});
+const mp=new Map();it.forEach(i=>{const o=mp.get(i.nombre)||{n:i.nombre,u:0,v:0,g:0};o.u+=i.cantidad;o.v+=i.precio_venta*i.cantidad;o.g+=(i.precio_venta-(i.costo_real_unitario==null?i.precio_compra:i.costo_real_unitario))*i.cantidad;mp.set(i.nombre,o)});
 const top=[...mp.values()].sort((a,b)=>b.g-a.g).slice(0,8),mx=Math.max(1,...top.map(x=>x.g));
 const fp={};L.forEach(r=>{const k=r.forma_pago||'Sin dato';fp[k]=(fp[k]||0)+Number(r.total)});
 const low=it.filter(i=>i.precio_venta<i.precio_compra||mg(i.precio_venta,i.precio_compra)<cfg.mMin).length;
@@ -630,15 +630,45 @@ sb.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY')showReset()});
  ],p));$n('#neg-save').onclick=()=>run(()=>saveProvider(id));}
  async function saveBuy(id){
   const uid=await owner(),v=k=>$n('#nf-'+k).value.trim(),n=k=>v(k)===''?null:Number(v(k));
-  const row={owner_id:uid,producto_nombre:v('producto_nombre'),cantidad:n('cantidad')||1,proveedor_id:v('proveedor_id')||null,costo_estimado:n('costo_estimado'),costo_real:n('costo_real'),estado:v('estado'),notas:v('notas')};
+  const row={owner_id:uid,producto_nombre:v('producto_nombre'),cantidad:n('cantidad')||1,proveedor_id:v('proveedor_id')||null,costo_estimado:n('costo_estimado'),costo_real:n('costo_real'),estado:v('estado'),notas:v('notas'),recibo_id:v('recibo_id')||null,recibo_item_id:v('recibo_item_id')||null};
   if(!row.producto_nombre)throw new Error('Escribe el medicamento.');
   if(id){const res=await sb.from('compras_pendientes').update(row).eq('id',id).eq('owner_id',uid);if(res.error)throw res.error}
-  else {const res=await sb.from('compras_pendientes').insert(row);if(res.error)throw res.error}
+  else {const {data,error}=await sb.from('compras_pendientes').insert(row).select().single();if(error)throw error;id=data.id}
+  if(row.costo_real!==null&&row.recibo_item_id){
+   const {error}=await sb.rpc('aplicar_costo_real_compra',{p_compra_id:id,p_recibo_item_id:row.recibo_item_id,p_costo_real:row.costo_real});
+   if(error)throw error;
+  }
   $n('#modal').hidden=true;await load();
  }
- function buyForm(id){const b=buys.find(x=>x.id===id)||{};modal(form(id?'Actualizar solicitud':'Medicamento por conseguir',[
-  {key:'producto_nombre',label:'Medicamento o producto',required:true},{key:'cantidad',label:'Cantidad',type:'number',min:1},{key:'proveedor_id',label:'Proveedor',type:'select',default:'',options:[{value:'',label:'Sin asignar'},...providers.map(p=>({value:p.id,label:p.nombre}))]},{key:'costo_estimado',label:'Costo estimado por unidad',type:'number',min:0},{key:'costo_real',label:'Costo real por unidad',type:'number',min:0},{key:'estado',label:'Estado',type:'select',default:'pendiente',options:['pendiente','cotizando','comprado','entregado','cancelado'].map(x=>({value:x,label:x[0].toUpperCase()+x.slice(1)}))},{key:'notas',label:'Notas'}
- ],{cantidad:1,estado:'pendiente',...b}));$n('#neg-save').onclick=()=>run(()=>saveBuy(id));}
+ async function buyForm(id){
+  const b=buys.find(x=>x.id===id)||{};
+  const {data:receipts,error}=await sb.from('recibos').select('id,numero,cliente_nombre,creado_en').order('creado_en',{ascending:false}).limit(100);
+  if(error)throw error;
+  const opts=[{value:'',label:'Sin vincular a un recibo'},...(receipts||[]).map(r=>({value:r.id,label:'Recibo '+r.numero+' · '+(r.cliente_nombre||'Sin cliente')+' · '+new Date(r.creado_en).toLocaleDateString('es-CO')}))];
+  modal(form(id?'Actualizar solicitud':'Medicamento por conseguir',[
+   {key:'producto_nombre',label:'Medicamento o producto',required:true},
+   {key:'cantidad',label:'Cantidad',type:'number',min:1},
+   {key:'proveedor_id',label:'Proveedor',type:'select',default:'',options:[{value:'',label:'Sin asignar'},...providers.map(p=>({value:p.id,label:p.nombre}))]},
+   {key:'costo_estimado',label:'Costo estimado por unidad',type:'number',min:0},
+   {key:'recibo_id',label:'Vincular con recibo (opcional)',type:'select',default:'',options:opts},
+   {key:'recibo_item_id',label:'Línea del recibo para actualizar costo',type:'select',default:'',options:[{value:'',label:'Selecciona primero un recibo'}]},
+   {key:'costo_real',label:'Costo real por unidad',type:'number',min:0},
+   {key:'estado',label:'Estado',type:'select',default:'pendiente',options:['pendiente','cotizando','comprado','entregado','cancelado'].map(x=>({value:x,label:x[0].toUpperCase()+x.slice(1)}))},
+   {key:'notas',label:'Notas'}
+  ],{cantidad:1,estado:'pendiente',...b}));
+  const receipt=$n('#nf-recibo_id'),item=$n('#nf-recibo_item_id');
+  async function itemsForReceipt(receiptId,selected){
+   item.innerHTML='<option value="">Cargando líneas…</option>';
+   if(!receiptId){item.innerHTML='<option value="">Selecciona primero un recibo</option>';return}
+   const {data,error}=await sb.from('recibo_items').select('id,nombre,cantidad,precio_venta').eq('recibo_id',receiptId).order('id');
+   if(error)throw error;
+   item.innerHTML='<option value="">No actualizar costo de una línea</option>'+(data||[]).map(x=>'<option value="'+x.id+'">'+escN(x.nombre)+' × '+x.cantidad+' · '+moneyN(x.precio_venta)+'</option>').join('');
+   if(selected)item.value=selected;
+  }
+  receipt.addEventListener('change',()=>run(()=>itemsForReceipt(receipt.value,'')));
+  if(b.recibo_id)await itemsForReceipt(b.recibo_id,b.recibo_item_id);
+  $n('#neg-save').onclick=()=>run(()=>saveBuy(id));
+ }
  async function quoteForm(id){
   const b=buys.find(x=>x.id===id);if(!b)return;
   if(!providers.length){alert('Primero registra un proveedor.');return}
