@@ -605,7 +605,8 @@ if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(
 $('#lv').textContent='v'+VERSION;
 $('#lf').addEventListener('submit',e=>{e.preventDefault();doLogin()});
 sb.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY')showReset()});
-(async()=>{try{const{data}=await sb.auth.getSession();if(data.session)start();else showLogin()}catch(e){showLogin()}})();
+showLogin();
+(async()=>{try{const{data,error}=await sb.auth.getSession();if(error)throw error;if(data.session)await start()}catch(e){console.error('No se pudo comprobar la sesión al iniciar:',e);showLogin()}})();
 </script>
 
 <script>
