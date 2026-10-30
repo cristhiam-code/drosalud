@@ -514,7 +514,7 @@ async function itemsDe(rs){let it=[];for(let i=0;i<rs.length;i+=40){const ids=rs
 function setHV(v){hv=v;document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.hv===v)));$('#hrec').hidden=v!=='rec';$('#hres').hidden=v!=='res';if(v==='res')go(rResumen)}
 const hisValid=()=>hisFiltered().filter(r=>!r.anulado);
 async function rResumen(){const L=hisValid(),box=$('#hres');if(!L.length){box.innerHTML='<p class="mut">No hay ventas en este período.</p>';return}
-box.innerHTML='<p class="mut">Calculando…</p>';const it=await itemsDe(L),T=L.reduce((a,r)=>a+Number(r.total),0),G=L.reduce((a,r)=>a+Number(r.ganancia),0),D=L.reduce((a,r)=>a+Number(r.domicilio||0),0),base=T-D;
+box.innerHTML='<p class="mut">Calculando…</p>';const it=await itemsDe(L),T=L.reduce((a,r)=>a+Number(r.total),0),G=L.reduce((a,r)=>a+Number(r.ganancia),0),D=L.reduce((a,r)=>a+Number(r.domicilio||0),0),M=L.reduce((a,r)=>a+Number(r.costo_mensajero||0),0),base=T-D;
 const mp=new Map();it.forEach(i=>{const o=mp.get(i.nombre)||{n:i.nombre,u:0,v:0,g:0};o.u+=i.cantidad;o.v+=i.precio_venta*i.cantidad;o.g+=(i.precio_venta-(i.costo_real_unitario==null?i.precio_compra:i.costo_real_unitario))*i.cantidad;mp.set(i.nombre,o)});
 const top=[...mp.values()].sort((a,b)=>b.g-a.g).slice(0,8),mx=Math.max(1,...top.map(x=>x.g));
 const fp={};L.forEach(r=>{const k=r.forma_pago||'Sin dato';fp[k]=(fp[k]||0)+Number(r.total)});
