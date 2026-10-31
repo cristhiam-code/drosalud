@@ -145,6 +145,20 @@ nav button[aria-current="true"]{color:var(--pri);font-weight:800;box-shadow:inse
  .home-grid{gap:9px}.home-tile{padding:13px;min-height:132px}
  .home-tile strong{font-size:.94rem}.home-tile small{font-size:.78rem}
 }
+
+/* Ajustes organizados por secciones independientes. */
+.aju-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0 22px}
+.aju-tile{display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-height:132px;padding:17px;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 3px 12px rgba(25,48,75,.045)}
+.aju-tile:active{transform:scale(.985)}
+.aju-tile strong{font-size:1rem;font-weight:800}
+.aju-tile small{color:var(--mut);line-height:1.35}
+.aju-ico{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:var(--soft);color:var(--pri);font-size:1.25rem;font-weight:800}
+.aju-admin{border-top:1px solid var(--line);padding-top:8px;margin-top:18px}
+.aju-admin h2{margin-top:8px}
+.aju-page{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
+.aju-page h2{margin-top:0}
+.aju-save{margin-top:8px}
+@media(min-width:700px){.aju-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
 <style>
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:24px}
@@ -344,51 +358,57 @@ nav button{font-size:.78rem}
  <p class="mut sm">Los datos de este módulo se guardan en Supabase y están separados por tu usuario.</p>
 </section>
 <section id="v-aju" hidden>
- <h2 style="margin-top:0">Precios</h2>
- <label for="mg">Ganancia sobre la compra (%)</label>
- <input id="mg" type="number" inputmode="decimal" min="0" step="0.5" data-k="m">
- <label for="rd">Redondear precio de venta</label>
- <select id="rd" data-k="r"><option value="0">Sin redondeo</option><option value="50">Hacia arriba a $50</option><option value="100">Hacia arriba a $100</option><option value="500">Hacia arriba a $500</option></select>
- <label for="mm">Alerta de ganancia baja (menos de … %)</label>
- <input id="mm" type="number" inputmode="decimal" min="0" step="1" data-k="mMin">
- <h2>Paleta de colores</h2><p class="mut sm">Personaliza la apariencia de la aplicación. No cambia el diseño ni la impresión de la factura.</p><label for="cp1">Color principal</label><input id="cp1" type="color" data-k="colorPri"><label for="cp2">Fondo</label><input id="cp2" type="color" data-k="colorBg"><label for="cp3">Tarjetas</label><input id="cp3" type="color" data-k="colorCard"><label for="cp4">Texto</label><input id="cp4" type="color" data-k="colorInk"><h2>Datos del negocio</h2>
- <label for="a1">Nombre</label><input id="a1" data-k="biz" autocomplete="off">
- <label for="a2">NIT</label><input id="a2" data-k="nit" autocomplete="off">
- <label for="a3">Ciudad</label><input id="a3" data-k="ciu" autocomplete="off">
- <label for="a4">Teléfono</label><input id="a4" data-k="tel" type="tel" autocomplete="off">
- <label for="a5">Dirección (opcional)</label><input id="a5" data-k="dir" autocomplete="off">
- <h2>Recibo</h2>
- <label for="a6">Mensaje final</label><input id="a6" data-k="msg" autocomplete="off">
- <label for="a7">Nota al pie (opcional)</label><textarea id="a7" data-k="nota" rows="3"></textarea>
- <label class="ck"><input type="checkbox" data-k="sHora"> Mostrar la hora</label>
- <label class="ck"><input type="checkbox" data-k="sCed"> Mostrar cédula del cliente</label>
- <label class="ck"><input type="checkbox" data-k="sTel"> Mostrar teléfono del cliente</label>
- <label class="ck"><input type="checkbox" data-k="sPago"> Mostrar forma de pago</label>
- <label class="ck"><input type="checkbox" data-k="big"> Letra grande</label>
- <label class="ck"><input type="checkbox" data-k="sLogo"> Mostrar el logo</label>
- <label for="cd1">Cotización válida por (días)</label><input id="cd1" type="number" inputmode="numeric" min="1" data-k="cotDias">
- <label for="cd2">Nota de la cotización</label><input id="cd2" data-k="cotNota" autocomplete="off">
- <label for="cd3">Mensaje para retomar clientes (usa {nombre})</label><input id="cd3" data-k="msgRetomar" autocomplete="off">
- <h2>Vendedor y pagos</h2>
- <label for="vd0">Vendedor por defecto (opcional)</label><input id="vd0" data-k="vendedorDef" autocomplete="off">
- <label for="pb1">Llave Bre-B</label><input id="pb1" data-k="breb" inputmode="numeric" autocomplete="off">
- <label for="pb2">A nombre de (opcional)</label><input id="pb2" data-k="pagoTitular" autocomplete="off">
- <label for="pb3">Mostrar los datos de pago en los recibos</label>
- <select id="pb3" data-k="pagoRec"><option value="siempre">Siempre</option><option value="noefectivo">Solo si no se pagó en efectivo</option><option value="nunca">Nunca</option></select>
- <label class="ck"><input type="checkbox" data-k="pagoCot"> Mostrar en las cotizaciones</label>
- <label for="qrf">Código QR de pago (imagen)</label>
- <input id="qrf" type="file" accept="image/*">
- <p class="mut sm" id="qrs"></p>
- <button class="btn alt full" id="qrx" type="button" style="margin-bottom:10px">Quitar el QR</button>
- <h2>Vista previa</h2>
- <div id="prev"></div>
- <button class="btn full" id="svs">Guardar ajustes</button>
- <p class="mut sm">Los ajustes se guardan en la base de datos, así que son iguales en todos tus aparatos.</p>
- <label for="rd3">Recordar el respaldo cada (días)</label><input id="rd3" type="number" inputmode="numeric" min="7" data-k="respDias">
- <p class="mut sm" id="bkt"></p>
- <div class="acts"><button class="btn alt full" id="xlsT">Descargar respaldo en Excel</button><button class="btn alt full" id="rf">Recargar datos</button><button class="btn bad full" id="out">Cerrar sesión</button></div>
- <p class="mut sm" id="who"></p>
- <p class="mut sm" id="ver"></p>
+ <div id="aju-menu">
+  <p class="mut sm">Configura cada área de Drosalud por separado.</p>
+  <div class="aju-grid">
+   <button class="aju-tile" data-aju-open="precios"><span class="aju-ico">％</span><strong>Precios</strong><small>Ganancia, redondeo y alertas</small></button>
+   <button class="aju-tile" data-aju-open="apariencia"><span class="aju-ico">◐</span><strong>Apariencia</strong><small>Paleta de colores</small></button>
+   <button class="aju-tile" data-aju-open="negocio"><span class="aju-ico">⌂</span><strong>Datos del negocio</strong><small>Identificación y contacto</small></button>
+   <button class="aju-tile" data-aju-open="recibo"><span class="aju-ico">▤</span><strong>Recibo</strong><small>Impresión y cotizaciones</small></button>
+   <button class="aju-tile" data-aju-open="vendedor"><span class="aju-ico">♙</span><strong>Vendedor</strong><small>Vendedor predeterminado</small></button>
+   <button class="aju-tile" data-aju-open="pagos"><span class="aju-ico">$</span><strong>Pagos</strong><small>Bre-B y QR de pago</small></button>
+  </div>
+  <div class="aju-admin">
+   <h2>Administración</h2>
+   <p class="mut sm">Herramientas de respaldo y acceso.</p>
+   <label for="rd3">Recordar el respaldo cada (días)</label><input id="rd3" type="number" inputmode="numeric" min="7" data-k="respDias">
+   <p class="mut sm" id="bkt"></p>
+   <div class="acts"><button class="btn alt full" id="xlsT">Descargar respaldo en Excel</button><button class="btn alt full" id="rf">Recargar datos</button><button class="btn bad full" id="out">Cerrar sesión</button></div>
+   <p class="mut sm" id="who"></p><p class="mut sm" id="ver"></p>
+  </div>
+ </div>
+ <div id="aju-pages" hidden>
+  <button class="btn alt" id="aju-back" type="button">← Volver a Ajustes</button>
+  <div class="aju-page" data-aju-page="precios" hidden>
+   <h2>Precios</h2>
+   <label for="mg">Ganancia sobre la compra (%)</label><input id="mg" type="number" inputmode="decimal" min="0" step="0.5" data-k="m">
+   <label for="rd">Redondear precio de venta</label><select id="rd" data-k="r"><option value="0">Sin redondeo</option><option value="50">Hacia arriba a $50</option><option value="100">Hacia arriba a $100</option><option value="500">Hacia arriba a $500</option></select>
+   <label for="mm">Alerta de ganancia baja (menos de … %)</label><input id="mm" type="number" inputmode="decimal" min="0" step="1" data-k="mMin">
+  </div>
+  <div class="aju-page" data-aju-page="apariencia" hidden>
+   <h2>Paleta de colores</h2><p class="mut sm">Personaliza la apariencia de la aplicación. No cambia el diseño ni la impresión de la factura.</p>
+   <label for="cp1">Color principal</label><input id="cp1" type="color" data-k="colorPri"><label for="cp2">Fondo</label><input id="cp2" type="color" data-k="colorBg"><label for="cp3">Tarjetas</label><input id="cp3" type="color" data-k="colorCard"><label for="cp4">Texto</label><input id="cp4" type="color" data-k="colorInk">
+  </div>
+  <div class="aju-page" data-aju-page="negocio" hidden>
+   <h2>Datos del negocio</h2>
+   <label for="a1">Nombre</label><input id="a1" data-k="biz" autocomplete="off"><label for="a2">NIT</label><input id="a2" data-k="nit" autocomplete="off"><label for="a3">Ciudad</label><input id="a3" data-k="ciu" autocomplete="off"><label for="a4">Teléfono</label><input id="a4" data-k="tel" type="tel" autocomplete="off"><label for="a5">Dirección (opcional)</label><input id="a5" data-k="dir" autocomplete="off">
+  </div>
+  <div class="aju-page" data-aju-page="recibo" hidden>
+   <h2>Recibo y cotizaciones</h2>
+   <label for="a6">Mensaje final</label><input id="a6" data-k="msg" autocomplete="off"><label for="a7">Nota al pie (opcional)</label><textarea id="a7" data-k="nota" rows="3"></textarea>
+   <label class="ck"><input type="checkbox" data-k="sHora"> Mostrar la hora</label><label class="ck"><input type="checkbox" data-k="sCed"> Mostrar cédula del cliente</label><label class="ck"><input type="checkbox" data-k="sTel"> Mostrar teléfono del cliente</label><label class="ck"><input type="checkbox" data-k="sPago"> Mostrar forma de pago</label><label class="ck"><input type="checkbox" data-k="big"> Letra grande</label><label class="ck"><input type="checkbox" data-k="sLogo"> Mostrar el logo</label>
+   <label for="cd1">Cotización válida por (días)</label><input id="cd1" type="number" inputmode="numeric" min="1" data-k="cotDias"><label for="cd2">Nota de la cotización</label><input id="cd2" data-k="cotNota" autocomplete="off"><label for="cd3">Mensaje para retomar clientes (usa {nombre})</label><input id="cd3" data-k="msgRetomar" autocomplete="off">
+   <h2>Vista previa</h2><div id="prev"></div>
+  </div>
+  <div class="aju-page" data-aju-page="vendedor" hidden>
+   <h2>Vendedor</h2><label for="vd0">Vendedor por defecto (opcional)</label><input id="vd0" data-k="vendedorDef" autocomplete="off">
+  </div>
+  <div class="aju-page" data-aju-page="pagos" hidden>
+   <h2>Pagos</h2><label for="pb1">Llave Bre-B</label><input id="pb1" data-k="breb" inputmode="numeric" autocomplete="off"><label for="pb2">A nombre de (opcional)</label><input id="pb2" data-k="pagoTitular" autocomplete="off"><label for="pb3">Mostrar los datos de pago en los recibos</label><select id="pb3" data-k="pagoRec"><option value="siempre">Siempre</option><option value="noefectivo">Solo si no se pagó en efectivo</option><option value="nunca">Nunca</option></select><label class="ck"><input type="checkbox" data-k="pagoCot"> Mostrar en las cotizaciones</label><label for="qrf">Código QR de pago (imagen)</label><input id="qrf" type="file" accept="image/*"><p class="mut sm" id="qrs"></p><button class="btn alt full" id="qrx" type="button">Quitar el QR</button>
+  </div>
+  <button class="btn full aju-save" data-aju-save type="button">Guardar cambios</button>
+  <p class="mut sm">Los cambios se guardan en la base de datos y se aplican en tus dispositivos.</p>
+ </div>
 </section>
 </main>
 <div id="more-menu" hidden aria-label="Más opciones">
@@ -423,7 +443,7 @@ const LOGO={c:new Image(),b:new Image()};LOGO.c.src='logo.png';LOGO.b.src='logo-
 async function loadCfg(){try{const{data,error}=await sb.from('ajustes').select('datos').eq('id',1).maybeSingle();if(error)throw error;const saved=(data&&data.datos)||{};cfg={...DEF,...saved};const oldPalette={colorPri:'#3DBE9A',colorBg:'#0D1613',colorCard:'#16231E',colorInk:'#E7F1EC'};const isOldDefault=Object.keys(oldPalette).every(k=>String(saved[k]||'').toUpperCase()===oldPalette[k]);if(isOldDefault){cfg={...cfg,...DEF};await saveCfgDb(cfg)}draft=null;applyPalette()}catch(e){console.error(e);if(/Failed to fetch|NetworkError|Load failed|fetch failed/i.test(String(e&&e.message)))throw e;toast('No se pudieron cargar los ajustes (¿falta crear la tabla ajustes?)')}}
 async function saveCfgDb(d){const{error}=await sb.from('ajustes').upsert({id:1,datos:d,actualizado_en:new Date().toISOString()});if(error)throw error;cfg={...DEF,...d}}
 function applyPalette(){const root=document.documentElement;[['--pri','colorPri'],['--bg','colorBg'],['--card','colorCard'],['--ink','colorInk']].forEach(([css,k])=>{const v=draft?.[k]||cfg[k];if(v&&/^#[0-9a-f]{6}$/i.test(v))root.style.setProperty(css,v)});const hex=draft?.colorPri||cfg.colorPri||'#0E6B55',n=parseInt(hex.slice(1),16),lum=.299*(n>>16&255)+.587*(n>>8&255)+.114*(n&255);root.style.setProperty('--pri-ink',lum>160?'#12261F':'#FFFFFF')}
-function fillAju(){$('#ver').textContent='Versión de la app: '+VERSION;$('#bkt').textContent=cfg.ultimoRespaldo?'Último respaldo: '+fd(cfg.ultimoRespaldo):'Todavía no has descargado un respaldo.';draft={...cfg};applyPalette();document.querySelectorAll('#v-aju [data-k]').forEach(e=>{const v=draft[e.dataset.k];if(e.type==='checkbox')e.checked=!!v;else e.value=v==null?'':v});qrStatus();renderPrev()}
+function fillAju(){$('#aju-menu').hidden=false;$('#aju-pages').hidden=true;document.querySelectorAll('[data-aju-page]').forEach(x=>x.hidden=true);$('#ver').textContent='Versión de la app: '+VERSION;$('#bkt').textContent=cfg.ultimoRespaldo?'Último respaldo: '+fd(cfg.ultimoRespaldo):'Todavía no has descargado un respaldo.';draft={...cfg};applyPalette();document.querySelectorAll('#v-aju [data-k]').forEach(e=>{const v=draft[e.dataset.k];if(e.type==='checkbox')e.checked=!!v;else e.value=v==null?'':v});qrStatus();renderPrev()}
 function renderPrev(){const it=[{nombre:'ACETAMINOFEN 500 MG * 100 TAB',cantidad:2,precio_venta:12500},{nombre:'SUERO ORAL SABOR UVA',cantidad:1,precio_venta:5600}];const r={numero:1,creado_en:new Date().toISOString(),cliente_nombre:'Cliente de ejemplo',vendedor:'Cristhiam',forcePago:true,cliente_cedula:'123456789',cliente_telefono:'3001234567',cliente_direccion:'Calle 10 # 12-34',descuento:1000,domicilio:3000,forma_pago:'Efectivo',recibido:50000,total:sub(it)+2000};const sv=cfg;cfg=draft;try{$('#prev').innerHTML=tkt(r,it)}finally{cfg=sv}}
 const price=c=>{const v=c*(1+cfg.m/100);return cfg.r?Math.ceil(v/cfg.r-1e-9)*cfg.r:Math.round(v)};
 const pv=p=>p.precio_venta!=null?Number(p.precio_venta):price(Number(p.precio_compra));
@@ -637,6 +657,9 @@ if(d.v==='mas'){const m=$('#more-menu'),open=m.hidden;m.hidden=!open;t.setAttrib
 if(d.v)return show(d.v);
 if(d.hv)return setHV(d.hv);
 if(id==='retry')return loadAllSafe();
+if(d.ajuOpen){$('#aju-menu').hidden=true;$('#aju-pages').hidden=false;document.querySelectorAll('[data-aju-page]').forEach(x=>x.hidden=x.dataset.ajuPage!==d.ajuOpen);$('#aju-back').hidden=false;return}
+if(id==='aju-back'){$('#aju-pages').hidden=true;$('#aju-menu').hidden=false;return}
+if(d.ajuSave){return go(async()=>{if(!String(draft.biz).trim()){toast('Escribe el nombre del negocio');return}draft.m=Math.max(0,+draft.m||0);draft.mMin=Math.max(0,+draft.mMin||0);applyPalette();await saveCfgDb(draft);iniVend();rRes();rCat();rCart();toast('Ajustes guardados')})}
 if(id==='qrx'){if(draft){draft.qrTexto='';draft.qrImg='';qrStatus();renderPrev()}return}
 if(id==='scan')return abrirScan('venta');
 if(id==='scan2')return abrirScan('cat');
@@ -670,7 +693,7 @@ if(id==='newc')return editC('');
 if(id==='clr'){cart=[];['#cli','#tel','#dircli','#ced','#dsc','#dom','#mens','#rec'].forEach(s=>{$(s).value=''});return rCart()}
 if(id==='mk')return go(crear);
 if(id==='impb')return go(importar);
-if(id==='svs')return go(async()=>{if(!String(draft.biz).trim()){toast('Escribe el nombre del negocio');return}draft.m=Math.max(0,+draft.m||0);draft.mMin=Math.max(0,+draft.mMin||0);applyPalette();await saveCfgDb(draft);iniVend();rRes();rCat();rCart();toast('Ajustes guardados')});
+
 if(id==='rf')return loadAllSafe();
 if(id==='out')return go(async()=>{await sb.auth.signOut();P=[];C=[];H=[];cart=[];showLogin()});
 });
