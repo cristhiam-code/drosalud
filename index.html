@@ -18,7 +18,7 @@ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:en
 /* Paleta verde oscura fija; los ajustes guardados pueden personalizarla. */
 *,*::before,*::after{box-sizing:inherit}
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font:400 16px/1.4 Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;padding-bottom:84px}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font:400 16px/1.4 Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;padding-bottom:24px}
 h1{font-size:1.5rem;font-weight:800;margin:0;letter-spacing:-.01em}
 h2{font-size:1rem;font-weight:800;margin:20px 0 8px}
 header{padding:16px 16px 4px}
@@ -51,7 +51,17 @@ button{cursor:pointer;border:0;background:none}
 .tot{display:flex;justify-content:space-between;align-items:baseline;font-size:1.6rem;font-weight:800;margin:14px 0 2px}
 .gain{color:var(--gain);font-weight:600}
 .acts{display:grid;gap:10px;margin-top:12px}
-nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:5}
+nav{display:none!important}
+#home{max-width:920px;margin:0 auto;padding:18px 16px 32px}
+.home-intro{margin:0 0 18px;color:var(--mut);font-size:.95rem}
+.home-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.home-tile{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:10px;min-height:142px;padding:18px;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:18px;color:var(--ink);box-shadow:0 3px 12px rgba(15,50,35,.05);transition:transform .15s,border-color .15s}
+.home-tile:active{transform:scale(.98)}.home-tile:focus-visible{outline:3px solid var(--pri);outline-offset:2px}
+.home-icon{display:grid;place-items:center;width:48px;height:48px;border-radius:14px;background:var(--bg);color:var(--pri);font-size:1.65rem}
+.home-tile strong{font-size:1rem;font-weight:800}.home-tile small{color:var(--mut);font-size:.82rem}
+@media(min-width:760px){header{max-width:920px;margin:0 auto;padding:24px 16px 4px}}
+@media(max-width:620px){.home-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.home-tile{min-height:132px;padding:14px;border-radius:15px}}
+@media(max-width:350px){.home-tile{padding:12px;min-height:122px}.home-icon{width:42px;height:42px}}
 nav button{flex:1;min-width:0;padding:12px 4px;font-weight:600;color:var(--mut);position:relative}
 nav button[aria-current="true"]{color:var(--pri);font-weight:800;box-shadow:inset 0 3px 0 var(--pri)}
 #more-menu{position:fixed;right:12px;bottom:calc(62px + env(safe-area-inset-bottom,0px));width:min(230px,calc(100vw - 24px));padding:8px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.18);z-index:8}
@@ -185,8 +195,20 @@ nav button{font-size:.78rem}
  </div>
 </section>
 <div id="app" hidden>
-<header><h1 id="ttl">Recibo</h1></header>
+<header><h1 id="ttl">Drosalud</h1></header>
 <div id="net" hidden></div><div id="upd" hidden></div><div id="bkb" hidden></div>
+ <section id="home" aria-label="Menú principal">
+  <p class="home-intro">Accede rápidamente a las herramientas de tu negocio.</p>
+  <div class="home-grid">
+   <button class="home-tile" data-home="venta"><span class="home-icon" aria-hidden="true">🧾</span><strong>Facturación POS</strong><small>Crear recibo y registrar venta</small></button>
+   <button class="home-tile" data-home="cat"><span class="home-icon" aria-hidden="true">💊</span><strong>Productos</strong><small>Consultar y administrar catálogo</small></button>
+   <button class="home-tile" data-home="cli"><span class="home-icon" aria-hidden="true">👥</span><strong>Clientes</strong><small>Consultar y retomar clientes</small></button>
+   <button class="home-tile" data-home="his"><span class="home-icon" aria-hidden="true">📋</span><strong>Historial</strong><small>Ventas y reportes</small></button>
+   <button class="home-tile" data-home="cot"><span class="home-icon" aria-hidden="true">📝</span><strong>Cotizaciones</strong><small>Consultar y enviar cotizaciones</small></button>
+   <button class="home-tile" data-home="neg"><span class="home-icon" aria-hidden="true">📦</span><strong>Gestión del negocio</strong><small>Medicamentos por conseguir y proveedores</small></button>
+   <button class="home-tile" data-home="aju"><span class="home-icon" aria-hidden="true">⚙️</span><strong>Ajustes</strong><small>Configurar Drosalud</small></button>
+  </div>
+ </section>
 <div id="imp" hidden><b>Tu catálogo está vacío.</b><p class="sm">Carga los productos de tu Excel una sola vez.</p><button class="btn full" id="impb">Cargar productos del Excel</button></div>
 <main>
 <section id="v-venta">
@@ -382,10 +404,11 @@ function find(q,lim){const t=norm(q).split(/\s+/).filter(Boolean),a=[];for(const
 const fmt=t=>new Date(t).toLocaleDateString('es-CO',{day:'numeric',month:'long',year:'numeric'})+', '+new Date(t).toLocaleTimeString('es-CO',{hour:'numeric',minute:'2-digit'});
 const pad=n=>String(n).padStart(4,'0');
 async function loadAll(){await loadCfg();if(!cfg.primerUso){try{await saveCfgDb({...cfg,primerUso:new Date().toISOString()})}catch(e){}}rBk();iniVend();P=await all('productos','nombre');idx();C=await all('clientes','nombre');H=[];$('#imp').hidden=P.length>0;$('#cls').innerHTML=C.map(c=>`<option value="${esc(c.nombre)}">`).join('');rRes();rCart();rCat();rCli();rHis();loadTop()}
-async function start(){$('#spl').hidden=true;$('#lg').hidden=true;$('#rsx').hidden=true;$('#app').hidden=false;const{data}=await sb.auth.getUser();$('#who').textContent=data&&data.user?'Sesión: '+data.user.email:'';await loadAllSafe();checkVer()}
+async function start(){$('#spl').hidden=true;$('#lg').hidden=true;$('#rsx').hidden=true;$('#app').hidden=false;const{data}=await sb.auth.getUser();$('#who').textContent=data&&data.user?'Sesión: '+data.user.email:'';await loadAllSafe();showHome();checkVer()}
 function showLogin(){$('#spl').hidden=true;$('#app').hidden=true;$('#rsx').hidden=true;$('#lg').hidden=false;try{const e=localStorage.getItem('lastEmail');if(e&&!$('#em').value){$('#em').value=e;$('#pw').focus()}}catch(x){}}
 const TT={venta:'Recibo',cat:'Catálogo',cli:'Clientes',his:'Historial',cot:'Cotizaciones',aju:'Ajustes'};
-function show(v){['venta','cat','cli','his','cot','aju'].forEach(k=>{$('#v-'+k).hidden=k!==v});$('#more-menu').hidden=true;$('#nav [data-v="mas"]').setAttribute('aria-expanded','false');document.querySelectorAll('#nav button').forEach(b=>{if(b.dataset.v!=='mas')b.setAttribute('aria-current',String(b.dataset.v===v));else b.setAttribute('aria-current',String(!['venta','cat','cli'].includes(v)))});$('#ttl').textContent=TT[v]||'Negocio';if(v==='aju')fillAju();if(v==='his')go(loadHis);if(v==='cli')loadCST().catch(()=>{});if(v==='cot')go(loadCotizaciones);window.scrollTo(0,0)}
+function showHome(){$('#home').hidden=false;['venta','cat','cli','his','cot','aju','neg'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=true});$('#more-menu').hidden=true;$('#ttl').textContent='Drosalud';window.scrollTo(0,0)}
+ function show(v){$('#home').hidden=true;['venta','cat','cli','his','cot','aju','neg'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=k!==v});$('#more-menu').hidden=true;$('#nav [data-v="mas"]').setAttribute('aria-expanded','false');document.querySelectorAll('#nav button').forEach(b=>{if(b.dataset.v!=='mas')b.setAttribute('aria-current',String(b.dataset.v===v));else b.setAttribute('aria-current',String(!['venta','cat','cli'].includes(v)))});$('#ttl').textContent=TT[v]||'Negocio';if(v==='aju')fillAju();if(v==='his')go(loadHis);if(v==='cli')loadCST().catch(()=>{});if(v==='cot')go(loadCotizaciones);window.scrollTo(0,0)}
 function rRes(){rTop();const q=$('#q').value.trim(),b=$('#res');if(!q){b.innerHTML='';return}const a=find(q,20);b.innerHTML=a.length?a.map(p=>`<button class="row" data-add="${p.id}"><span class="nm">${esc(p.nombre)}<small>${esc(p.laboratorio)}</small></span><span class="pr">${money(pv(p))}<small>compra ${money(p.precio_compra)}</small></span></button>`).join(''):'<p class="mut">No hay resultados. Agrégalo en Catálogo.</p>'}
 function calc(){const st=cart.reduce((s,i)=>s+i.p*i.q,0),g=cart.reduce((s,i)=>s+(i.p-i.c)*i.q,0),ds=Math.max(0,+$('#dsc').value||0),dm=Math.max(0,+$('#dom').value||0),mens=Math.max(0,+$('#mens').value||0);return{st,ds,dm,mens,total:Math.max(0,st-ds+dm),gan:g-ds+dm-mens}}
 function rCart(){const b=$('#cart');b.innerHTML=cart.length?cart.map((i,k)=>`<div class="item"><div class="top"><span>${esc(i.n)}</span><button class="rm" data-rm="${k}" aria-label="Quitar">✕</button></div><div class="ctl"><div class="step"><button data-dec="${k}" aria-label="Menos">−</button><span>${i.q} ${i.q===1?'unidad':'unidades'}</span><button data-inc="${k}" aria-label="Más">+</button></div><label class="pp">$<input type="number" inputmode="numeric" data-pr="${k}" value="${i.p}" aria-label="Precio de venta por unidad"></label><span class="lt">${money(i.p*i.q)}</span></div><small class="mut">${esc(etiquetaCarrito(i))} · Compra ${money(i.c)} c/u · ganas ${money((i.p-i.c)*i.q)}${warnM(i.p,i.c)}</small></div>`).join(''):'<p class="mut">Busca un producto y tócalo para agregarlo.</p>';const k=calc(),n=cart.reduce((s,i)=>s+i.q,0);$('#tot').textContent=money(k.total);$('#gn').textContent=cart.length?'Ganancia estimada (productos + domicilio − mensajero − descuento): '+money(k.gan):'';const e=$('#bg');e.hidden=!n;e.textContent=n;rVue(k)}
@@ -607,6 +630,7 @@ if(id==='rf')return loadAllSafe();
 if(id==='out')return go(async()=>{await sb.auth.signOut();P=[];C=[];H=[];cart=[];showLogin()});
 });
 $('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeM()});
+ $('#home').addEventListener('click',e=>{const b=e.target.closest('[data-home]');if(!b)return;const v=b.dataset.home;if(v==='neg'){const target=document.querySelector('#nav [data-v="neg"]');if(target)target.click();else{showHome();toast('Abre Gestión del negocio desde el menú Más.')}return}show(v)});
 $('#coq').addEventListener('input',renderCotizaciones);
 $('#q').addEventListener('input',rRes);
 $('#q2').addEventListener('input',rCat);
