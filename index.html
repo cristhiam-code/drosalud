@@ -100,6 +100,51 @@ nav button[aria-current="true"]{color:var(--pri);font-weight:800;box-shadow:inse
  .step span{font-size:.86rem}
 }
 
+
+/* Rediseño visual del menú principal: solo presentación, sin cambiar flujos. */
+#app > header.app-header{
+  max-width:1120px;margin:22px auto 0;padding:18px 24px;
+  background:var(--card);border:1px solid var(--line);border-radius:18px;
+  box-shadow:0 5px 22px rgba(18,38,31,.045);
+}
+#app > header.app-header h1{font-size:1.35rem;letter-spacing:-.035em;color:#142b43}
+#app > header.app-header #back-home{border-radius:11px}
+#home{max-width:1120px;padding:34px 24px 48px}
+.home-intro{font-size:0;margin:0 0 24px;color:#718096}
+.home-intro:before{content:"PANEL PRINCIPAL";display:block;font-size:.72rem;font-weight:800;letter-spacing:.13em;color:#2563a6;margin-bottom:7px}
+.home-intro:after{content:"Todo lo que necesitas para administrar tu droguería.";display:block;font-size:1rem;font-weight:400;letter-spacing:0;color:#718096}
+.home-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.home-tile{
+  position:relative;min-height:158px;padding:22px;border-radius:18px;
+  border:1px solid #e4eaf1;box-shadow:0 4px 16px rgba(25,48,75,.045);
+  background:linear-gradient(145deg,#fff 0%,#fbfdff 100%);
+  gap:11px;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;
+}
+.home-tile:hover{transform:translateY(-3px);border-color:#b9d2ec;box-shadow:0 12px 28px rgba(35,83,132,.10)}
+.home-tile .home-icon{width:48px;height:48px;border-radius:15px;background:#eaf3fc;color:#2366a5}
+.home-tile strong{font-size:1.02rem;letter-spacing:-.015em;color:#1d3148}
+.home-tile small{font-size:.84rem;line-height:1.4;color:#718096}
+.home-tile[data-home="venta"]{
+  grid-column:1/-1;min-height:116px;flex-direction:row;align-items:center;
+  justify-content:flex-start;padding:22px 26px;
+  background:linear-gradient(105deg,#155b9b 0%,#2479bd 100%);
+  border-color:#155b9b;box-shadow:0 10px 24px rgba(24,91,151,.18);color:#fff;
+}
+.home-tile[data-home="venta"] .home-icon{background:rgba(255,255,255,.16);color:#fff;width:54px;height:54px}
+.home-tile[data-home="venta"] strong{color:#fff;font-size:1.12rem}
+.home-tile[data-home="venta"] small{color:rgba(255,255,255,.82)}
+.home-tile[data-home="venta"]:after{content:"›";margin-left:auto;font-size:2rem;font-weight:400;color:#fff;opacity:.9}
+@media(max-width:760px){
+ #app > header.app-header{margin:12px 12px 0;padding:15px 16px;border-radius:15px}
+ #home{padding:26px 16px 36px}
+ .home-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+ .home-tile{min-height:142px;padding:16px;border-radius:16px}
+ .home-tile[data-home="venta"]{min-height:104px;padding:17px}
+}
+@media(max-width:360px){
+ .home-grid{gap:9px}.home-tile{padding:13px;min-height:132px}
+ .home-tile strong{font-size:.94rem}.home-tile small{font-size:.78rem}
+}
 </style>
 <style>
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:24px}
