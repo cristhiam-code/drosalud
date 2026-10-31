@@ -21,7 +21,7 @@ html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font:400 16px/1.4 Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;padding-bottom:24px}
 h1{font-size:1.5rem;font-weight:800;margin:0;letter-spacing:-.01em}
 h2{font-size:1rem;font-weight:800;margin:20px 0 8px}
-header{padding:16px 16px 4px}
+header{padding:16px 16px 4px}.app-header{display:flex;align-items:center;gap:14px}.app-header h1{flex:1}.app-header #back-home{border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--pri);padding:9px 12px;font:600 .9rem Figtree,system-ui,sans-serif;cursor:pointer}
 main{padding:8px 16px;max-width:640px;margin:0 auto}
 [hidden]{display:none!important}
 input,select,textarea,button{font:inherit;color:inherit}
@@ -195,7 +195,7 @@ nav button{font-size:.78rem}
  </div>
 </section>
 <div id="app" hidden>
-<header><h1 id="ttl">Drosalud</h1></header>
+<header class="app-header"><button id="back-home" type="button" aria-label="Volver al inicio" hidden>← Inicio</button><h1 id="ttl">Drosalud</h1></header>
 <div id="net" hidden></div><div id="upd" hidden></div><div id="bkb" hidden></div>
  <section id="home" aria-label="Menú principal">
   <p class="home-intro">Accede rápidamente a las herramientas de tu negocio.</p>
@@ -407,8 +407,8 @@ async function loadAll(){await loadCfg();if(!cfg.primerUso){try{await saveCfgDb(
 async function start(){$('#spl').hidden=true;$('#lg').hidden=true;$('#rsx').hidden=true;$('#app').hidden=false;const{data}=await sb.auth.getUser();$('#who').textContent=data&&data.user?'Sesión: '+data.user.email:'';await loadAllSafe();showHome();checkVer()}
 function showLogin(){$('#spl').hidden=true;$('#app').hidden=true;$('#rsx').hidden=true;$('#lg').hidden=false;try{const e=localStorage.getItem('lastEmail');if(e&&!$('#em').value){$('#em').value=e;$('#pw').focus()}}catch(x){}}
 const TT={venta:'Recibo',cat:'Catálogo',cli:'Clientes',his:'Historial',cot:'Cotizaciones',aju:'Ajustes'};
-function showHome(){$('#home').hidden=false;['venta','cat','cli','his','cot','aju','neg'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=true});$('#more-menu').hidden=true;$('#ttl').textContent='Drosalud';window.scrollTo(0,0)}
- function show(v){$('#home').hidden=true;['venta','cat','cli','his','cot','aju','neg'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=k!==v});$('#more-menu').hidden=true;$('#nav [data-v="mas"]').setAttribute('aria-expanded','false');document.querySelectorAll('#nav button').forEach(b=>{if(b.dataset.v!=='mas')b.setAttribute('aria-current',String(b.dataset.v===v));else b.setAttribute('aria-current',String(!['venta','cat','cli'].includes(v)))});$('#ttl').textContent=TT[v]||'Negocio';if(v==='aju')fillAju();if(v==='his')go(loadHis);if(v==='cli')loadCST().catch(()=>{});if(v==='cot')go(loadCotizaciones);window.scrollTo(0,0)}
+function showHome(){$('#back-home').hidden=true;$('#home').hidden=false;['venta','cat','cli','his','cot','aju','neg'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=true});$('#more-menu').hidden=true;$('#ttl').textContent='Drosalud';window.scrollTo(0,0)}
+ function show(v){$('#back-home').hidden=false;$('#home').hidden=true;['venta','cat','cli','his','cot','aju','neg'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=k!==v});$('#more-menu').hidden=true;$('#nav [data-v="mas"]').setAttribute('aria-expanded','false');document.querySelectorAll('#nav button').forEach(b=>{if(b.dataset.v!=='mas')b.setAttribute('aria-current',String(b.dataset.v===v));else b.setAttribute('aria-current',String(!['venta','cat','cli'].includes(v)))});$('#ttl').textContent=TT[v]||'Negocio';if(v==='aju')fillAju();if(v==='his')go(loadHis);if(v==='cli')loadCST().catch(()=>{});if(v==='cot')go(loadCotizaciones);window.scrollTo(0,0)}
 function rRes(){rTop();const q=$('#q').value.trim(),b=$('#res');if(!q){b.innerHTML='';return}const a=find(q,20);b.innerHTML=a.length?a.map(p=>`<button class="row" data-add="${p.id}"><span class="nm">${esc(p.nombre)}<small>${esc(p.laboratorio)}</small></span><span class="pr">${money(pv(p))}<small>compra ${money(p.precio_compra)}</small></span></button>`).join(''):'<p class="mut">No hay resultados. Agrégalo en Catálogo.</p>'}
 function calc(){const st=cart.reduce((s,i)=>s+i.p*i.q,0),g=cart.reduce((s,i)=>s+(i.p-i.c)*i.q,0),ds=Math.max(0,+$('#dsc').value||0),dm=Math.max(0,+$('#dom').value||0),mens=Math.max(0,+$('#mens').value||0);return{st,ds,dm,mens,total:Math.max(0,st-ds+dm),gan:g-ds+dm-mens}}
 function rCart(){const b=$('#cart');b.innerHTML=cart.length?cart.map((i,k)=>`<div class="item"><div class="top"><span>${esc(i.n)}</span><button class="rm" data-rm="${k}" aria-label="Quitar">✕</button></div><div class="ctl"><div class="step"><button data-dec="${k}" aria-label="Menos">−</button><span>${i.q} ${i.q===1?'unidad':'unidades'}</span><button data-inc="${k}" aria-label="Más">+</button></div><label class="pp">$<input type="number" inputmode="numeric" data-pr="${k}" value="${i.p}" aria-label="Precio de venta por unidad"></label><span class="lt">${money(i.p*i.q)}</span></div><small class="mut">${esc(etiquetaCarrito(i))} · Compra ${money(i.c)} c/u · ganas ${money((i.p-i.c)*i.q)}${warnM(i.p,i.c)}</small></div>`).join(''):'<p class="mut">Busca un producto y tócalo para agregarlo.</p>';const k=calc(),n=cart.reduce((s,i)=>s+i.q,0);$('#tot').textContent=money(k.total);$('#gn').textContent=cart.length?'Ganancia estimada (productos + domicilio − mensajero − descuento): '+money(k.gan):'';const e=$('#bg');e.hidden=!n;e.textContent=n;rVue(k)}
@@ -630,6 +630,7 @@ if(id==='rf')return loadAllSafe();
 if(id==='out')return go(async()=>{await sb.auth.signOut();P=[];C=[];H=[];cart=[];showLogin()});
 });
 $('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeM()});
+$('#back-home').addEventListener('click',showHome);
  $('#home').addEventListener('click',e=>{const b=e.target.closest('[data-home]');if(!b)return;const v=b.dataset.home;if(v==='neg'){const target=document.querySelector('#more-menu [data-v="neg"]');if(target)target.click();return}show(v)});
 $('#coq').addEventListener('input',renderCotizaciones);
 $('#q').addEventListener('input',rRes);
