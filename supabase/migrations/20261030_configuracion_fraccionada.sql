@@ -2,7 +2,14 @@
 -- Los precios de productos siguen guardándose por empaque completo.
 ALTER TABLE public.productos
   ADD COLUMN IF NOT EXISTS unidades_por_caja integer NOT NULL DEFAULT 1,
-  ADD COLUMN IF NOT EXISTS unidades_por_venta integer NOT NULL DEFAULT 10;
+  ADD COLUMN IF NOT EXISTS unidades_por_venta integer NOT NULL DEFAULT 1;
+
+-- Los productos que ya estaban marcados como fraccionables usaban grupos de 10.
+UPDATE public.productos
+SET unidades_por_caja = 10, unidades_por_venta = 10
+WHERE fraccionable = true
+  AND unidades_por_caja = 1
+  AND unidades_por_venta = 1;
 
 ALTER TABLE public.productos
   DROP CONSTRAINT IF EXISTS productos_unidades_por_caja_check,
