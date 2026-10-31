@@ -72,6 +72,24 @@ nav button[aria-current="true"]{color:var(--pri);font-weight:800;box-shadow:inse
 .sum div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:.85rem;color:var(--mut)}
 .sum b{display:block;font-size:1.25rem;color:var(--ink)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* Ajustes de uso en pantallas móviles. No modifica la plantilla de factura. */
+@media (max-width:420px){
+ .item{padding:10px}
+ .ctl{display:grid;grid-template-columns:minmax(0,1fr) minmax(104px,.85fr);gap:8px}
+ .step{grid-column:1;min-width:0}
+ .step button{width:36px;min-width:36px;height:42px}
+ .step span{flex:1;min-width:0;white-space:nowrap;font-size:.92rem}
+ .pp{grid-column:2;min-width:0;width:100%;font-size:.9rem}
+ .pp input{width:100%;min-width:0;padding:9px 6px;font-size:16px}
+ .lt{grid-column:2;justify-self:end;min-width:0;width:100%;font-size:1rem}
+}
+@media (max-width:350px){
+ .ctl{grid-template-columns:minmax(0,1fr) minmax(94px,.8fr);gap:6px}
+ .step button{width:32px;min-width:32px}
+ .step span{font-size:.86rem}
+}
+
 </style>
 <style>
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:24px}
