@@ -630,7 +630,7 @@ if(id==='rf')return loadAllSafe();
 if(id==='out')return go(async()=>{await sb.auth.signOut();P=[];C=[];H=[];cart=[];showLogin()});
 });
 $('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeM()});
- $('#home').addEventListener('click',e=>{const b=e.target.closest('[data-home]');if(!b)return;const v=b.dataset.home;if(v==='neg'){const target=document.querySelector('#nav [data-v="neg"]');if(target)target.click();else{showHome();toast('Abre Gestión del negocio desde el menú Más.')}return}show(v)});
+ $('#home').addEventListener('click',e=>{const b=e.target.closest('[data-home]');if(!b)return;const v=b.dataset.home;if(v==='neg'){const target=document.querySelector('#more-menu [data-v="neg"]');if(target)target.click();return}show(v)});
 $('#coq').addEventListener('input',renderCotizaciones);
 $('#q').addEventListener('input',rRes);
 $('#q2').addEventListener('input',rCat);
