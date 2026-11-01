@@ -23,7 +23,7 @@ alter table public.usuarios_drosalud enable row level security;
 -- Limpiar TODAS las políticas anteriores de las tablas protegidas.
 -- Las políticas RLS permisivas se combinan con OR: dejar una antigua activa
 -- podría anular las restricciones nuevas.
-do $
+do $$
 declare p record;
 begin
   for p in
@@ -38,7 +38,8 @@ begin
   loop
     execute format('drop policy %I on %I.%I', p.policyname, p.schemaname, p.tablename);
   end loop;
-end $;
+end;
+$$;
 
 -- Comprueba que la cuenta está autorizada para usar Drosalud.
 create or replace function public.es_usuario_drosalud()
@@ -46,14 +47,14 @@ returns boolean
 language sql
 stable
 security definer
-set search_path = ''
+as $$
 as $
   select exists (
     select 1
     from public.usuarios_drosalud u
     where u.user_id = (select auth.uid())
       and u.activo = true
-  );
+$$;
 $;
 
 revoke all on function public.es_usuario_drosalud() from public;
