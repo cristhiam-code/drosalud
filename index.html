@@ -225,6 +225,32 @@ nav button{font-size:.78rem}
  #sheet .acts,#sheet .tkt{display:none!important}
  #sheet .print-img{display:block!important;width:72mm!important;max-width:72mm!important;height:auto!important;margin:0 auto!important}
 }
+
+/* Unificación de los controles restantes con la identidad azul de Drosalud. */
+#v-aju [data-aju-save],
+#v-aju #xlsT,
+#v-aju #rf,
+#v-neg .seg{
+  background:#eaf3fc!important;
+  color:#1d3148!important;
+}
+#v-aju [data-aju-save]{
+  background:#2366a5!important;
+  color:#fff!important;
+}
+#v-aju .aju-ico{
+  background:#eaf3fc!important;
+  color:#2366a5!important;
+}
+#v-neg .seg button[aria-pressed="true"]{
+  background:#2366a5!important;
+  color:#fff!important;
+  box-shadow:0 1px 3px rgba(35,102,165,.22)!important;
+}
+#v-neg .seg button:not([aria-pressed="true"]){
+  background:transparent!important;
+  color:#52677d!important;
+}
 </style>
 </head>
 <body>
