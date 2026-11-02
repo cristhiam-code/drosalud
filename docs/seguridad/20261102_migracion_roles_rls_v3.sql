@@ -140,7 +140,7 @@ create or replace view public.recibos_app with (security_barrier=true) as
   case when public.es_admin_drosalud() then ganancia else null end as ganancia,
   creado_en,descuento,domicilio,forma_pago,cliente_cedula,cliente_telefono,
   cliente_direccion,recibido,anulado,anulado_en,motivo_anulacion,vendedor,
-  costo_mensajero,creado_por
+  case when public.es_admin_drosalud() then costo_mensajero else null end as costo_mensajero,creado_por
  from public.recibos
  where public.es_usuario_drosalud()
   and (public.es_admin_drosalud() or creado_por=auth.uid());
@@ -227,6 +227,7 @@ begin
   v_costo:=0;
   if nullif(v_item->>'producto_id','') is not null then
    select * into v_prod from public.productos where id=(v_item->>'producto_id')::uuid;
+   if not found then raise exception 'Producto inexistente'; end if;
    v_costo:=case when v_prod.fraccionable then v_prod.precio_compra/greatest(v_prod.unidades_por_caja,1) else v_prod.precio_compra end;
   end if;
   insert into public.recibo_items(recibo_id,producto_id,nombre,cantidad,precio_compra,precio_venta,presentacion,unidades_por_presentacion)
