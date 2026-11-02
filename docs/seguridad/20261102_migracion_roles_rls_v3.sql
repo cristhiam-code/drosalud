@@ -198,7 +198,7 @@ declare
  v_total numeric;
 begin
  if not public.es_usuario_drosalud() then raise exception 'Usuario no autorizado'; end if;
- if jsonb_typeof(p_items)<>'array' or jsonb_array_length(p_items)=0 then raise exception 'La venta no tiene productos'; end if;
+ if p_items is null or jsonb_typeof(p_items)<>'array' or jsonb_array_length(p_items)=0 then raise exception 'La venta no tiene productos'; end if;
  for v_item in select value from jsonb_array_elements(p_items) loop
   if coalesce((v_item->>'cantidad')::numeric,0)<=0
    or coalesce((v_item->>'cantidad')::numeric,0)<>trunc((v_item->>'cantidad')::numeric)
@@ -250,7 +250,7 @@ declare
  v_dom numeric:=greatest(coalesce((p_cotizacion->>'domicilio')::numeric,0),0);
 begin
  if not public.es_usuario_drosalud() then raise exception 'Usuario no autorizado'; end if;
- if jsonb_typeof(p_items)<>'array' or jsonb_array_length(p_items)=0 then raise exception 'La cotización no tiene productos'; end if;
+ if p_items is null or jsonb_typeof(p_items)<>'array' or jsonb_array_length(p_items)=0 then raise exception 'La cotización no tiene productos'; end if;
  for v_item in select value from jsonb_array_elements(p_items) loop
   if coalesce((v_item->>'cantidad')::numeric,0)<=0
    or coalesce((v_item->>'cantidad')::numeric,0)<>trunc((v_item->>'cantidad')::numeric)
@@ -297,8 +297,9 @@ grant execute on function public.registrar_venta_drosalud(jsonb,jsonb),
  public.crear_cotizacion_venta_drosalud(jsonb,jsonb),
  public.actualizar_precio_venta_drosalud(uuid,numeric) to authenticated;
 
--- No exponer agregados de ventas/costos por la función antigua a vendedores.
+-- La función existente es SECURITY INVOKER; RLS limita sus filas a admin.
 revoke all on function public.mas_vendidos(integer) from public,anon,authenticated;
+grant execute on function public.mas_vendidos(integer) to authenticated;
 
 -- El trigger trg_log_precio y su función se conservan: solo admin actualiza precio_compra.
 
