@@ -722,7 +722,7 @@ if(d.dec!==undefined){const i=cart[d.dec],step=i.unidadesPorPresentacion||1;if(i
 if(d.rm!==undefined){cart.splice(d.rm,1);return rCart()}
 if(d.ed)return editP(d.ed);
 if(d.ec)return editC(d.ec);
-if(d.rc!==undefined){const r=H.find(x=>x.id===d.rc);return go(async()=>{const{data,error}=await sb.from('recibo_items').select('*').eq('recibo_id',r.id).order('id');if(error)throw error;showRec(r,data)})}
+if(d.rc!==undefined){const r=H.find(x=>x.id===d.rc);return go(async()=>{const{data,error}=await sb.from('recibo_items_app').select('*').eq('recibo_id',r.id).order('id');if(error)throw error;showRec(r,data)})}
 if(id==='newp')return editP('');
 if(id==='newc')return editC('');
 if(id==='clr'){cart=[];['#cli','#tel','#dircli','#ced','#dsc','#dom','#mens','#rec'].forEach(s=>{$(s).value=''});return rCart()}
@@ -859,7 +859,7 @@ showLogin();
   async function itemsForReceipt(receiptId,selected){
    item.innerHTML='<option value="">Cargando líneas…</option>';
    if(!receiptId){item.innerHTML='<option value="">Selecciona primero un recibo</option>';return}
-   const {data,error}=await sb.from('recibo_items').select('id,nombre,cantidad,precio_venta').eq('recibo_id',receiptId).order('id');
+   const {data,error}=await sb.from('recibo_items_app').select('id,nombre,cantidad,precio_venta').eq('recibo_id',receiptId).order('id');
    if(error)throw error;
    item.innerHTML='<option value="">No actualizar costo de una línea</option>'+(data||[]).map(x=>'<option value="'+x.id+'">'+escN(x.nombre)+' × '+x.cantidad+' · '+moneyN(x.precio_venta)+'</option>').join('');
    if(selected)item.value=selected;
