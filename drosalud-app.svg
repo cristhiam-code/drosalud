@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#087F70"/><stop offset="1" stop-color="#155A86"/></linearGradient></defs>
+<rect width="512" height="512" rx="112" fill="url(#g)"/>
+<path d="M115 145h105c88 0 142 43 142 111S308 367 220 367H115V145zm75 64v94h29c45 0 69-16 69-47s-24-47-69-47h-29z" fill="#fff"/>
+<path d="M359 209c-16-12-34-18-53-18-17 0-27 6-27 16 0 11 12 15 42 23 43 11 65 29 65 67 0 47-36 75-91 75-34 0-66-10-91-30l31-51c19 15 39 23 60 23 17 0 27-6 27-16 0-11-11-16-39-23-48-12-68-30-68-68 0-44 34-73 88-73 29 0 56 8 78 23l-22 52z" fill="#fff" opacity=".94"/>
+<text x="256" y="435" text-anchor="middle" font-family="Arial,sans-serif" font-size="38" font-weight="700" letter-spacing="5" fill="#fff">DROSALUD</text>
+</svg>
