@@ -1,0 +1,5 @@
+-- ARCHIVO RETIRADO: NO EJECUTAR.
+-- Esta propuesta v2 fue reemplazada por:
+-- docs/seguridad/20261102_migracion_roles_rls_v3.sql
+-- La v3 corrige vistas, columnas sensibles, lectura de costos y cálculos de cotización.
+-- Ejecutar únicamente la v3 en un entorno de pruebas tras respaldo.

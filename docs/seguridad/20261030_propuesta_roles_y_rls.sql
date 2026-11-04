@@ -1,0 +1,4 @@
+-- ARCHIVO RETIRADO: NO EJECUTAR.
+-- Esta propuesta inicial fue reemplazada por:
+-- docs/seguridad/20261102_migracion_roles_rls_v3.sql
+-- Utilizar únicamente la migración v3, primero en un entorno de pruebas.
