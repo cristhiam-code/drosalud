@@ -55,8 +55,10 @@ security definer
 set search_path = ''
 as $$
 begin
-  if not public.es_admin_drosalud() then
-    raise exception 'Solo el administrador puede anonimizar clientes';
+  -- Accion irreversible: exige administrador Y sesion verificada en dos pasos (aal2)
+  if not public.es_admin_drosalud()
+     or coalesce(auth.jwt() ->> 'aal', 'aal1') <> 'aal2' then
+    raise exception 'Solo el administrador con verificación en dos pasos puede anonimizar clientes';
   end if;
 
   update public.clientes
