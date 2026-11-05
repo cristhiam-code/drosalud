@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Catálogo y recibos</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0E6B55">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="logo.png">
+<link rel="icon" type="image/svg+xml" href="drosalud-app.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F2F6F3;--card:#FFFFFF;--ink:#12261F;--mut:#65766D;--line:#DCE7E1;--pri:#0E6B55;--pri-ink:#FFFFFF;--soft:#E7F0EB;--gain:#16845D;--bad:#C62828;color-scheme:light;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+/* Paleta clara inicial; los ajustes guardados pueden personalizarla. */
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font:400 16px/1.4 Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;padding-bottom:24px}
+h1{font-size:1.5rem;font-weight:800;margin:0;letter-spacing:-.01em}
+h2{font-size:1rem;font-weight:800;margin:20px 0 8px}
+header{padding:16px 16px 4px}.app-header{display:flex;align-items:center;gap:14px}.app-header h1{flex:1}.app-header #back-home{border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--pri);padding:9px 12px;font:600 .9rem Figtree,system-ui,sans-serif;cursor:pointer}
+main{padding:8px 16px;max-width:640px;margin:0 auto}
+[hidden]{display:none!important}
+input,select,textarea,button{font:inherit;color:inherit}
+input,select,textarea{width:100%;padding:12px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);margin:4px 0 10px}
+input:focus,select:focus,textarea:focus,button:focus-visible,a:focus-visible{outline:2px solid var(--pri);outline-offset:1px}
+label{font-weight:600;font-size:.9rem;color:var(--mut)}
+button{cursor:pointer;border:0;background:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:13px 16px;border-radius:12px;background:var(--pri);color:var(--pri-ink);font-weight:800;text-decoration:none;min-height:48px}
+.btn.alt{background:var(--soft);color:var(--ink)}
+.btn.bad{background:none;color:var(--bad);border:1.5px solid var(--bad)}
+.btn.full{width:100%}
+.mut{color:var(--mut)}small,.sm{font-size:.82rem}
+.row{display:flex;width:100%;justify-content:space-between;align-items:center;gap:12px;text-align:left;padding:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:8px}
+.row .nm{display:flex;flex-direction:column;font-weight:600;min-width:0}
+.row .nm small{color:var(--mut);font-weight:400}
+.row .pr{font-weight:800;text-align:right;white-space:nowrap}
+.row .pr small{display:block;color:var(--mut);font-weight:400}
+.item{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px}
+.item .top{display:flex;justify-content:space-between;gap:8px;font-weight:600}
+.ctl{display:flex;align-items:center;gap:10px;margin-top:8px}
+.step{display:flex;align-items:center;border:1.5px solid var(--line);border-radius:10px}
+.step button{width:44px;height:44px;font-size:1.3rem;font-weight:800}
+.step span{min-width:28px;text-align:center;font-weight:800}
+.pp{display:flex;align-items:center;gap:4px;flex:1;margin:0}.pp input{margin:0;padding:10px}
+.lt{font-weight:800;min-width:84px;text-align:right}
+.rm{width:36px;height:36px;color:var(--mut);font-size:1.1rem}
+.tot{display:flex;justify-content:space-between;align-items:baseline;font-size:1.6rem;font-weight:800;margin:14px 0 2px}
+.gain{color:var(--gain);font-weight:600}
+.acts{display:grid;gap:10px;margin-top:12px}
+nav{display:none!important}
+#home{max-width:920px;margin:0 auto;padding:18px 16px 32px}
+.home-intro{margin:0 0 18px;color:var(--mut);font-size:.95rem}
+.home-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.home-tile{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:10px;min-height:142px;padding:18px;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:18px;color:var(--ink);box-shadow:0 3px 12px rgba(15,50,35,.05);transition:transform .15s,border-color .15s}
+.home-tile:active{transform:scale(.98)}.home-tile:focus-visible{outline:3px solid var(--pri);outline-offset:2px}
+.home-icon{display:grid;place-items:center;width:48px;height:48px;border-radius:14px;background:var(--soft);color:var(--pri)}.home-icon svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block}
+.home-tile strong{font-size:1rem;font-weight:800}.home-tile small{color:var(--mut);font-size:.82rem}
+@media(min-width:760px){header{max-width:920px;margin:0 auto;padding:24px 16px 4px}}
+@media(max-width:620px){.home-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.home-tile{min-height:132px;padding:14px;border-radius:15px}}
+@media(max-width:350px){.home-tile{padding:12px;min-height:122px}.home-icon{width:42px;height:42px}}
+nav button{flex:1;min-width:0;padding:12px 4px;font-weight:600;color:var(--mut);position:relative}
+nav button[aria-current="true"]{color:var(--pri);font-weight:800;box-shadow:inset 0 3px 0 var(--pri)}
+#more-menu{position:fixed;right:12px;bottom:calc(62px + env(safe-area-inset-bottom,0px));width:min(230px,calc(100vw - 24px));padding:8px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.18);z-index:8}
+#more-menu button{display:block;width:100%;padding:13px 12px;text-align:left;border-radius:9px;font-weight:600}
+#more-menu button:active,#more-menu button:focus-visible{background:var(--soft);color:var(--pri)}
+.bdg{background:var(--pri);color:var(--pri-ink);border-radius:99px;font-size:.72rem;padding:1px 7px;margin-left:4px}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:10;overflow-y:auto}
+#sheet{background:var(--bg);width:100%;max-width:640px;border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:94%;overflow-y:auto}
+.tkt{background:#FFFEF8;color:#1D1D1B;font-family:ui-monospace,"Courier New",monospace;font-size:.9rem;padding:22px 18px 30px;margin:0 0 14px;-webkit-mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) 50%/14px 100%;mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) 50%/14px 100%}
+.tkt h3{margin:0;text-align:center;font-size:1.05rem;text-transform:none}
+.tkt .c{text-align:center}
+.tkt hr{border:0;border-top:1.5px dashed #1D1D1B;margin:10px 0}
+.tkt .l{display:flex;justify-content:space-between;gap:10px;margin:4px 0}
+.tkt .l span:last-child{white-space:nowrap}
+.tkt .t{font-weight:700;font-size:1.15rem}
+#toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:99px;font-weight:600;z-index:20}
+.sum{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.sum div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:.85rem;color:var(--mut)}
+.sum b{display:block;font-size:1.25rem;color:var(--ink)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* Ajustes de uso en pantallas móviles. No modifica la plantilla de factura. */
+@media (max-width:420px){
+ .item{padding:10px}
+ .ctl{display:grid;grid-template-columns:minmax(0,1fr) minmax(104px,.85fr);gap:8px}
+ .step{grid-column:1;min-width:0}
+ .step button{width:36px;min-width:36px;height:42px}
+ .step span{flex:1;min-width:0;white-space:nowrap;font-size:.92rem}
+ .pp{grid-column:2;min-width:0;width:100%;font-size:.9rem}
+ .pp input{width:100%;min-width:0;padding:9px 6px;font-size:16px}
+ .lt{grid-column:2;justify-self:end;min-width:0;width:100%;font-size:1rem}
+}
+@media (max-width:350px){
+ .ctl{grid-template-columns:minmax(0,1fr) minmax(94px,.8fr);gap:6px}
+ .step button{width:32px;min-width:32px}
+ .step span{font-size:.86rem}
+}
+
+
+/* Rediseño visual del menú principal: solo presentación, sin cambiar flujos. */
+#app > header.app-header{
+  max-width:1120px;margin:22px auto 0;padding:18px 24px;
+  background:var(--card);border:1px solid var(--line);border-radius:18px;
+  box-shadow:0 5px 22px rgba(18,38,31,.045);
+}
+#app > header.app-header h1{font-size:1.35rem;letter-spacing:-.035em;color:#142b43}
+#app > header.app-header #back-home{border-radius:11px}
+#home{max-width:1120px;padding:34px 24px 48px}
+.home-intro{font-size:0;margin:0 0 24px;color:#718096}
+.home-intro:before{content:"PANEL PRINCIPAL";display:block;font-size:.72rem;font-weight:800;letter-spacing:.13em;color:#2563a6;margin-bottom:7px}
+.home-intro:after{content:"Todo lo que necesitas para administrar tu droguería.";display:block;font-size:1rem;font-weight:400;letter-spacing:0;color:#718096}
+.home-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.home-tile{
+  position:relative;min-height:158px;padding:22px;border-radius:18px;
+  border:1px solid #e4eaf1;box-shadow:0 4px 16px rgba(25,48,75,.045);
+  background:linear-gradient(145deg,#fff 0%,#fbfdff 100%);
+  gap:11px;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;
+}
+.home-tile:hover{transform:translateY(-3px);border-color:#b9d2ec;box-shadow:0 12px 28px rgba(35,83,132,.10)}
+.home-tile .home-icon{width:48px;height:48px;border-radius:15px;background:#eaf3fc;color:#2366a5}
+.home-tile strong{font-size:1.02rem;letter-spacing:-.015em;color:#1d3148}
+.home-tile small{font-size:.84rem;line-height:1.4;color:#718096}
+.home-tile[data-home="venta"]{
+  grid-column:1/-1;min-height:116px;flex-direction:row;align-items:center;
+  justify-content:flex-start;padding:22px 26px;
+  background:linear-gradient(105deg,#155b9b 0%,#2479bd 100%);
+  border-color:#155b9b;box-shadow:0 10px 24px rgba(24,91,151,.18);color:#fff;
+}
+.home-tile[data-home="venta"] .home-icon{background:rgba(255,255,255,.16);color:#fff;width:54px;height:54px}
+.home-tile[data-home="venta"] strong{color:#fff;font-size:1.12rem}
+.home-tile[data-home="venta"] small{color:rgba(255,255,255,.82)}
+.home-tile[data-home="venta"]:after{content:"›";margin-left:auto;font-size:2rem;font-weight:400;color:#fff;opacity:.9}
+@media(max-width:760px){
+ #app > header.app-header{margin:12px 12px 0;padding:15px 16px;border-radius:15px}
+ #home{padding:26px 16px 36px}
+ .home-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+ .home-tile{min-height:142px;padding:16px;border-radius:16px}
+ .home-tile[data-home="venta"]{min-height:104px;padding:17px}
+}
+@media(max-width:360px){
+ .home-grid{gap:9px}.home-tile{padding:13px;min-height:132px}
+ .home-tile strong{font-size:.94rem}.home-tile small{font-size:.78rem}
+}
+
+/* Ajustes organizados por secciones independientes. */
+.aju-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0 22px}
+.aju-tile{display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-height:132px;padding:17px;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 3px 12px rgba(25,48,75,.045)}
+.aju-tile:active{transform:scale(.985)}
+.aju-tile strong{font-size:1rem;font-weight:800}
+.aju-tile small{color:var(--mut);line-height:1.35}
+.aju-ico{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:var(--soft);color:var(--pri);font-size:1.25rem;font-weight:800}
+.aju-admin{border-top:1px solid var(--line);padding-top:8px;margin-top:18px}
+.aju-admin h2{margin-top:8px}
+.aju-page{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
+.aju-page h2{margin-top:0}
+.aju-save{margin-top:8px}
+@media(min-width:700px){.aju-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+</style>
+<style>
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:24px}
+#lg{max-width:420px;margin:0 auto;padding:40px 16px}
+#imp{background:var(--soft);border-radius:12px;padding:12px;margin:8px 16px;max-width:608px}
+@media(min-width:640px){#imp{margin:8px auto}}
+.g{display:grid;grid-template-columns:1fr 30px 62px 70px;gap:4px;margin:3px 0;font-size:.76rem}.g span:nth-child(n+2){text-align:right}.g.h{font-weight:700}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ck{display:flex;align-items:center;gap:10px;margin:8px 0;color:var(--ink);font-weight:400;font-size:1rem}
+.cons{border:1px solid var(--line);border-radius:12px;padding:4px 12px;margin:12px 0}
+.cons details{margin:2px 0 8px;font-size:.9rem}
+.cons summary{cursor:pointer;color:var(--mut)}
+.ck input{width:22px;height:22px;margin:0;padding:0;flex:none}
+.tkt.big{font-size:1.05rem}.tkt.big .g{font-size:.88rem;grid-template-columns:1fr 34px 70px 80px}
+#prev{margin:8px 0 16px}
+.tkt .nota{font-size:.72rem;margin-top:10px;line-height:1.3;text-wrap:balance}
+.g.gl .gn{grid-column:1/-1;text-align:left}
+.seg{display:flex;gap:6px;background:var(--soft);padding:4px;border-radius:12px;margin-bottom:12px}
+.seg button{flex:1;padding:10px;border-radius:9px;font-weight:600;color:var(--mut)}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.warn{color:var(--bad);font-weight:700}
+.warnrow{border-color:var(--bad);color:var(--bad);font-weight:600}
+.kpi{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.kpi div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:.82rem;color:var(--mut)}
+.kpi b{display:block;font-size:1.2rem;color:var(--ink)}
+.rk{display:flex;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:6px;border:1px solid var(--line);font-size:.9rem;background:var(--card)}
+.rk small{display:block;color:var(--mut)}
+.rk b{white-space:nowrap}
+.bars{display:flex;align-items:flex-end;gap:3px;height:130px;overflow-x:auto;padding:6px 4px 4px;background:var(--card);border:1px solid var(--line);border-radius:12px}
+.bars div{flex:1;min-width:16px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;font-size:.62rem;color:var(--mut)}
+.bars i{display:block;width:100%;background:var(--pri);border-radius:4px 4px 0 0;min-height:2px}
+/* Unifica estos controles con el azul del rediseño. */
+.aju-save,#neg-new-buy{background:#2366a5;color:#fff}
+.bars i{background:#2366a5}
+.tkt .lg{display:block;width:62%;max-width:240px;margin:0 auto 8px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 10px;margin:0 -2px}
+.chip{flex:none;padding:9px 13px;border-radius:99px;background:var(--soft);font-weight:600;font-size:.85rem;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:1px solid var(--line)}
+.chip small{color:var(--mut);font-weight:400}
+#net,#upd{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 14px;font-weight:600;font-size:.9rem}
+#net{background:var(--bad);color:#fff}
+#upd{background:var(--pri);color:var(--pri-ink)}
+#net button,#upd button{background:#fff;color:#111;border-radius:8px;padding:7px 12px;font-weight:700;flex:none}
+.anul .nm,.anul .pr{text-decoration:line-through;opacity:.6}
+#spl{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;background:var(--bg);z-index:40}
+.spin{width:30px;height:30px;border:3px solid var(--line);border-top-color:var(--pri);border-radius:50%;animation:sp .9s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+#lg,#rsx{max-width:440px;margin:0 auto;padding:34px 20px 28px;display:flex;flex-direction:column;align-items:center}
+#lg .brand,#rsx .brand{width:min(250px,68%);margin:6px 0 4px}
+#lg h1,#rsx h1{font-size:1.3rem;text-align:center;margin:8px 0 2px}
+#lg .sub{color:var(--mut);margin:0 0 6px;text-align:center}
+#lg .card,#rsx .card{width:100%;padding:22px;box-shadow:0 10px 30px rgba(0,0,0,.09);margin-top:18px}
+#mfa{max-width:440px;margin:0 auto;padding:34px 20px 28px;display:flex;flex-direction:column;align-items:center}
+#mfa .brand{width:min(250px,68%);margin:6px 0 4px}
+#mfa h1{font-size:1.3rem;text-align:center;margin:8px 0 2px}
+#mfa .sub{color:var(--mut);margin:0 0 6px;text-align:center}
+#mfa .card{width:100%;padding:22px;box-shadow:0 10px 30px rgba(0,0,0,.09);margin-top:18px}
+.aju-mfa{border-top:1px solid var(--line);padding-top:8px;margin-top:18px}
+.aju-mfa h2{margin-top:8px}
+.pwrow{display:flex;gap:8px;align-items:flex-start}.pwrow input{flex:1;min-width:0}.pwrow button{flex:none;margin-top:4px;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);font-weight:600;color:var(--pri);font-size:.85rem}
+.msg{min-height:1.3em;font-size:.88rem;margin:12px 0 0;text-align:center}.msg.bad{color:var(--bad)}.msg.ok{color:var(--ink)}
+.lk{background:none;color:var(--pri);font-weight:600;width:100%;padding:12px;margin-top:4px}
+.foot{color:var(--mut);font-size:.8rem;margin-top:22px;text-align:center}
+#bkb{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 14px;font-weight:600;font-size:.9rem;background:#8a5a00;color:#fff}
+#bkb button{background:#fff;color:#111;border-radius:8px;padding:7px 12px;font-weight:700;flex:none}
+.tkt .qr{display:block;width:170px;max-width:60%;margin:8px auto 0;image-rendering:pixelated}
+nav button{font-size:.78rem}
+.print-img{display:none}
+@media print{
+ @page{size:80mm 297mm;margin:0}
+ html,body{width:80mm!important;min-height:0!important;margin:0!important;padding:0!important;background:#fff!important;overflow:visible!important}
+ body>:not(#modal){display:none!important}
+ #modal{position:static!important;display:block!important;inset:auto!important;overflow:visible!important;width:80mm!important;height:auto!important;background:transparent!important}
+ #sheet{width:80mm!important;max-width:none!important;max-height:none!important;height:auto!important;margin:0!important;padding:0!important;overflow:visible!important;border-radius:0!important;background:#fff!important}
+ #sheet .acts,#sheet .tkt{display:none!important}
+ #sheet .print-img{display:block!important;width:72mm!important;max-width:72mm!important;height:auto!important;margin:0 auto!important}
+}
+
+/* Unificación de los controles restantes con la identidad azul de Drosalud. */
+#v-aju [data-aju-save],
+#v-aju #xlsT,
+#v-aju #rf,
+#v-neg .seg{
+  background:#eaf3fc!important;
+  color:#1d3148!important;
+}
+#v-aju [data-aju-save]{
+  background:#2366a5!important;
+  color:#fff!important;
+}
+#v-aju .aju-ico{
+  background:#eaf3fc!important;
+  color:#2366a5!important;
+}
+#v-neg .seg button[aria-pressed="true"]{
+  background:#2366a5!important;
+  color:#fff!important;
+  box-shadow:0 1px 3px rgba(35,102,165,.22)!important;
+}
+#v-neg .seg button:not([aria-pressed="true"]){
+  background:transparent!important;
+  color:#52677d!important;
+}
+</style>
+</head>
+<body>
+<div id="spl"><img src="logo.png" alt="Drosalud" style="width:min(240px,60%)"><div class="spin" role="status" aria-label="Cargando"></div></div>
+<section id="lg" hidden>
+ <img class="brand" src="logo.png" alt="Drosalud">
+ <h1>Acceso al sistema</h1>
+ <p class="sub">Ventas, catálogo y recibos</p>
+ <form class="card" id="lf" autocomplete="on">
+  <label for="em">Correo electrónico</label>
+  <input id="em" type="email" name="email" autocomplete="username" inputmode="email" autocapitalize="none" spellcheck="false">
+  <label for="pw">Contraseña</label>
+  <div class="pwrow"><input id="pw" type="password" name="password" autocomplete="current-password"><button type="button" id="tgp">Mostrar</button></div>
+  <button class="btn full" id="in" type="submit" style="margin-top:6px">Entrar</button>
+  <p class="msg" id="lgm" role="alert"></p>
+  <button type="button" class="lk" id="fgt">¿Olvidaste tu contraseña?</button>
+ </form>
+ <p class="foot">Acceso privado · Conexión segura · <span id="lv"></span></p>
+</section>
+<section id="mfa" hidden>
+ <img class="brand" src="logo.png" alt="Drosalud">
+ <h1>Verificación en dos pasos</h1>
+ <p class="sub">Escribe el código de 6 dígitos de tu app autenticadora</p>
+ <form class="card" id="mf" autocomplete="off">
+  <label for="mfc">Código</label>
+  <input id="mfc" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code">
+  <button class="btn full" id="mfv" type="submit" style="margin-top:6px">Verificar</button>
+  <p class="msg" id="mfm" role="alert"></p>
+  <button type="button" class="lk" id="mfx">Cancelar y cerrar sesión</button>
+ </form>
+</section>
+<section id="rsx" hidden>
+ <img class="brand" src="logo.png" alt="Drosalud">
+ <h1>Crea tu nueva contraseña</h1>
+ <div class="card">
+  <label for="np1">Nueva contraseña (mínimo 8 caracteres)</label>
+  <input id="np1" type="password" autocomplete="new-password">
+  <label for="np2">Repite la contraseña</label>
+  <input id="np2" type="password" autocomplete="new-password">
+  <button class="btn full" id="rsok" type="button">Guardar contraseña</button>
+  <p class="msg bad" id="rsm" role="alert"></p>
+ </div>
+</section>
+<div id="app" hidden>
+<header class="app-header"><button id="back-home" type="button" aria-label="Volver al inicio" hidden>← Inicio</button><h1 id="ttl">Drosalud</h1><button id="out-top" class="btn bad" type="button" style="min-height:40px;padding:8px 11px;font-size:.85rem">Salir</button></header>
+<div id="net" hidden></div><div id="upd" hidden></div><div id="bkb" hidden></div>
+ <section id="home" aria-label="Menú principal">
+  <p class="home-intro">Accede rápidamente a las herramientas de tu negocio.</p>
+  <div class="home-grid">
+   <button class="home-tile" data-home="venta"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 3h8l4 4v14H7z"/><path d="M15 3v5h4M10 13h6M10 17h6"/></svg></span><strong>Facturación POS</strong><small>Crear recibo y registrar venta</small></button>
+   <button class="home-tile" data-home="cat"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16v13H4zM8 7V4h8v3M9 12h6M9 16h6"/></svg></span><strong>Productos</strong><small>Consultar y administrar catálogo</small></button>
+   <button class="home-tile" data-home="cli"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="9" cy="8" r="3"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0M16 5.5a3 3 0 0 1 0 5.8M17 14a5 5 0 0 1 3.5 4.8"/></svg></span><strong>Clientes</strong><small>Consultar y retomar clientes</small></button>
+   <button class="home-tile" data-home="his"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 4h14v17H5zM8 8h8M8 12h8M8 16h5"/></svg></span><strong>Historial</strong><small>Ventas y reportes</small></button>
+   <button class="home-tile" data-home="cot"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 3h9l4 4v14H6zM15 3v5h4M9 13h7M9 17h5"/></svg></span><strong>Cotizaciones</strong><small>Consultar y enviar cotizaciones</small></button>
+   <button class="home-tile" data-home="neg"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 7h18v13H3zM3 7l2-4h14l2 4M9 12h6"/></svg></span><strong>Gestión del negocio</strong><small>Medicamentos por conseguir y proveedores</small></button>
+   <button class="home-tile" data-home="aju"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.8 1.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5v.1h-2.6v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1-1.8-1.8.1-.1A1.7 1.7 0 0 0 8 15a1.7 1.7 0 0 0-1.5-1H6.4v-2.6h.1A1.7 1.7 0 0 0 8 10a1.7 1.7 0 0 0-.3-1.9l-.1-.1 1.8-1.8.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5V5h2.6v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.8 1.8-.1.1A1.7 1.7 0 0 0 19.4 10a1.7 1.7 0 0 0 1.5 1h.1v2.6h-.1a1.7 1.7 0 0 0-1.5 1.4z"/></svg></span><strong>Ajustes</strong><small>Configurar Drosalud</small></button>
+  </div>
+ </section>
+<div id="imp" hidden><b>Tu catálogo está vacío.</b><p class="sm">Carga los productos de tu Excel una sola vez.</p><button class="btn full" id="impb">Cargar productos del Excel</button></div>
+<main>
+<section id="v-venta">
+ <label for="ced">Cédula o NIT</label>
+ <input id="ced" inputmode="numeric" autocomplete="off">
+ <label for="nombres">Nombres</label>
+ <input id="nombres" autocomplete="given-name">
+ <label for="apellidos">Apellidos</label>
+ <input id="apellidos" autocomplete="family-name">
+ <datalist id="cls"></datalist>
+ <label for="tel">Teléfono del cliente</label>
+ <input id="tel" type="tel" inputmode="tel" placeholder="Para enviarle el recibo por WhatsApp">
+ <label for="dircli">Dirección</label>
+ <input id="dircli" autocomplete="street-address">
+ <div id="consv"></div>
+ <label for="vend">Vendedor (opcional)</label>
+ <input id="vend" list="vds" placeholder="Quién hace la venta" autocomplete="off">
+ <datalist id="vds"></datalist>
+ <label for="q">Buscar producto</label>
+ <input id="q" type="search" placeholder="Nombre, laboratorio o código" autocomplete="off">
+ <button class="btn alt full" id="scan" style="margin:0 0 10px">Escanear código de barras</button>
+ <div id="topw" hidden><label>Más vendidos (últimos 60 días)</label><div class="chips" id="top"></div></div>
+ <div id="res"></div>
+ <h2>Productos del recibo</h2>
+ <div id="cart"></div>
+ <div class="two"><div><label for="dsc">Descuento</label><input id="dsc" type="number" inputmode="numeric" placeholder="0"></div><div><label for="dom">Domicilio cobrado</label><input id="dom" type="number" inputmode="numeric" placeholder="0"></div></div><label for="mens">Pago al mensajero (0 si entregas tú)</label><input id="mens" type="number" inputmode="numeric" min="0" placeholder="0">
+ <label for="fp">Forma de pago</label>
+ <select id="fp"><option>Efectivo</option><option>Transferencia</option><option>Nequi</option><option>Daviplata</option><option>Tarjeta</option></select>
+ <div id="efw"><label for="rec">Recibido en efectivo (opcional)</label><input id="rec" type="number" inputmode="numeric" placeholder="Con cuánto paga el cliente"><p class="gain" id="vue"></p></div>
+ <div class="tot"><span>Total a pagar</span><span id="tot">$0</span></div>
+ <div class="gain sm" id="gn"></div>
+ <div class="acts"><button class="btn full" id="mk">Crear recibo</button><button class="btn alt full" id="cot">Crear cotización (sin recibo)</button><button class="btn alt full" id="clr">Vaciar recibo</button></div>
+</section>
+<section id="v-cat" hidden>
+ <label for="q2">Buscar en el catálogo</label>
+ <input id="q2" type="search" placeholder="Nombre, laboratorio o código" autocomplete="off">
+ <button class="btn alt full" id="newp">Agregar producto</button>
+ <button class="btn alt full" id="scan2" style="margin-top:8px">Escanear para buscar</button>
+ <button class="btn alt full" id="chg" style="margin-top:8px">Cambios recientes de precio</button>
+ <div id="lowb" hidden style="margin-top:8px"></div>
+ <p class="mut sm" id="cnt"></p>
+ <div id="cl"></div>
+</section>
+<section id="v-cli" hidden>
+ <div class="seg"><button data-cv="todos" aria-pressed="true">Todos</button><button data-cv="ret" aria-pressed="false">Para retomar</button></div>
+ <div id="cvt">
+  <input id="qc" type="search" placeholder="Buscar cliente por nombre, teléfono o cédula" autocomplete="off">
+  <button class="btn alt full" id="newc">Agregar cliente</button>
+  <p class="mut sm" id="ccnt"></p>
+  <div id="cll"></div>
+ </div>
+ <div id="cvr" hidden>
+  <label for="rtf">Mostrar</label>
+  <select id="rtf"><option value="toca">A los que ya les toca comprar</option><option value="30">Sin comprar hace 30 días o más</option><option value="60">Sin comprar hace 60 días o más</option><option value="90">Sin comprar hace 90 días o más</option></select>
+  <p class="mut sm" id="rtc"></p>
+  <div id="rtl"></div>
+  <p class="mut sm">Cuando tocas "Ya le escribí", ese cliente se oculta 14 días en este aparato.</p>
+ </div>
+</section>
+<section id="v-his" hidden>
+ <div class="seg"><button data-hv="rec" aria-pressed="true">Recibos</button><button data-hv="res" aria-pressed="false">Resumen</button></div>
+ <label for="hp">Período</label>
+ <select id="hp"><option value="hoy">Hoy</option><option value="sem">Esta semana</option><option value="mes" selected>Este mes</option><option value="mant">Mes anterior</option><option value="30">Últimos 30 días</option><option value="rango">Rango de fechas</option><option value="todo">Todo</option></select>
+ <div class="two" id="hr" hidden><div><label for="hd1">Desde</label><input id="hd1" type="date"></div><div><label for="hd2">Hasta</label><input id="hd2" type="date"></div></div>
+ <input id="hq" type="search" placeholder="Buscar por cliente o número de recibo" autocomplete="off">
+ <div class="kpi"><div>Vendido<b id="hs"></b></div><div>Ganancia<b id="hg"></b></div></div>
+ <p class="mut sm" id="hn"></p>
+ <div id="hrec"><div id="hl"></div><button class="btn alt full" id="hmore" hidden>Mostrar más</button></div>
+ <div id="hres" hidden></div>
+ <button class="btn alt full" id="xlsH" style="margin-top:12px">Descargar este período en Excel</button>
+</section>
+<section id="v-cot" hidden>
+ <p class="mut sm">Cotizaciones guardadas en la nube. Puedes abrirlas para volver a enviarlas.</p>
+ <input id="coq" type="search" placeholder="Buscar por cliente o número" autocomplete="off">
+ <div id="colist"></div>
+</section>
+<section id="v-neg" hidden>
+ <div class="sum" id="neg-kpi"></div>
+ <div class="seg"><button data-neg-tab="pend" aria-pressed="true">Por conseguir</button><button data-neg-tab="prov" aria-pressed="false">Proveedores</button></div>
+ <div id="neg-pend">
+  <button class="btn full" id="neg-new-buy">＋ Registrar medicamento por conseguir</button>
+  <p class="mut sm">Registra solicitudes de clientes y compras posteriores. No maneja existencias.</p>
+  <div id="neg-buy-list"></div>
+ </div>
+ <div id="neg-prov" hidden>
+  <button class="btn full" id="neg-new-provider">＋ Agregar proveedor</button>
+  <div id="neg-provider-list"></div>
+ </div>
+ <p class="mut sm">Los datos de este módulo se guardan en Supabase y están separados por tu usuario.</p>
+</section>
+<section id="v-aju" hidden>
+ <div id="aju-menu">
+  <p class="mut sm">Configura cada área de Drosalud por separado.</p>
+  <div class="aju-grid">
+   <button class="aju-tile" data-aju-open="precios"><span class="aju-ico">％</span><strong>Precios</strong><small>Ganancia, redondeo y alertas</small></button>
+   <button class="aju-tile" data-aju-open="apariencia"><span class="aju-ico">◐</span><strong>Apariencia</strong><small>Paleta de colores</small></button>
+   <button class="aju-tile" data-aju-open="negocio"><span class="aju-ico">⌂</span><strong>Datos del negocio</strong><small>Identificación y contacto</small></button>
+   <button class="aju-tile" data-aju-open="recibo"><span class="aju-ico">▤</span><strong>Recibo</strong><small>Impresión y cotizaciones</small></button>
+   <button class="aju-tile" data-aju-open="vendedor"><span class="aju-ico">♙</span><strong>Vendedor</strong><small>Vendedor predeterminado</small></button>
+   <button class="aju-tile" data-aju-open="pagos"><span class="aju-ico">$</span><strong>Pagos</strong><small>Bre-B y QR de pago</small></button>
+  </div>
+  <div class="aju-admin">
+   <h2>Administración</h2>
+   <p class="mut sm">Herramientas de respaldo y acceso.</p>
+   <label for="rd3">Recordar el respaldo cada (días)</label><input id="rd3" type="number" inputmode="numeric" min="7" data-k="respDias">
+   <p class="mut sm" id="bkt"></p>
+   <button class="btn full" data-aju-save type="button">Guardar frecuencia del respaldo</button>
+   <div class="aju-mfa" data-admin-only>
+    <h2>Verificación en dos pasos</h2>
+    <p class="mut sm" id="mfa-st">Comprobando…</p>
+    <div class="acts"><button class="btn alt full" id="mfa-on" type="button" hidden>Activar verificación en dos pasos</button><button class="btn bad full" id="mfa-off" type="button" hidden>Desactivar</button></div>
+   </div>
+   <div class="acts"><button class="btn alt full" id="xlsT">Descargar respaldo en Excel</button><button class="btn alt full" id="rf">Recargar datos</button><button class="btn bad full" id="out">Cerrar sesión</button></div>
+   <p class="mut sm" id="who"></p><p class="mut sm" id="ver"></p>
+  </div>
+ </div>
+ <div id="aju-pages" hidden>
+  <button class="btn alt" id="aju-back" type="button">← Volver a Ajustes</button>
+  <div class="aju-page" data-aju-page="precios" hidden>
+   <h2>Precios</h2>
+   <label for="mg">Ganancia sobre la compra (%)</label><input id="mg" type="number" inputmode="decimal" min="0" step="0.5" data-k="m">
+   <label for="rd">Redondear precio de venta</label><select id="rd" data-k="r"><option value="0">Sin redondeo</option><option value="50">Hacia arriba a $50</option><option value="100">Hacia arriba a $100</option><option value="500">Hacia arriba a $500</option></select>
+   <label for="mm">Alerta de ganancia baja (menos de … %)</label><input id="mm" type="number" inputmode="decimal" min="0" step="1" data-k="mMin">
+  </div>
+  <div class="aju-page" data-aju-page="apariencia" hidden>
+   <h2>Paleta de colores</h2><p class="mut sm">Personaliza la apariencia de la aplicación. No cambia el diseño ni la impresión de la factura.</p>
+   <label for="cp1">Color principal</label><input id="cp1" type="color" data-k="colorPri"><label for="cp2">Fondo</label><input id="cp2" type="color" data-k="colorBg"><label for="cp3">Tarjetas</label><input id="cp3" type="color" data-k="colorCard"><label for="cp4">Texto</label><input id="cp4" type="color" data-k="colorInk">
+  </div>
+  <div class="aju-page" data-aju-page="negocio" hidden>
+   <h2>Datos del negocio</h2>
+   <label for="a1">Nombre</label><input id="a1" data-k="biz" autocomplete="off"><label for="a2">NIT</label><input id="a2" data-k="nit" autocomplete="off"><label for="a3">Ciudad</label><input id="a3" data-k="ciu" autocomplete="off"><label for="a4">Teléfono</label><input id="a4" data-k="tel" type="tel" autocomplete="off"><label for="a5">Dirección (opcional)</label><input id="a5" data-k="dir" autocomplete="off">
+  </div>
+  <div class="aju-page" data-aju-page="recibo" hidden>
+   <h2>Recibo y cotizaciones</h2>
+   <label for="a6">Mensaje final</label><input id="a6" data-k="msg" autocomplete="off"><label for="a7">Nota al pie (opcional)</label><textarea id="a7" data-k="nota" rows="3"></textarea>
+   <label class="ck"><input type="checkbox" data-k="sHora"> Mostrar la hora</label><label class="ck"><input type="checkbox" data-k="sCed"> Mostrar cédula del cliente</label><label class="ck"><input type="checkbox" data-k="sTel"> Mostrar teléfono del cliente</label><label class="ck"><input type="checkbox" data-k="sPago"> Mostrar forma de pago</label><label class="ck"><input type="checkbox" data-k="big"> Letra grande</label><label class="ck"><input type="checkbox" data-k="sLogo"> Mostrar el logo</label>
+   <label for="cd1">Cotización válida por (días)</label><input id="cd1" type="number" inputmode="numeric" min="1" data-k="cotDias"><label for="cd2">Nota de la cotización</label><input id="cd2" data-k="cotNota" autocomplete="off"><label for="cd3">Mensaje para retomar clientes (usa {nombre})</label><input id="cd3" data-k="msgRetomar" autocomplete="off">
+   <h2>Vista previa</h2><div id="prev"></div>
+  </div>
+  <div class="aju-page" data-aju-page="vendedor" hidden>
+   <h2>Vendedor</h2><label for="vd0">Vendedor por defecto (opcional)</label><input id="vd0" data-k="vendedorDef" autocomplete="off">
+  </div>
+  <div class="aju-page" data-aju-page="pagos" hidden>
+   <h2>Pagos</h2><label for="pb1">Llave Bre-B</label><input id="pb1" data-k="breb" inputmode="numeric" autocomplete="off"><label for="pb2">A nombre de (opcional)</label><input id="pb2" data-k="pagoTitular" autocomplete="off"><label for="pb3">Mostrar los datos de pago en los recibos</label><select id="pb3" data-k="pagoRec"><option value="siempre">Siempre</option><option value="noefectivo">Solo si no se pagó en efectivo</option><option value="nunca">Nunca</option></select><label class="ck"><input type="checkbox" data-k="pagoCot"> Mostrar en las cotizaciones</label><label for="qrf">Código QR de pago (imagen)</label><input id="qrf" type="file" accept="image/*"><p class="mut sm" id="qrs"></p><button class="btn alt full" id="qrx" type="button">Quitar el QR</button>
+  </div>
+  <button class="btn full aju-save" data-aju-save type="button">Guardar cambios</button>
+  <p class="mut sm">Los cambios se guardan en la base de datos y se aplican en tus dispositivos.</p>
+ </div>
+</section>
+</main>
+<div id="more-menu" hidden aria-label="Más opciones">
+ <button data-v="his">Historial</button>
+ <button data-v="cot">Cotizaciones</button>
+ <button data-v="aju">Ajustes</button>
+ <button data-v="neg">Negocio</button>
+</div>
+<nav id="nav" aria-label="Navegación principal">
+ <button data-v="venta" aria-current="true">Recibo<span class="bdg" id="bg" hidden></span></button>
+ <button data-v="cat">Catálogo</button>
+ <button data-v="cli">Clientes</button>
+ <button data-v="mas" aria-expanded="false">Más <span aria-hidden="true">☰</span></button>
+</nav>
+</div>
+<div id="modal" hidden><div id="sheet" role="dialog" aria-modal="true"></div></div>
+<script src="supabase.js"></script>
+<script src="base.js"></script>
+<script src="xlsx.mini.min.js"></script>
+<script src="html5-qrcode.min.js"></script>
+<script src="qrcode.js"></script>
+<script>
+const sb=supabase.createClient('https://fwkaqxzdhqpvvjhixeod.supabase.co','sb_publishable_ZJ24N_m8fFJDa2NZvERl5g_gvd4xbFz');
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const money=n=>'$'+Math.round(n).toLocaleString('es-CO');
+const DEF={m:25,r:100,biz:'DROGUERIA DROSALUD.SAS',nit:'900.109.443-0',ciu:'Cúcuta',tel:'3112581564',dir:'',msg:'Gracias por su compra',nota:'Resolución de facturación electrónica N° 1845101586525 de 2025-11-12. Vigencia 24 meses.',sHora:true,sCed:true,sTel:true,sPago:true,big:false,sLogo:true,mMin:10,colorPri:'#0E6B55',colorBg:'#F2F6F3',colorCard:'#FFFFFF',colorInk:'#12261F',cotDias:3,cotNota:'Precios sujetos a cambio y disponibilidad.',respDias:30,breb:'3112581564',pagoTitular:'',pagoCot:true,pagoRec:'siempre',qrTexto:'',qrImg:'',vendedorDef:'',msgRetomar:'Hola {nombre}, ¿cómo estás? Te escribimos de Drosalud. Hace un tiempo no sabemos de ti, ¿te ayudamos con algo? Tu salud, nuestra prioridad.'};
+const VERSION='2026-11-05.1-ley1581-consentimiento';
+let P=[],C=[],H=[],CO=[],cart=[],savingVenta=false,savingCotizacion=false,cfg={...DEF},draft=null,usuarioDrosalud=null,rolDrosalud=null;
+// Control de interfaz por rol. La autorización definitiva debe aplicarse también en RLS.
+async function cargarRolDrosalud(){const{data,error}=await sb.auth.getUser();if(error)throw error;if(!data.user)throw new Error('Inicia sesión nuevamente.');const{data:perfil,error:ep}=await sb.from('usuarios_drosalud').select('rol,activo').eq('user_id',data.user.id).maybeSingle();if(ep)throw ep;if(!perfil||perfil.activo!==true||!['admin','vendedor'].includes(perfil.rol))throw new Error('Tu usuario no tiene un rol activo en Drosalud. Solicita al administrador que lo habilite.');usuarioDrosalud=data.user;rolDrosalud=perfil.rol;return perfil.rol}
+function esAdminDrosalud(){return rolDrosalud==='admin'}
+function aplicarInterfazRol(){const admin=esAdminDrosalud();document.querySelectorAll('[data-admin-only]').forEach(el=>el.hidden=!admin);const tile=document.querySelector('[data-home="his"]');if(tile)tile.hidden=false;const resTab=document.querySelector('[data-hv="res"]');if(resTab)resTab.hidden=!admin;const hg=$('#hg');if(hg&&hg.parentElement)hg.parentElement.hidden=!admin;const xls=$('#xlsH');if(xls)xls.hidden=!admin;const who=$('#who');if(who&&usuarioDrosalud)who.textContent='Sesión: '+usuarioDrosalud.email+' · '+(admin?'Administrador':'Vendedor')}
+const LOGO={c:new Image(),b:new Image()};LOGO.c.src='logo.png';LOGO.b.src='logo-bw.png';
+async function loadCfg(){try{const{data,error}=await sb.from('ajustes').select('datos').eq('id',1).maybeSingle();if(error)throw error;const saved=(data&&data.datos)||{};cfg={...DEF,...saved};const oldPalette={colorPri:'#3DBE9A',colorBg:'#0D1613',colorCard:'#16231E',colorInk:'#E7F1EC'};const isOldDefault=Object.keys(oldPalette).every(k=>String(saved[k]||'').toUpperCase()===oldPalette[k]);if(isOldDefault){cfg={...cfg,...DEF};await saveCfgDb(cfg)}draft=null;applyPalette()}catch(e){console.error(e);if(/Failed to fetch|NetworkError|Load failed|fetch failed/i.test(String(e&&e.message)))throw e;toast('No se pudieron cargar los ajustes (¿falta crear la tabla ajustes?)')}}
+async function saveCfgDb(d){const{error}=await sb.from('ajustes').upsert({id:1,datos:d,actualizado_en:new Date().toISOString()});if(error)throw error;cfg={...DEF,...d}}
+function applyPalette(){const root=document.documentElement;[['--pri','colorPri'],['--bg','colorBg'],['--card','colorCard'],['--ink','colorInk']].forEach(([css,k])=>{const v=draft?.[k]||cfg[k];if(v&&/^#[0-9a-f]{6}$/i.test(v))root.style.setProperty(css,v)});const hex=draft?.colorPri||cfg.colorPri||'#0E6B55',n=parseInt(hex.slice(1),16),lum=.299*(n>>16&255)+.587*(n>>8&255)+.114*(n&255);root.style.setProperty('--pri-ink',lum>160?'#12261F':'#FFFFFF')}
+function fillAju(){$('#aju-menu').hidden=false;$('#aju-pages').hidden=true;document.querySelectorAll('[data-aju-page]').forEach(x=>x.hidden=true);$('#ver').textContent='Versión de la app: '+VERSION;$('#bkt').textContent=cfg.ultimoRespaldo?'Último respaldo: '+fd(cfg.ultimoRespaldo):'Todavía no has descargado un respaldo.';draft={...cfg};applyPalette();document.querySelectorAll('#v-aju [data-k]').forEach(e=>{const v=draft[e.dataset.k];if(e.type==='checkbox')e.checked=!!v;else e.value=v==null?'':v});qrStatus();renderPrev();if(esAdminDrosalud())mfaEstado()}
+function renderPrev(){const it=[{nombre:'ACETAMINOFEN 500 MG * 100 TAB',cantidad:2,precio_venta:12500},{nombre:'SUERO ORAL SABOR UVA',cantidad:1,precio_venta:5600}];const r={numero:1,creado_en:new Date().toISOString(),cliente_nombre:'Cliente de ejemplo',vendedor:'Cristhiam',forcePago:true,cliente_cedula:'123456789',cliente_telefono:'3001234567',cliente_direccion:'Calle 10 # 12-34',descuento:1000,domicilio:3000,forma_pago:'Efectivo',recibido:50000,total:sub(it)+2000};const sv=cfg;cfg=draft;try{$('#prev').innerHTML=tkt(r,it)}finally{cfg=sv}}
+const price=c=>{const v=c*(1+cfg.m/100);return cfg.r?Math.ceil(v/cfg.r-1e-9)*cfg.r:Math.round(v)};
+const pv=p=>p.precio_venta!=null?Number(p.precio_venta):(Number(p.precio_compra)>0?price(Number(p.precio_compra)):null);
+const sub=it=>it.reduce((s,i)=>s+Number(i.precio_venta)*i.cantidad,0);
+let tt;function toast(m){let e=$('#toast');if(!e){e=document.createElement('div');e.id='toast';document.body.appendChild(e)}e.textContent=m;e.hidden=false;clearTimeout(tt);tt=setTimeout(()=>{e.hidden=true},String(m).length>70?7000:2600)}
+const msgErr=e=>{const m=String((e&&e.message)||e||''),c=String((e&&e.code)||'');
+if(/Failed to fetch|NetworkError|Load failed|fetch failed/i.test(m))return 'Sin conexión con la base de datos. Revisa tu internet. Si llevas más de una semana sin usar la app, Supabase pudo pausarla: entra a su panel y toca Restore project.';
+if(/JWT|expired|not authenticated|invalid claim/i.test(m))return 'Tu sesión venció. Vuelve a iniciar sesión.';
+if(/42P01|42703|PGRST20[45]|does not exist|schema cache/i.test(c+' '+m))return 'Falta ejecutar el SQL de la última actualización en Supabase.';
+return 'Error: '+m};
+async function go(f){try{await f()}catch(e){console.error(e);const m=msgErr(e);if(/sesión venció/.test(m))showLogin();toast(m)}}
+async function cotizar(){if(savingCotizacion)return;if(!cart.length){toast('Agrega al menos un producto');return}savingCotizacion=true;const ventaItems=cart.map(i=>({...i}));try{const nm=nombreCompleto($('#nombres').value,$('#apellidos').value),tel=$('#tel').value.trim(),ced=$('#ced').value.trim(),dir=$('#dircli').value.trim(),vend=($('#vend').value||'').trim(),k=calc();const cliente=await guardarCliente(nm,ced,tel,dir);const vence=new Date();vence.setDate(vence.getDate()+(+cfg.cotDias||3));const valida=vence.getFullYear()+'-'+String(vence.getMonth()+1).padStart(2,'0')+'-'+String(vence.getDate()).padStart(2,'0');const p_cotizacion={cliente_id:cliente?.id||null,cliente_nombre:nm||cliente?.nombre||null,cliente_cedula:ced||cliente?.cedula||null,cliente_telefono:tel||cliente?.telefono||null,cliente_direccion:dir||cliente?.direccion||null,vendedor:vend||null,descuento:k.ds,domicilio:k.dm,subtotal:k.st,total:k.total,valida_hasta:valida};const p_items=ventaItems.map(i=>({producto_id:i.pid||null,nombre:i.n,cantidad:i.q,precio_venta:i.p,presentacion:i.presentacion||'Unidad',unidades_por_presentacion:i.unidadesPorPresentacion||1}));const{data:co,error}=await sb.rpc('crear_cotizacion_venta_drosalud',{p_cotizacion,p_items});if(error)throw error;CO.unshift(co);showRec({...co,cot:true},ventaItems.map(i=>({nombre:i.n,cantidad:i.q,precio_venta:i.p,presentacion:i.presentacion||'Unidad',unidades_por_presentacion:i.unidadesPorPresentacion||1})));}finally{savingCotizacion=false}}
+async function loadCotizaciones(){const{data,error}=await sb.from('cotizaciones_venta_app').select('*').order('creado_en',{ascending:false}).order('numero',{ascending:false}).limit(500);if(error)throw error;CO=data||[];renderCotizaciones()}
+function renderCotizaciones(){const q=norm($('#coq').value),L=CO.filter(r=>!q||norm((r.cliente_nombre||'')+' '+r.numero).includes(q));$('#colist').innerHTML=L.length?L.map(r=>'<button class="row" data-cotid="'+r.id+'"><span class="nm">Cotización '+pad(r.numero)+(r.cliente_nombre?' · '+esc(tcase(r.cliente_nombre)):'')+'<small>'+esc(fmt(r.creado_en))+' · '+esc(r.estado)+(r.valida_hasta?' · válida hasta '+esc(fd(r.valida_hasta)):'')+'</small></span><span class="pr">'+money(r.total)+'</span></button>').join(''):'<p class="mut">No hay cotizaciones guardadas.</p>'}
+async function abrirCotizacion(r){const{data,error}=await sb.from('cotizacion_venta_items_app').select('*').eq('cotizacion_id',r.id).order('id');if(error)throw error;showRec({...r,cot:true},(data||[]).map(i=>({nombre:i.nombre,cantidad:i.cantidad,precio_venta:i.precio_venta,presentacion:i.presentacion,unidades_por_presentacion:i.unidades_por_presentacion})));}
+async function loadAllSafe(){try{await loadAll();$('#net').hidden=true}catch(e){console.error(e);$('#net').hidden=false;$('#net').innerHTML='<span>'+esc(msgErr(e))+'</span><button id="retry">Reintentar</button>'}}
+let lastVer=0;async function checkVer(){lastVer=Date.now();try{const t=await(await fetch('index.html',{cache:'no-store'})).text(),m=t.match(/const VERSION='([^']+)'/);if(m&&m[1]!==VERSION){$('#upd').hidden=false;$('#upd').innerHTML='<span>Hay una versión nueva de la app</span><button id="upb">Actualizar</button>'}}catch(e){}}
+async function actualizar(){try{const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(e){}location.reload()}
+async function copy(t){try{await navigator.clipboard.writeText(t);toast('Copiado')}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}a.remove();toast(ok?'Copiado':'No se pudo copiar')}}
+async function all(t,o){let a=[],f=0;for(;;){const{data,error}=await sb.from(t).select('*').order(o).order('id').range(f,f+999);if(error)throw error;a=a.concat(data);if(data.length<1000)break;f+=1000}return a}
+const idx=()=>P.forEach(p=>{p._s=norm(p.nombre+' '+(p.laboratorio||'')+' '+(p.codigo||''))});
+function find(q,lim){const t=norm(q).split(/\s+/).filter(Boolean),a=[];for(const p of P){if(t.every(x=>p._s.includes(x))){a.push(p);if(a.length>=lim)break}}return a}
+const fmt=t=>new Date(t).toLocaleDateString('es-CO',{day:'numeric',month:'long',year:'numeric'})+', '+new Date(t).toLocaleTimeString('es-CO',{hour:'numeric',minute:'2-digit'});
+const pad=n=>String(n).padStart(4,'0');
+async function loadAll(){await cargarRolDrosalud();aplicarInterfazRol();if(esAdminDrosalud()){await loadCfg();if(!cfg.primerUso){try{await saveCfgDb({...cfg,primerUso:new Date().toISOString()})}catch(e){}}}else{cfg={...DEF};applyPalette()}rBk();iniVend();P=await all('productos_app','nombre');idx();C=await all('clientes','nombre');await cargarConsentimientos();if(!$('#consv').innerHTML)$('#consv').innerHTML=consentHTML('cons');H=[];$('#imp').hidden=!esAdminDrosalud()||P.length>0;$('#cls').innerHTML=C.map(c=>`<option value="${esc(c.nombre)}">`).join('');rRes();rCart();rCat();rCli();rHis();if(esAdminDrosalud())loadTop();else{TOP=[];rTop()}}
+async function start(){try{if((await mfaNivel()).pedir){showMfa();return}}catch(e){console.error('No se pudo comprobar el nivel de verificación:',e)}$('#spl').hidden=true;$('#mfa').hidden=true;$('#lg').hidden=true;$('#rsx').hidden=true;$('#app').hidden=false;const{data}=await sb.auth.getUser();$('#who').textContent=data&&data.user?'Sesión: '+data.user.email:'';await loadAllSafe();showHome();checkVer()}
+async function mfaNivel(){if(!sb.auth.mfa)return{pedir:false};const{data,error}=await sb.auth.mfa.getAuthenticatorAssuranceLevel();if(error)throw error;return{pedir:data.nextLevel==='aal2'&&data.currentLevel!=='aal2'}}
+function showMfa(){$('#spl').hidden=true;$('#app').hidden=true;$('#rsx').hidden=true;$('#lg').hidden=true;$('#mfa').hidden=false;$('#mfc').value='';$('#mfm').textContent='';setTimeout(()=>$('#mfc').focus(),50)}
+async function doMfa(){const m=$('#mfm'),b=$('#mfv'),code=$('#mfc').value.replace(/\s/g,'');m.className='msg bad';m.textContent='';if(!/^\d{6}$/.test(code)){m.textContent='Escribe los 6 dígitos del código.';return}b.disabled=true;b.textContent='Verificando…';try{const{data:l,error:e1}=await sb.auth.mfa.listFactors();if(e1)throw e1;const f=(l.totp||[])[0];if(!f)throw new Error('Sin factor verificado');const{error}=await sb.auth.mfa.challengeAndVerify({factorId:f.id,code});if(error){m.textContent=/rate|too many|limit/i.test(String(error.message))?'Demasiados intentos. Espera unos minutos.':'Código incorrecto o vencido. Revisa tu app e intenta de nuevo.';return}$('#mfa').hidden=true;await start()}catch(e){console.error(e);m.textContent=/Failed to fetch|network/i.test(String(e&&e.message))?'Sin conexión. Revisa tu internet.':'No se pudo verificar. Intenta de nuevo.'}finally{b.disabled=false;b.textContent='Verificar'}}
+async function mfaEstado(){const st=$('#mfa-st'),on=$('#mfa-on'),off=$('#mfa-off');if(!st)return;if(!sb.auth.mfa){st.textContent='No disponible en esta versión de la app.';on.hidden=true;off.hidden=true;return}try{const{data,error}=await sb.auth.mfa.listFactors();if(error)throw error;const act=(data.totp||[]).length>0;st.textContent=act?'Activada: al entrar te pediremos un código de tu app autenticadora.':'Desactivada. Actívala para proteger tu cuenta de administrador.';on.hidden=act;off.hidden=!act}catch(e){console.error(e);st.textContent='No se pudo comprobar el estado.';on.hidden=true;off.hidden=true}}
+async function mfaActivar(){if(!sb.auth.mfa){toast('No disponible en esta versión de la app.');return}const{data:l,error:e0}=await sb.auth.mfa.listFactors();if(e0)throw e0;for(const f of(l.all||[]).filter(x=>x.status==='unverified')){await sb.auth.mfa.unenroll({factorId:f.id})}const{data,error}=await sb.auth.mfa.enroll({factorType:'totp',friendlyName:'Drosalud administrador'});if(error)throw error;
+openM(`<h2 style="margin-top:0">Activar verificación en dos pasos</h2><p class="mut sm">1. Abre Google Authenticator, toca «+» y elige «Escanear código QR».</p><div style="text-align:center"><img alt="Código QR" src="${data.totp.qr_code}" style="width:200px;height:200px;background:#fff"></div><p class="mut sm">¿No puedes escanear? Escribe esta clave a mano:</p><p class="sm" style="word-break:break-all;font-weight:700">${esc(data.totp.secret)}</p><p class="mut sm">2. Escribe el código de 6 dígitos que muestra la app.</p><input id="mfa-code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000"><p class="msg bad" id="mfa-msg" role="alert"></p><div class="acts"><button class="btn full" id="mfa-ok">Confirmar y activar</button><button class="btn alt full" id="mfa-no">Cancelar</button></div>`);
+$('#mfa-no').onclick=async()=>{try{await sb.auth.mfa.unenroll({factorId:data.id})}catch(e){}closeM()};
+$('#mfa-ok').onclick=()=>go(async()=>{const code=$('#mfa-code').value.replace(/\s/g,''),m=$('#mfa-msg');m.textContent='';if(!/^\d{6}$/.test(code)){m.textContent='Escribe los 6 dígitos del código.';return}const{error:ev}=await sb.auth.mfa.challengeAndVerify({factorId:data.id,code});if(ev){m.textContent='Código incorrecto o vencido. Revisa tu app e intenta de nuevo.';return}closeM();toast('Verificación en dos pasos activada');mfaEstado()})}
+async function mfaDesactivar(){const{data:l,error:e0}=await sb.auth.mfa.listFactors();if(e0)throw e0;const f=(l.totp||[])[0];if(!f){mfaEstado();return}if(!confirm('¿Desactivar la verificación en dos pasos? Tu cuenta quedará protegida solo con la contraseña.'))return;const{error}=await sb.auth.mfa.unenroll({factorId:f.id});if(error){toast(/aal2|assurance|verif/i.test(String(error.message))?'Para desactivarla debes haber entrado con tu código.':'No se pudo desactivar. Intenta de nuevo.');return}toast('Verificación en dos pasos desactivada');mfaEstado()}
+function showLogin(){$('#spl').hidden=true;$('#app').hidden=true;$('#rsx').hidden=true;$('#mfa').hidden=true;$('#lg').hidden=false;try{const e=localStorage.getItem('lastEmail');if(e&&!$('#em').value){$('#em').value=e;$('#pw').focus()}}catch(x){}}
+const TT={venta:'Recibo',cat:'Catálogo',cli:'Clientes',his:'Historial',cot:'Cotizaciones',aju:'Ajustes'};
+function showHome(){$('#back-home').hidden=true;$('#home').hidden=false;['venta','cat','cli','his','cot','aju','neg'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=true});$('#more-menu').hidden=true;$('#ttl').textContent='Drosalud';window.scrollTo(0,0)}
+ function show(v){$('#back-home').hidden=false;$('#home').hidden=true;['venta','cat','cli','his','cot','aju','neg'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=k!==v});$('#more-menu').hidden=true;$('#nav [data-v="mas"]').setAttribute('aria-expanded','false');document.querySelectorAll('#nav button').forEach(b=>{if(b.dataset.v!=='mas')b.setAttribute('aria-current',String(b.dataset.v===v));else b.setAttribute('aria-current',String(!['venta','cat','cli'].includes(v)))});$('#ttl').textContent=TT[v]||'Negocio';if(v==='aju')fillAju();if(v==='his')go(loadHis);if(v==='cli')loadCST().catch(()=>{});if(v==='cot')go(loadCotizaciones);window.scrollTo(0,0)}
+function rRes(){rTop();const q=$('#q').value.trim(),b=$('#res');if(!q){b.innerHTML='';return}const a=find(q,20);b.innerHTML=a.length?a.map(p=>`<button class="row" data-add="${p.id}"><span class="nm">${esc(p.nombre)}<small>${esc(p.laboratorio||'')}</small></span><span class="pr">${pv(p)==null?'Precio pendiente':money(pv(p))}<small>compra ${money(p.precio_compra)}</small></span></button>`).join(''):'<p class="mut">No hay resultados. Agrégalo en Catálogo.</p>'}
+function calc(){const st=cart.reduce((s,i)=>s+i.p*i.q,0),g=esAdminDrosalud()?cart.reduce((s,i)=>s+(i.p-(i.c||0))*i.q,0):null,ds=Math.max(0,+$('#dsc').value||0),dm=Math.max(0,+$('#dom').value||0),mens=Math.max(0,+$('#mens').value||0);return{st,ds,dm,mens,total:Math.max(0,st-ds+dm),gan:g==null?null:g-ds+dm-mens}}
+function rCart(){const b=$('#cart');b.innerHTML=cart.length?cart.map((i,k)=>`<div class="item"><div class="top"><span>${esc(i.n)}</span><button class="rm" data-rm="${k}" aria-label="Quitar">✕</button></div><div class="ctl"><div class="step"><button data-dec="${k}" aria-label="Menos">−</button><span>${i.q} ${i.q===1?'unidad':'unidades'}</span><button data-inc="${k}" aria-label="Más">+</button></div><label class="pp">$<input type="number" inputmode="numeric" data-pr="${k}" value="${i.p}" aria-label="Precio de venta por unidad"></label><span class="lt">${money(i.p*i.q)}</span></div><small class="mut">${esc(etiquetaCarrito(i))}· Compra ${money(i.c)} c/u${esAdminDrosalud()?` · ganas ${money((i.p-i.c)*i.q)}${warnM(i.p,i.c)}`:''}</small></div>`).join(''):'<p class="mut">Busca un producto y tócalo para agregarlo.</p>';const k=calc(),n=cart.reduce((s,i)=>s+i.q,0);$('#tot').textContent=money(k.total);$('#gn').textContent=esAdminDrosalud()&&cart.length?'Ganancia estimada (productos + domicilio − mensajero − descuento): '+money(k.gan):'';const e=$('#bg');e.hidden=!n;e.textContent=n;rVue(k)}
+function rCat(){rLow();const q=$('#q2').value.trim(),a=catLow?lowList().slice(0,100):(q?find(q,50):P.slice(0,50));$('#cnt').textContent=q?`${a.length}${a.length===50?'+':''} resultados`:`${P.length} productos. Mostrando 50, escribe para buscar.`;$('#cl').innerHTML=a.map(p=>`<button class="row" data-ed="${p.id}"><span class="nm">${esc(p.nombre)}<small>${esc(p.laboratorio||'')} · actualizado ${new Date(p.actualizado_en).toLocaleDateString('es-CO',{day:'numeric',month:'short'})}</small></span><span class="pr">${pv(p)==null?'Precio pendiente':money(pv(p))}${esAdminDrosalud()?`<small>compra ${money(p.precio_compra)}</small>`:''}</span></button>`).join('')}
+function rCli(){const q=norm($('#qc').value),L=q?C.filter(c=>norm(c.nombre+' '+(c.telefono||'')+' '+(c.cedula||'')).includes(q)):C;$('#ccnt').textContent=C.length+' clientes'+(q?' · '+L.length+' coinciden':'');
+$('#cll').innerHTML=L.slice(0,200).map(c=>{const s=CST[c.id];return `<button class="row" data-ec="${c.id}"><span class="nm">${esc(tcase(c.nombre))}<small>${esc(c.telefono||'Sin teléfono')}${s?' · '+s.n+' compra'+(s.n>1?'s':'')+' · última '+esc(fd(s.u)):''}</small></span>${s?`<span class="pr">${money(s.t)}</span>`:''}</button>`}).join('')}
+async function loadCST(){const m={};let f=0;for(;;){const{data,error}=await sb.from('recibos_app').select('cliente_id,total,creado_en,anulado').order('creado_en').order('id').range(f,f+999);if(error)throw error;data.forEach(r=>{if(!r.cliente_id||r.anulado)return;const o=m[r.cliente_id]||(m[r.cliente_id]={n:0,t:0,u:null,p:null});o.n++;o.t+=Number(r.total);if(!o.u||r.creado_en>o.u)o.u=r.creado_en;if(!o.p||r.creado_en<o.p)o.p=r.creado_en});if(data.length<1000)break;f+=1000}CST=m;rCli();if(cv==='ret')rRet()}
+async function abrirRec(r){const{data,error}=await sb.from('recibo_items_app').select('*').eq('recibo_id',r.id).order('id');if(error)throw error;showRec(r,data)}
+async function cliHist(id){const{data,error}=await sb.from('recibos_app').select('*').eq('cliente_id',id).order('creado_en',{ascending:false}).range(0,499);let b=$('#chs');if(!b)return;if(error){b.textContent='No se pudo cargar el historial.';return}CR=data;const V=data.filter(r=>!r.anulado);if(!data.length){b.textContent='Aún no tiene compras.';return}
+const T=V.reduce((a,r)=>a+Number(r.total),0),G=esAdminDrosalud()?V.reduce((a,r)=>a+Number(r.ganancia),0):null;let top='';try{const it=await itemsDe(V.slice(0,60)),mp=new Map();it.forEach(i=>mp.set(i.nombre,(mp.get(i.nombre)||0)+i.cantidad));top=[...mp.entries()].sort((a,b)=>b[1]-a[1]).slice(0,5).map(e=>esc(e[0])+' <b>×'+e[1]+'</b>').join('<br>')}catch(e){}
+b=$('#chs');if(!b)return;b.className='sm';b.innerHTML=`<div class="kpi"><div>Ha comprado<b>${money(T)}</b></div>${esAdminDrosalud()?`<div>Ganancia que dejó<b>${money(G)}</b></div>`:''}<div>Compras<b>${V.length}</b></div><div>Ticket promedio<b>${V.length?money(T/V.length):'—'}</b></div><div>Última compra<b>${V[0]?esc(fd(V[0].creado_en)):'—'}</b></div><div>Primera compra<b>${V.length?esc(fd(V[V.length-1].creado_en)):'—'}</b></div></div>${top?`<p class="mut sm" style="margin:6px 0 4px">Lo que más compra:</p><p class="sm" style="margin:0 0 8px">${top}</p>`:''}<p class="mut sm" style="margin:8px 0 6px">Últimos recibos:</p>${data.slice(0,8).map(r=>`<button class="row${r.anulado?' anul':''}" data-rcc="${r.id}"><span class="nm">Recibo ${pad(r.numero)}<small>${esc(fmt(r.creado_en))}${r.anulado?' · ANULADO':''}</small></span><span class="pr">${money(r.total)}</span></button>`).join('')}`}
+function openM(h){$('#sheet').innerHTML=h;$('#modal').hidden=false}
+function closeM(){stopScan();$('#modal').hidden=true}
+const fd=t=>new Date(t).toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit',year:'numeric'}),ft=t=>new Date(t).toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+const titulo=r=>r.cot?'COTIZACIÓN':'RECIBO DE VENTA N° '+pad(r.numero);
+const tcase=s=>{s=String(s||'').trim();if(!s)return s;const sm=new Set(['de','del','la','las','los','el','y','e']),up=s===s.toUpperCase()&&s!==s.toLowerCase();return s.split(/\s+/).map((w,i)=>{const lw=w.toLowerCase();if(up||w===lw||(w===w.toUpperCase()&&w.length>3)){return i&&sm.has(lw)?lw:lw.charAt(0).toUpperCase()+lw.slice(1)}return w}).join(' ')};
+const head=()=>[cfg.nit,cfg.ciu,cfg.tel?'Teléfonos: '+cfg.tel:'',cfg.dir].filter(Boolean);
+function infoLines(r){const a=['Fecha: '+fd(r.creado_en)+(cfg.sHora&&!r.cot?'   Hora: '+ft(r.creado_en):'')];if(cfg.sCed&&r.cliente_cedula)a.push('Cédula/NIT: '+r.cliente_cedula);if(r.cliente_nombre)a.push('Cliente: '+tcase(r.cliente_nombre));if(cfg.sTel&&r.cliente_telefono)a.push('Teléfono: '+r.cliente_telefono);if(r.cliente_direccion)a.push('Dirección: '+r.cliente_direccion);if(r.vendedor)a.push('Vendedor: '+r.vendedor);if(r.cot)a.push('Válida hasta: '+fd(r.valida_hasta||new Date(r.creado_en).getTime()+(+cfg.cotDias||3)*864e5));return a}
+function payLines(r){return r.forma_pago==='Efectivo'&&+r.recibido>0?[['ENTREGA',money(+r.recibido)],['VUELTOS',money(+r.recibido-+r.total)]]:[]}
+function extLines(r,it){const e=[],st=sub(it),ds=+r.descuento||0,dm=+r.domicilio||0;if(ds||dm){e.push(['SUB TOTAL',money(st)]);if(ds)e.push(['DESCUENTOS','-'+money(ds)]);if(dm)e.push(['DOMICILIO',money(dm)])}return e}
+function txt(r,it){const L=['*'+cfg.biz+'*',...head(),'',titulo(r),...(r.anulado?['** ANULADO **']:[]),...infoLines(r),''];it.forEach(i=>L.push(`${i.cantidad} × ${nombreConPresentacion(i)} — ${money(i.precio_venta*i.cantidad)}`+(i.cantidad>1?` (${money(i.precio_venta)} c/u)`:'')));const ex=extLines(r,it);if(ex.length){L.push('');ex.forEach(e=>L.push(e[0][0]+e[0].slice(1).toLowerCase()+': '+e[1]))}L.push('','*'+(r.cot?'TOTAL':'TOTAL A PAGAR')+': '+money(r.total)+'*');if(cfg.sPago&&r.forma_pago)L.push('Forma de pago: '+r.forma_pago);payLines(r).forEach(e=>L.push(e[0][0]+e[0].slice(1).toLowerCase()+': '+e[1]));if(mostrarPago(r)){L.push('','Paga con Bre-B');if(cfg.breb)L.push('Llave: '+cfg.breb);if(cfg.pagoTitular)L.push(cfg.pagoTitular);if(r.cot)L.push('Valor a pagar: '+money(r.total))}const mm=r.cot?'Gracias por su interés':cfg.msg,nn=r.cot?cfg.cotNota:cfg.nota;if(mm)L.push('',mm);if(nn)L.push('',nn);return L.join('\n')}
+function recImg(r,it,forPrint=false){const S=(cfg.big?1.25:1)*(forPrint?1.35:1),R=forPrint?2:1,W=cfg.big?760:640,m=28,u=n=>Math.round(n*S),lh=u(28),f='"Courier New",ui-monospace,monospace',fs=(n,b)=>(b?'bold ':'')+u(n)+'px '+f,c=document.createElement('canvas'),x=c.getContext('2d');
+const info=infoLines(r),ext=extLines(r,it),hd=head();
+const wrap=(t,w,z)=>{x.font=fs(z||20);const o=[];let l='';for(const q of t.split(' ')){const s=l?l+' '+q:q;if(x.measureText(s).width>w&&l){o.push(l);l=q}else l=s}o.push(l);return o};
+c.width=W*R;const infoRows=info.flatMap(s=>wrap(s,W-m*2)),rawRows=it.map(i=>({name:nombreConPresentacion(i),q:String(i.cantidad),u:money(i.precio_venta),a:money(i.precio_venta*i.cantidad)}));
+let xT=W-m,xU=W-m-u(120),xQ=W-m-u(250),nw=xQ-m-40,valueSize=u(20),valueFont=fs(20);
+if(forPrint){const qs=rawRows.map(q=>q.q),us=rawRows.map(q=>q.u),as=rawRows.map(q=>q.a).concat(ext.map(q=>q[1]),money(r.total)),meas=(a,ft)=>{x.font=ft;return Math.max(...a.map(s=>x.measureText(s).width))},gp=u(12),minName=u(190),hf=fs(17,1);let vs=u(20),cw;const cc=()=>{const vf=vs+'px '+f;return{vf,Q:Math.max(meas(qs,vf),meas(['CANT'],hf)),U:Math.max(meas(us,vf),meas(['VR UNIT'],hf)),A:Math.max(meas(as,vf),meas(['TOTAL'],hf))}};cw=cc();while(W-m*2-(cw.Q+cw.U+cw.A+gp*3)<minName&&vs>16){vs--;cw=cc()}valueSize=vs;valueFont=cw.vf;xT=W-m;xU=xT-cw.A-gp;xQ=xU-cw.U-gp;nw=xQ-cw.Q-gp-m}
+const gap=u(10),rows=rawRows.map(q=>{const t=wrap(q.name,nw);return t.length>1?{t:wrap(q.name,W-m*2),long:1,q:q.q,u:q.u,a:q.a}:{t,q:q.q,u:q.u,a:q.a}});
+const msgT=r.cot?'Gracias por su interés':cfg.msg,notaT=r.cot?cfg.cotNota:cfg.nota;const pagoOn=mostrarPago(r),qrC=pagoOn?qrCanvas(forPrint?5:4,W-m*2):null,qrW=qrC?qrC.width:0;const bal=(t,w,z)=>{x.font=fs(z);const tw=x.measureText(t).width,n0=Math.ceil(tw/w);if(n0<=1)return[t];for(let n=n0;n<=n0+3;n++){for(let k=tw/n;k<=w;k+=4){const o=wrap(t,k,z);if(o.length<=n)return o}}return wrap(t,w,z)};const nl=notaT?notaT.split('\n').flatMap(s=>bal(s,W-m*2,16)):[];const lgI=cfg.sLogo?(forPrint?LOGO.b:LOGO.c):null,lgOK=!!(lgI&&lgI.complete&&lgI.naturalWidth>0),lgW=lgOK?Math.round(W*.6):0,lgH=lgOK?Math.round(lgW*lgI.naturalHeight/lgI.naturalWidth):0;const run=d=>{let y=m+u(24)+(lgOK?lgH+u(10):0);if(d&&lgOK)x.drawImage(lgI,(W-lgW)/2,m,lgW,lgH);const T=(s,px,al,py)=>{if(d){x.textAlign=al||'left';const yy=py==null?y:py;x.fillText(s,px,yy);if(forPrint)x.fillText(s,px+.5,yy)}},D=()=>{if(d){x.setLineDash([8,6]);x.beginPath();x.moveTo(m,y);x.lineTo(W-m,y);x.stroke()}};
+x.font=fs(28,1);T(cfg.biz,W/2,'center');x.font=fs(20);hd.forEach(s=>{y+=u(26);T(s,W/2,'center')});
+y+=u(18);D();y+=u(32);x.font=fs(22,1);T(titulo(r),W/2,'center');x.font=fs(20);if(r.anulado){y+=lh;x.font=fs(22,1);T('** ANULADO **',W/2,'center');x.font=fs(20)}infoRows.forEach(s=>{y+=lh;T(s,m)});
+y+=u(14);D();y+=u(26);x.font=fs(17,1);T('PRODUCTO',m);T('CANT',xQ,'right');T('VR UNIT',xU,'right');T('TOTAL',xT,'right');y+=u(10);D();y+=u(26);x.font=forPrint?valueFont:fs(20);
+rows.forEach(q=>{if(q.long){q.t.forEach((l,k)=>T(l,m,'left',y+k*lh));y+=q.t.length*lh;T(q.q,xQ,'right');T(q.u,xU,'right');T(q.a,xT,'right');y+=lh+gap}else{T(q.q,xQ,'right');T(q.u,xU,'right');T(q.a,xT,'right');q.t.forEach((l,k)=>T(l,m,'left',y+k*lh));y+=q.t.length*lh+gap}});
+y-=u(8);D();y+=u(30);x.font=forPrint?valueFont:fs(20);ext.forEach(e=>{T(e[0],m);T(e[1],xT,'right');y+=lh});if(ext.length){y-=lh-u(17);D();y+=u(30)}
+x.font=fs(26,1);T(r.cot?'TOTAL':'TOTAL A PAGAR',m);T(money(r.total),xT,'right');x.font=forPrint?valueFont:fs(20);if(cfg.sPago&&r.forma_pago){y+=lh+4;T('Forma de pago: '+r.forma_pago,m)}payLines(r).forEach(e=>{y+=lh;T(e[0],m);T(e[1],xT,'right')});if(pagoOn){y+=u(24);D();y+=u(34);x.font=fs(20,1);T('PAGA CON Bre-B',W/2,'center');if(cfg.breb){x.font=fs(24,1);y+=u(32);T('Llave: '+cfg.breb,W/2,'center')}x.font=fs(20);if(cfg.pagoTitular){y+=u(28);T(cfg.pagoTitular,W/2,'center')}if(r.cot){y+=u(28);T('Valor a pagar: '+money(r.total),W/2,'center')}if(qrC){y+=u(14);if(d){x.imageSmoothingEnabled=false;x.drawImage(qrC,(W-qrW)/2,y,qrW,qrW)}y+=qrW+u(4);x.font=fs(16);y+=u(18);T('Escanea con la app de tu banco',W/2,'center');x.font=fs(20)}}
+if(msgT){y+=u(46);T(msgT,W/2,'center')}if(nl.length){y+=u(msgT?16:46);x.font=fs(16);nl.forEach(l=>{y+=u(24);T(l,W/2,'center')})}return y+m+(forPrint?u(44):0)};
+const H=run(false);c.height=H*R;x.scale(R,R);x.fillStyle=forPrint?'#FFFFFF':'#FFFEF8';x.fillRect(0,0,W,H);x.fillStyle=forPrint?'#000000':'#1D1D1B';x.strokeStyle=forPrint?'#000000':'#1D1D1B';x.lineWidth=2;run(true);return c}
+async function shareImg(r,it){const c=recImg(r,it);const b=await new Promise(res=>c.toBlob(res,'image/png'));const f=new File([b],(r.cot?'cotizacion-'+fd(r.creado_en).replace(/\//g,'-'):'recibo-'+pad(r.numero))+'.png',{type:'image/png'});
+if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f]})}catch(e){if(e.name!=='AbortError')throw e}}else{window.open(URL.createObjectURL(b),'_blank');toast('Mantén presionada la imagen para guardarla')}}
+function tkt(r,it){const qc=mostrarPago(r)?qrCanvas(3,300):null,pagoH=mostrarPago(r)?'<hr><div class="c"><b>PAGA CON Bre-B</b></div>'+(cfg.breb?'<div class="c"><b>Llave: '+esc(cfg.breb)+'</b></div>':'')+(cfg.pagoTitular?'<div class="c">'+esc(cfg.pagoTitular)+'</div>':'')+(r.cot?'<div class="c">Valor a pagar: '+money(r.total)+'</div>':'')+(qc?'<img class="qr" src="'+qc.toDataURL()+'" alt="QR de pago">':''):'';const rows=it.map(i=>{const n=nombreConPresentacion(i);return n.length>20?`<div class="g gl"><span class="gn">${esc(n)}</span><span></span><span>${i.cantidad}</span><span>${money(i.precio_venta)}</span><span>${money(i.precio_venta*i.cantidad)}</span></div>`:`<div class="g"><span>${esc(n)}</span><span>${i.cantidad}</span><span>${money(i.precio_venta)}</span><span>${money(i.precio_venta*i.cantidad)}</span></div>`}).join('');
+const ex=extLines(r,it).map(e=>`<div class="l"><span>${e[0]}</span><span>${e[1]}</span></div>`).join('');const inf=infoLines(r).map(s=>`<div>${esc(s)}</div>`).join('');
+return `<div class="tkt${cfg.big?' big':''}">${cfg.sLogo?'<img class="lg" src="logo.png" alt="">':''}<h3>${esc(cfg.biz)}</h3><div class="c">${head().map(esc).join('<br>')}</div><hr><div class="c"><b>${titulo(r)}</b></div>${r.anulado?'<div class="c"><b>** ANULADO **</b></div>':''}${inf}<hr><div class="g h"><span>PRODUCTO</span><span>CANT</span><span>VR UNIT</span><span>TOTAL</span></div>${rows}<hr>${ex}<div class="l t"><span>${r.cot?'TOTAL':'TOTAL A PAGAR'}</span><span>${money(r.total)}</span></div>${cfg.sPago&&r.forma_pago?`<div>Forma de pago: ${esc(r.forma_pago)}</div>`:''}${payLines(r).map(e=>`<div class="l"><span>${e[0]}</span><span>${e[1]}</span></div>`).join('')}${pagoH}${(r.cot?'Gracias por su interés':cfg.msg)?`<div class="c" style="margin-top:12px">${esc(r.cot?'Gracias por su interés':cfg.msg)}</div>`:''}${(r.cot?cfg.cotNota:cfg.nota)?`<div class="c nota">${esc(r.cot?cfg.cotNota:cfg.nota).replace(/\n/g,'<br>')}</div>`:''}</div>`}
+function showRec(r,it){const T=txt(r,it),image=recImg(r,it,true);let d=String(r.cliente_telefono||'').replace(/\D/g,'');if(d.length===10)d='57'+d;
+openM(tkt(r,it)+`<img class="print-img" alt="Recibo de venta"><div class="acts"><button class="btn full" data-img>Enviar como imagen</button><a class="btn alt full" target="_blank" rel="noopener" href="https://wa.me/${d}?text=${encodeURIComponent(T)}">${d?'Enviar texto por WhatsApp al cliente':'Enviar texto por WhatsApp'}</a><button class="btn alt full" data-cp>Copiar texto</button><button class="btn alt full" data-sh>Compartir</button>${r.cot||!esAdminDrosalud()?'':(r.anulado?'<button class="btn bad full" data-del>Eliminar definitivamente</button>':'<button class="btn bad full" data-anu>Anular este recibo</button>')}<button class="btn alt full" data-x>Cerrar</button></div>`);
+const s=$('#sheet');s.querySelector('.print-img').src=image.toDataURL('image/png');s.querySelector('[data-cp]').onclick=()=>copy(T);s.querySelector('[data-img]').onclick=()=>go(()=>shareImg(r,it));
+s.querySelector('[data-sh]').onclick=()=>{if(navigator.share)navigator.share({text:T}).catch(()=>{});else copy(T)};s.querySelector('[data-x]').onclick=closeM;
+const bd=s.querySelector('[data-del]');if(bd)bd.onclick=()=>go(async()=>{if(!confirm('¿Eliminar este recibo definitivamente? No se puede deshacer.'))return;const{error}=await sb.from('recibos').delete().eq('id',r.id);if(error)throw error;H=H.filter(x=>x.id!==r.id);closeM();rHis();toast('Recibo eliminado')});
+const ba=s.querySelector('[data-anu]');if(ba)ba.onclick=()=>anular(r)}
+function anular(r){openM(`<h2 style="margin-top:0">Anular recibo ${pad(r.numero)}</h2><p class="mut sm">El recibo queda guardado, pero no cuenta en las ventas ni en la ganancia.</p><label for="mo">Motivo</label><input id="mo" placeholder="Ej: error en el producto, devolución" autocomplete="off"><div class="acts"><button class="btn bad full" id="aok">Anular recibo</button><button class="btn alt full" id="ano">Volver</button></div>`);$('#ano').onclick=closeM;
+$('#aok').onclick=()=>go(async()=>{const mo=$('#mo').value.trim();if(!mo){toast('Escribe el motivo');return}const f={anulado:true,anulado_en:new Date().toISOString(),motivo_anulacion:mo};const{error}=await sb.from('recibos').update(f).eq('id',r.id);if(error)throw error;Object.assign(r,f);const x=H.find(y=>y.id===r.id);if(x)Object.assign(x,f);closeM();rHis();if(hv==='res')go(rResumen);toast('Recibo anulado')})}
+function editP(id,pre){if(!esAdminDrosalud()){if(!id){toast('Solo el administrador puede crear productos.');scanAdd=false;return}const p=P.find(x=>x.id===id);if(!p)return;openM(`<h2 style="margin-top:0">Actualizar precio de venta</h2><p class="mut sm">${esc(p.nombre)}</p><label for="seller-price">Precio de venta del empaque completo</label><input id="seller-price" type="number" min="1" step="1" inputmode="numeric" value="${p.precio_venta==null?'':Number(p.precio_venta)}" placeholder="Escribe el precio de venta"><p class="mut sm">Costo de compra: ${money(p.precio_compra)}. Si no hay precio de venta asignado, se sugiere uno calculado con el margen configurado. El cambio actualiza únicamente el precio de venta.</p><div class="acts"><button class="btn full" id="seller-save">Guardar precio</button><button class="btn alt full" id="seller-cancel">Cancelar</button></div>`);$('#seller-cancel').onclick=closeM;$('#seller-save').onclick=()=>go(async()=>{const v=$('#seller-price').value,nv=v===''?null:Number(v);if(nv===null||!Number.isFinite(nv)||nv<=0){toast('Escribe un precio de venta válido');return}const{error}=await sb.rpc('actualizar_precio_venta_drosalud',{p_producto_id:id,p_precio:nv});if(error)throw error;p.precio_venta=nv;p.actualizado_en=new Date().toISOString();closeM();rCat();rRes();toast('Precio de venta actualizado')});return}const p=id?P.find(x=>x.id===id):{nombre:'',laboratorio:'',codigo:pre||'',precio_compra:0,precio_venta:null,fraccionable:false,unidades_por_caja:1,unidades_por_venta:10};openM(`<h2 style="margin-top:0">${id?'Editar producto':'Producto nuevo'}</h2><label for="en">Nombre</label><input id="en" value="${esc(p.nombre)}"><label for="el">Laboratorio o proveedor</label><input id="el" value="${esc(p.laboratorio)}"><label for="eco">Código de barras (opcional)</label><input id="eco" inputmode="numeric" value="${esc(p.codigo)}"><label for="ec">Costo de compra del empaque completo</label><input id="ec" type="number" inputmode="numeric" value="${p.precio_compra||''}"><label for="ev2">Precio de venta del empaque completo (opcional)</label><input id="ev2" type="number" inputmode="numeric" value="${p.precio_venta==null?'':Number(p.precio_venta)}" placeholder="Vacío = compra + ${cfg.m}%"><label class="ck"><input id="efr" type="checkbox" ${p.fraccionable?'checked':''}> Permite vender por unidades</label><div id="frcfg" ${p.fraccionable?'':'hidden'}><label for="euc">Unidades que trae el empaque completo</label><input id="euc" type="number" min="1" step="1" value="${Number(p.unidades_por_caja)||1}"><label for="euv">Unidades por venta</label><input id="euv" type="number" min="1" step="1" value="${Number(p.unidades_por_venta)||10}"><p class="mut sm">Ejemplo: empaque de 20 unidades; venta mínima de 10. Los precios se calculan proporcionalmente.</p></div><p class="gain" id="ev"></p>${id?'<h2 style="font-size:.95rem">Historial del precio de compra</h2><div id="hph" class="sm mut">Cargando…</div>':''}<div class="acts"><button class="btn full" id="es">Guardar</button>${id?'<button class="btn bad full" id="ed">Eliminar producto</button>':''}<button class="btn alt full" id="ex">Cancelar</button></div>`);
+const pvw=()=>{const c=+$('#ec').value||0,v=$('#ev2').value!==''?+$('#ev2').value:price(c),box=$('#efr').checked?Math.max(1,+$('#euc').value||1):1,unit=$('#efr').checked?Math.max(1,+$('#euv').value||1):1;$('#ev').innerHTML='Empaque: '+money(v)+' · '+money(c)+' compra'+($('#efr').checked?' · Por '+unit+' unidades: venta '+money(v/box*unit)+' · compra '+money(c/box*unit):'')+(c>0?' · ganancia '+Math.round(mg(v,c))+'%':'')+(c>0?warnM(v,c):'')};pvw();$('#ec').oninput=pvw;$('#ev2').oninput=pvw;$('#euc').oninput=pvw;$('#euv').oninput=pvw;$('#efr').onchange=()=>{$('#frcfg').hidden=!$('#efr').checked;pvw()};$('#ex').onclick=()=>{scanAdd=false;closeM()};
+$('#es').onclick=()=>go(async()=>{const n=$('#en').value.trim(),c=+$('#ec').value,l=$('#el').value.trim(),cod=($('#eco').value||'').trim(),v=$('#ev2').value===''?null:+$('#ev2').value,fr=$('#efr').checked,box=fr?Number($('#euc').value):1,unit=fr?Number($('#euv').value):1;if(!n||!(c>0)){toast('Escribe el nombre y el precio de compra');return}if(v!==null&&!(v>=0)){toast('Revisa el precio de venta');return}if(fr&&(!Number.isInteger(box)||box<1||!Number.isInteger(unit)||unit<1||unit>box)){toast('Revisa las unidades del empaque y las unidades por venta');return}if(cod&&P.some(x=>x.id!==id&&String(x.codigo||'').trim()===cod)){toast('Ya existe un producto con ese código');return}
+if(id){const f={nombre:n,laboratorio:l,codigo:cod||null,precio_compra:c,precio_venta:v,fraccionable:fr,unidades_por_caja:box,unidades_por_venta:unit,actualizado_en:new Date().toISOString()};const{error}=await sb.from('productos').update(f).eq('id',id);if(error)throw error;Object.assign(p,f)}
+else{const{data,error}=await sb.from('productos').insert({nombre:n,laboratorio:l,codigo:cod||null,precio_compra:c,precio_venta:v,fraccionable:fr,unidades_por_caja:box,unidades_por_venta:unit}).select().single();if(error)throw error;P.unshift(data);if(scanAdd){scanAdd=false;addCart(data)}}
+const gg=mg(v!==null?v:price(c),c);idx();closeM();rCat();rRes();toast(gg<cfg.mMin?'⚠ Guardado, pero la ganancia es solo '+Math.round(gg)+'%':'Guardado')});
+if(id){$('#ed').onclick=()=>go(async()=>{if(!confirm('¿Eliminar este producto del catálogo?'))return;const{error}=await sb.from('productos').delete().eq('id',id);if(error){toast('No se puede eliminar: ya está en recibos');return}P=P.filter(x=>x.id!==id);closeM();rCat();rRes();toast('Eliminado')});
+sb.from('historial_precios').select('*').eq('producto_id',id).order('creado_en',{ascending:false}).limit(8).then(({data,error})=>{const b=$('#hph');if(!b)return;b.innerHTML=error?'No disponible todavía.':(data.length?data.map(x=>{const d=(x.precio_nuevo-x.precio_anterior)/x.precio_anterior*100;return `${esc(fd(x.creado_en))}: ${money(x.precio_anterior)} → ${money(x.precio_nuevo)} <b class="${d>0?'warn':''}">(${d>0?'+':''}${d.toFixed(1).replace('.',',')}%)</b>`}).join('<br>'):'Sin cambios registrados.')})}}
+const POLITICA_VERSION='v1-2026-11';
+const CONSENTIMIENTO_OBLIGATORIO=true;
+const AVISO_CORTO='DROGUERIA DROSALUD S.A.S. (NIT 900.109.443-0) trata tus datos personales para elaborar cotizaciones y recibos, coordinar entregas y contactarte sobre tu pedido. Darnos tu cédula y tus datos es voluntario. Si tu compra incluye medicamentos, esa información puede revelar datos de salud, que son sensibles, y no estás obligado a autorizar su tratamiento. Puedes conocer, actualizar, corregir o pedir la supresión de tus datos escribiendo a drosaludpharma@gmail.com o al +57 322 7489384.';
+let CONS=new Set();
+function consentHTML(id){return `<div class="cons"><label class="ck"><input type="checkbox" id="${id}"> El cliente autoriza el tratamiento de sus datos personales</label><details><summary>Ver aviso de privacidad</summary><p class="sm">${esc(AVISO_CORTO)}</p></details></div>`}
+async function cargarConsentimientos(){try{const r=await all('consentimientos_clientes','aceptado_en');CONS=new Set();r.forEach(x=>{if(!x.cliente_id)return;if(x.aceptado)CONS.add(x.cliente_id);else CONS.delete(x.cliente_id)})}catch(e){console.error('Consentimientos:',e)}}
+async function registrarConsentimiento(cid,canal){if(!cid||CONS.has(cid))return;const{error}=await sb.from('consentimientos_clientes').insert({cliente_id:cid,version_texto:POLITICA_VERSION,aceptado:true,canal:canal||'mostrador'});if(error)throw error;CONS.add(cid)}
+function faltaConsentimiento(tieneDatos,marcada,cid){return CONSENTIMIENTO_OBLIGATORIO&&tieneDatos&&!marcada&&!(cid&&CONS.has(cid))}
+function partesNombre(n){const p=String(n||'').trim().split(/\\s+/).filter(Boolean);return{nombres:p.shift()||'',apellidos:p.join(' ')}}
+function nombreCompleto(n,a){return[n,a].map(x=>String(x||'').trim()).filter(Boolean).join(' ').replace(/\\s+/g,' ')}
+function buscarCliente(ced,tel){const ce=String(ced||'').replace(/\\D/g,'');if(ce)return C.find(x=>String(x.cedula||'').replace(/\\D/g,'')===ce)||null;const te=String(tel||'').replace(/\\D/g,'');return te?C.find(x=>String(x.telefono||'').replace(/\\D/g,'')===te)||null:null}
+async function guardarCliente(nm,ced,tel,dir){if(!nm&&!ced&&!tel)return null;let c=buscarCliente(ced,tel);if(!c&&ced&&tel&&buscarCliente('',tel))throw new Error('Ese teléfono ya está asociado a otro cliente. Revisa los datos.');const d={nombre:nm||c?.nombre||'Cliente sin nombre',cedula:ced||c?.cedula||null,telefono:tel||c?.telefono||null,direccion:dir||c?.direccion||null};if(c){const u={};Object.keys(d).forEach(k=>{if(d[k]&&d[k]!==c[k])u[k]=d[k]});if(Object.keys(u).length){const{error}=await sb.from('clientes').update(u).eq('id',c.id);if(error)throw error;Object.assign(c,u)}}else{const{data,error}=await sb.from('clientes').insert(d).select().single();if(error)throw error;c=data;C.push(c)}C.sort((a,b)=>a.nombre.localeCompare(b.nombre));return c}
+function editC(id){const c=id?C.find(x=>x.id===id):{nombre:'',telefono:'',cedula:'',direccion:''},p=partesNombre(c.nombre);openM(`<h2 style="margin-top:0">${id?'Editar cliente':'Cliente nuevo'}</h2><label for="cc">Cédula o NIT</label><input id="cc" inputmode="numeric" value="${esc(c.cedula)}"><label for="cn">Nombres</label><input id="cn" value="${esc(p.nombres)}"><label for="ca">Apellidos</label><input id="ca" value="${esc(p.apellidos)}"><label for="ct">Teléfono</label><input id="ct" type="tel" value="${esc(c.telefono)}"><label for="cd">Dirección</label><input id="cd" value="${esc(c.direccion)}">${id&&CONS.has(id)?'<div class="sm mut">✓ Autorización de datos registrada</div>':consentHTML('cco')}${id?'<div id="chs" class="sm mut">Cargando…</div>':''}<div class="acts">${id?'<button class="btn alt full" id="cbuy">Hacer un recibo para este cliente</button>':''}${id&&esAdminDrosalud()?'<button class="btn bad full" id="canon">Anonimizar datos del cliente</button>':''}<button class="btn full" id="cs">Guardar</button><button class="btn alt full" id="cx">Cancelar</button></div>`);$('#cx').onclick=closeM;if(id&&esAdminDrosalud()){const ba=$('#canon');if(ba)ba.onclick=()=>go(async()=>{if(!confirm('¿Anonimizar a este cliente? Se borran de forma permanente su nombre, cédula, teléfono y dirección. Sus recibos se conservan sin identificarlo.'))return;const{error}=await sb.rpc('anonimizar_cliente_drosalud',{p_cliente_id:id});if(error)throw error;closeM();await loadAllSafe();toast('Cliente anonimizado')})}if(id){cliHist(id);$('#cbuy').onclick=()=>{const z=partesNombre(c.nombre);$('#nombres').value=z.nombres;$('#apellidos').value=z.apellidos;$('#tel').value=c.telefono||'';$('#dircli').value=c.direccion||'';$('#ced').value=c.cedula||'';closeM();show('venta')}}$('#cs').onclick=()=>go(async()=>{const n=nombreCompleto($('#cn').value,$('#ca').value),t=$('#ct').value.trim(),di=$('#cd').value.trim(),ce=$('#cc').value.trim();if(!n){toast('Escribe nombres y apellidos');return}const m=buscarCliente(ce,t);if(m&&(!id||m.id!==id)){toast('Ya existe un cliente con esa cédula o teléfono.');return}const cs=!!($('#cco')&&$('#cco').checked);if(faltaConsentimiento(true,cs,id)){toast('Falta la autorización de datos del cliente. Marca la casilla.');return}if(id){const{error}=await sb.from('clientes').update({nombre:n,telefono:t||null,direccion:di||null,cedula:ce||null}).eq('id',id);if(error)throw error;Object.assign(c,{nombre:n,telefono:t||null,direccion:di||null,cedula:ce||null});if(cs)await registrarConsentimiento(id,'mostrador')}else{const nc=await guardarCliente(n,ce,t,di);if(cs&&nc)await registrarConsentimiento(nc.id,'mostrador')}closeM();rCli();toast('Guardado')})}
+async function crear(){if(savingVenta)return;if(!cart.length){toast('Agrega al menos un producto');return}savingVenta=true;const ventaItems=cart.map(i=>({...i}));try{
+const nm=nombreCompleto($('#nombres').value,$('#apellidos').value),tel=$('#tel').value.trim(),dir=$('#dircli').value.trim(),ced=$('#ced').value.trim(),k=calc(),fp=$('#fp').value,vend=($('#vend').value||'').trim(),rc=fp==='Efectivo'?(+$('#rec').value||0):0;if(rc>0&&rc<k.total){toast('El valor recibido es menor al total');return}let cid=null,cliDir=dir||null,cliente=null;const consOk=!!($('#cons')&&$('#cons').checked);if(faltaConsentimiento(!!(nm||ced||tel||dir),consOk,buscarCliente(ced,tel)?.id)){toast('Falta la autorización de datos del cliente: marca la casilla, o deja los datos del cliente vacíos.');return}if(nm||ced||tel){cliente=await guardarCliente(nm,ced,tel,dir);cid=cliente?.id||null;if(consOk&&cid)await registrarConsentimiento(cid,'mostrador');cliDir=dir||cliente?.direccion||null}
+const venta={cliente_id:cid,cliente_nombre:nm||cliente?.nombre||null,cliente_cedula:ced||cliente?.cedula||null,cliente_telefono:tel||cliente?.telefono||null,cliente_direccion:cliDir,descuento:k.ds,domicilio:k.dm,costo_mensajero:esAdminDrosalud()?k.mens:0,forma_pago:fp,recibido:rc>0?rc:null,vendedor:vend||null};
+const items=ventaItems.map(i=>({producto_id:i.pid,nombre:i.n,cantidad:i.q,precio_venta:i.p,presentacion:i.presentacion||'Unidad',unidades_por_presentacion:i.unidadesPorPresentacion||1}));
+const{data:rec,error}=await sb.rpc('registrar_venta_drosalud',{p_venta:venta,p_items:items});if(error)throw error;
+const it=ventaItems.map(i=>({nombre:i.n,cantidad:i.q,precio_venta:i.p,...(esAdminDrosalud()?{precio_compra:i.c}:{}),presentacion:i.presentacion||'Unidad',unidades_por_presentacion:i.unidadesPorPresentacion||1}));
+H.unshift(rec);try{localStorage.setItem('lastVend',vend);if(vend){const L=JSON.parse(localStorage.getItem('vendList')||'[]').filter(x=>x!==vend);L.unshift(vend);localStorage.setItem('vendList',JSON.stringify(L.slice(0,8)))}}catch(e){}iniVend();cart=[];if($('#cons'))$('#cons').checked=false;['#nombres','#apellidos','#tel','#dircli','#ced','#dsc','#dom','#mens','#rec'].forEach(s=>{$(s).value=''});$('#cls').innerHTML=C.map(x=>`<option value="${esc(x.nombre)}">`).join('');rCart();if(esAdminDrosalud())rHis();rCli();showRec(rec,it)}finally{savingVenta=false}}
+async function importar(){if(!esAdminDrosalud()){toast('Solo el administrador puede importar productos.');return}const{count,error:e0}=await sb.from('productos').select('*',{count:'exact',head:true});if(e0)throw e0;if(count>0){await loadAll();toast('El catálogo ya tiene productos');return}if(!confirm('Se cargarán '+BASE.length+' productos de tu Excel. ¿Continuar?'))return;for(let i=0;i<BASE.length;i+=250){const rows=BASE.slice(i,i+250).map(r=>({codigo:r[0],nombre:r[1],laboratorio:r[2],precio_compra:r[3]}));const{error}=await sb.from('productos').insert(rows);if(error)throw error;toast('Cargando '+Math.min(i+250,BASE.length)+' de '+BASE.length)}await loadAll();toast('Catálogo cargado')}
+async function loadTop(){if(!esAdminDrosalud()){TOP=[];rTop();return}try{const{data,error}=await sb.rpc('mas_vendidos',{dias:60});if(error)throw error;TOP=(data||[]).filter(x=>P.some(p=>p.id===x.producto_id)).slice(0,10)}catch(e){TOP=[]}rTop()}
+function rTop(){const w=$('#topw');if(!w)return;const q=$('#q').value.trim();w.hidden=!TOP.length||!!q;$('#top').innerHTML=TOP.map(x=>{const p=P.find(y=>y.id===x.producto_id);return p?`<button class="chip" data-add="${p.id}">${esc(p.nombre)} <small>${money(pv(p))}</small></button>`:''}).join('')}
+let cv='todos',contact={},scn=null,scMode='venta',scLast='',scT=0,scanAdd=false,scLog=[],kb='',kt=0;try{contact=JSON.parse(localStorage.getItem('contactados')||'{}')}catch(e){}
+const dd=t=>Math.floor((Date.now()-new Date(t).getTime())/864e5);
+const waNum=t=>{let d=String(t||'').replace(/\D/g,'');if(d.length===10)d='57'+d;return d};
+function setCV(v){cv=v;document.querySelectorAll('[data-cv]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.cv===v)));$('#cvt').hidden=v!=='todos';$('#cvr').hidden=v!=='ret';if(v==='ret')loadCST().catch(()=>{}).then(rRet)}
+function rRet(){const f=$('#rtf').value,L=[];C.forEach(c=>{const s=CST[c.id];if(!s||!s.u)return;if(contact[c.id]&&Date.now()-contact[c.id]<14*864e5)return;const d=dd(s.u),avg=s.n>=3?(new Date(s.u)-new Date(s.p))/864e5/(s.n-1):0;let mo=null;if(f==='toca'){if(avg>=1&&d>avg*1.2&&d>=5)mo='Suele comprar cada ~'+Math.round(avg)+' días y ya van '+d}else if(d>=+f)mo='Sin comprar hace '+d+' días';if(mo)L.push({c,s,d,mo})});L.sort((a,b)=>b.d-a.d);
+$('#rtc').textContent=L.length?L.length+(L.length>1?' clientes':' cliente')+' para escribirles':'';
+$('#rtl').innerHTML=L.length?L.slice(0,50).map(x=>{const c=x.c,nom=tcase(c.nombre),ph=waNum(c.telefono),msg=(cfg.msgRetomar||'').replace(/\{nombre\}/g,nom.split(' ')[0]);return `<div class="item"><div class="top"><span>${esc(nom)}</span><b>${money(x.s.t)}</b></div><small class="mut">${esc(x.mo)}<br>Última compra: ${esc(fd(x.s.u))} · ${x.s.n} compra${x.s.n>1?'s':''}</small><div class="ctl">${ph?`<a class="btn" style="flex:1" target="_blank" rel="noopener" href="https://wa.me/${ph}?text=${encodeURIComponent(msg)}">Escribir por WhatsApp</a>`:'<span class="mut sm" style="flex:1">Sin teléfono</span>'}<button class="btn alt" data-cok="${c.id}">Ya le escribí</button></div></div>`}).join(''):'<p class="mut">Por ahora no hay clientes para retomar con este filtro.</p>'}
+function rBk(){const b=$('#bkb');if(!b)return;const ref=cfg.ultimoRespaldo||cfg.primerUso;if(!ref){b.hidden=true;return}const d=dd(ref);let sn=0;try{sn=+localStorage.getItem('bkSnooze')||0}catch(e){}b.hidden=!(d>=(+cfg.respDias||30)&&Date.now()>sn);if(!b.hidden)b.innerHTML='<span>'+(cfg.ultimoRespaldo?'Hace '+d+' días no descargas tu respaldo':'Aún no has descargado tu respaldo')+'</span><button id="bkd">Descargar</button><button id="bkl">Luego</button>'}
+const buscarCodigo=c=>{c=String(c||'').trim();if(!c)return null;const z=s=>String(s||'').trim().replace(/^0+/,'');return P.find(p=>String(p.codigo||'').trim()===c)||P.find(p=>z(p.codigo)&&z(p.codigo)===z(c))||null};
+function unidadesPresentacion(i){return Math.max(1,Number(i.unidades_por_presentacion||i.unidadesPorPresentacion||1))}
+function nombreConPresentacion(i){const u=unidadesPresentacion(i),q=Number(i.cantidad??i.q)||0;if(u<=1||!i.presentacion)return i.nombre;return `${i.nombre} · ${q} unidades`}
+function etiquetaCarrito(i){return `${i.q} ${i.q===1?'unidad':'unidades'}`}
+function addCart(p){const step=p.fraccionable?Math.max(1,Number(p.unidades_por_venta)||10):1,box=p.fraccionable?Math.max(1,Number(p.unidades_por_caja)||1):1,precio=pv(p);if(precio==null){toast('Este producto no tiene precio de venta. Solicita al administrador que lo asigne.');return}const f=cart.find(i=>i.pid===p.id);if(f)f.q+=step;else cart.push({pid:p.id,n:p.nombre,c:Number(p.precio_compra)/box,p:precio/box,q:step,fraccionable:!!p.fraccionable,presentacion:p.fraccionable?'Unidades':'Unidad',unidadesPorPresentacion:step});rCart()}
+function beep(){try{const a=new(window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator(),g=a.createGain();o.frequency.value=880;g.gain.value=.08;o.connect(g);g.connect(a.destination);o.start();setTimeout(()=>{o.stop();a.close()},110)}catch(e){}try{navigator.vibrate&&navigator.vibrate(40)}catch(e){}}
+function stopScan(){const s=scn;scn=null;if(!s)return Promise.resolve();return Promise.resolve().then(()=>s.stop()).then(()=>s.clear()).catch(()=>{})}
+function notFound(code,modo){stopScan();scanAdd=modo==='venta';openM(`<h2 style="margin-top:0">Código no encontrado</h2><p>El código <b>${esc(code)}</b> no está en tu catálogo.</p><div class="acts"><button class="btn full" id="nfc">Crear producto con este código</button><button class="btn alt full" id="nfx">Cerrar</button></div>`);$('#nfx').onclick=()=>{scanAdd=false;closeM()};$('#nfc').onclick=()=>editP('',code)}
+function onCodigo(code,modo){const p=buscarCodigo(code);if(!p){notFound(code,modo);return}if(modo==='cat'){$('#q2').value=String(p.codigo);rCat();toast(p.nombre)}else{addCart(p);toast('Agregado: '+p.nombre)}}
+function camOk(code){const n=Date.now();if(code===scLast&&n-scT<2500)return;scLast=code;scT=n;const p=buscarCodigo(code);beep();
+if(!p){notFound(code,scMode);return}
+if(scMode==='cat'){closeM();$('#q2').value=String(p.codigo);rCat();toast(p.nombre);return}
+addCart(p);const cont=$('#scc')&&$('#scc').checked;if(cont){scLog.unshift(p.nombre);$('#scs').textContent='Agregado: '+p.nombre;$('#scl').innerHTML=scLog.slice(0,5).map(x=>'<div>✓ '+esc(x)+'</div>').join('')}else{closeM();toast('Agregado: '+p.nombre)}}
+async function abrirScan(modo){scMode=modo;scLast='';scLog=[];
+if(typeof Html5Qrcode==='undefined'){if(window.DEMO){openM('<h2 style="margin-top:0">Escáner (demostración)</h2><p class="mut sm">En tu celular aquí se abre la cámara. En la demostración puedes probar con códigos de ejemplo:</p>'+P.slice(0,3).map(p=>`<button class="row" data-demoscan="${esc(p.codigo)}"><span class="nm">${esc(p.nombre)}<small>${esc(p.codigo)}</small></span></button>`).join('')+'<button class="row" data-demoscan="7700000000000"><span class="nm">Un código que no existe<small>7700000000000</small></span></button><div class="acts"><button class="btn alt full" id="scx">Cerrar</button></div>');$('#scx').onclick=closeM}else toast('El escáner no está disponible en esta versión');return}
+openM(`<h2 style="margin-top:0">Escanear código de barras</h2><div id="reader" style="width:100%;border-radius:12px;overflow:hidden;background:#000;min-height:220px"></div><p class="mut sm" id="scs">Iniciando la cámara…</p><div class="sm" id="scl"></div>${modo==='venta'?'<label class="ck"><input type="checkbox" id="scc"> Seguir escaneando varios productos</label>':''}<div class="acts"><button class="btn alt full" id="scx">Cerrar</button></div>`);$('#scx').onclick=closeM;
+try{const F=Html5QrcodeSupportedFormats;scn=new Html5Qrcode('reader',{formatsToSupport:[F.EAN_13,F.EAN_8,F.UPC_A,F.UPC_E,F.CODE_128,F.CODE_39],experimentalFeatures:{useBarCodeDetectorIfSupported:true},verbose:false});
+await scn.start({facingMode:'environment'},{fps:10,qrbox:(w,h)=>({width:Math.floor(w*.85),height:Math.floor(Math.min(h*.55,150))})},camOk,()=>{});if($('#scs'))$('#scs').textContent='Apunta al código de barras de la caja.'}catch(e){scn=null;if($('#scs'))$('#scs').textContent='No se pudo abrir la cámara. Permite el acceso a la cámara en el navegador e intenta de nuevo.'}}
+document.addEventListener('keydown',e=>{const t=e.target,tag=(t.tagName||'').toLowerCase();if(!(tag==='body'||t.id==='q'||t.id==='q2')||e.ctrlKey||e.metaKey||e.altKey||!$('#modal').hidden)return;const n=Date.now();if(e.key==='Enter'){if(kb.length>=6&&/^\w+$/.test(kb)){e.preventDefault();const c=kb;kb='';if(t.id==='q'||t.id==='q2'){t.value='';t.dispatchEvent(new Event('input',{bubbles:true}))}onCodigo(c,t.id==='q2'?'cat':'venta')}else kb='';return}if(e.key.length!==1)return;if(n-kt>60)kb='';kt=n;kb+=e.key});
+function showReset(){$('#spl').hidden=true;$('#lg').hidden=true;$('#mfa').hidden=true;$('#app').hidden=true;$('#rsx').hidden=false}
+async function doReset(){const a=$('#np1').value,b=$('#np2').value,m=$('#rsm');m.textContent='';if(a.length<8){m.textContent='Usa al menos 8 caracteres.';return}if(a!==b){m.textContent='Las contraseñas no coinciden.';return}const{error}=await sb.auth.updateUser({password:a});if(error){m.textContent='No se pudo cambiar la contraseña. Intenta de nuevo.';return}$('#np1').value='';$('#np2').value='';$('#rsx').hidden=true;toast('Contraseña actualizada');await start()}
+async function doForgot(){const em=$('#em').value.trim(),m=$('#lgm');if(!em){m.className='msg bad';m.textContent='Escribe tu correo arriba y toca de nuevo.';return}const{error}=await sb.auth.resetPasswordForEmail(em,{redirectTo:location.origin+location.pathname});m.className='msg '+(error?'bad':'ok');m.textContent=error?'No se pudo enviar el enlace. Intenta en unos minutos.':'Si el correo está registrado, te enviamos un enlace para crear una nueva contraseña. Revisa también el correo no deseado.'}
+async function doLogin(){const em=$('#em').value.trim(),pw=$('#pw').value,m=$('#lgm'),b=$('#in');m.className='msg bad';m.textContent='';if(!em||!pw){m.textContent='Escribe tu correo y tu contraseña.';return}b.disabled=true;b.textContent='Entrando…';
+try{const{error}=await sb.auth.signInWithPassword({email:em,password:pw});if(error){const t=String(error.message||'');m.textContent=/rate|too many|limit/i.test(t)?'Demasiados intentos. Espera unos minutos e intenta de nuevo.':(/Failed to fetch|network/i.test(t)?'Sin conexión. Revisa tu internet.':'Correo o contraseña incorrectos.');return}
+try{localStorage.setItem('lastEmail',em)}catch(e){}$('#pw').value='';await start()}catch(e){m.textContent=/Failed to fetch|NetworkError/i.test(String(e&&e.message))?'Sin conexión. Revisa tu internet.':'No se pudo iniciar sesión. Intenta de nuevo.'}finally{b.disabled=false;b.textContent='Entrar'}}
+const hayPago=()=>!!(cfg.breb||cfg.qrTexto||cfg.qrImg);
+function mostrarPago(r){if(r.anulado||!hayPago())return false;if(r.forcePago)return true;if(r.cot)return !!cfg.pagoCot;if(cfg.pagoRec==='nunca')return false;if(cfg.pagoRec==='noefectivo')return r.forma_pago!=='Efectivo';return true}
+const QRI=new Image();QRI.onload=()=>{try{if(draft)renderPrev()}catch(e){}};
+function qrImgEl(){if(!cfg.qrImg)return null;if(QRI._u!==cfg.qrImg){QRI._u=cfg.qrImg;QRI.src=cfg.qrImg}return QRI.complete&&QRI.naturalWidth?QRI:null}
+function qrCanvas(sPref,maxW){let n=0,g=null;if(cfg.qrTexto&&typeof qrcode!=='undefined'){try{g=qrcode(0,'M');g.addData(cfg.qrTexto);g.make();n=g.getModuleCount()}catch(e){g=null}}
+if(g){const s=Math.max(2,Math.min(sPref,Math.floor((maxW||9999)/(n+8)))),sz=(n+8)*s,c=document.createElement('canvas');c.width=c.height=sz;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,sz,sz);x.fillStyle='#000';for(let i=0;i<n;i++)for(let j=0;j<n;j++)if(g.isDark(i,j))x.fillRect((j+4)*s,(i+4)*s,s,s);return c}
+const im=qrImgEl();if(im){const sz=Math.min(maxW||9999,Math.round(sPref*93)),c=document.createElement('canvas');c.width=c.height=sz;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,sz,sz);x.imageSmoothingEnabled=false;x.drawImage(im,0,0,sz,sz);return c}
+return null}
+function qrStatus(){const s=$('#qrs');if(!s)return;s.textContent=draft&&draft.qrTexto?'QR leído y redibujado en alta nitidez. Comprueba con la app de tu banco que el destinatario sea el tuyo.':(draft&&draft.qrImg?'QR cargado como imagen. Comprueba con la app de tu banco que el destinatario sea el tuyo.':'No hay QR cargado.')}
+function reducir(url,max){return new Promise(res=>{const im=new Image();im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/png'))};im.onerror=()=>res('');im.src=url})}
+async function leerQR(file){if(typeof Html5Qrcode==='undefined')return null;let el=$('#qrtmp');if(!el){el=document.createElement('div');el.id='qrtmp';el.style.display='none';document.body.appendChild(el)}const q=new Html5Qrcode('qrtmp',{formatsToSupport:[Html5QrcodeSupportedFormats.QR_CODE],verbose:false});try{return await q.scanFile(file,false)}catch(e){return null}}
+async function cargarQR(file){const st=$('#qrs');st.textContent='Leyendo el QR…';
+const url=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)});
+const txt=await leerQR(file);draft.qrTexto='';draft.qrImg='';
+if(txt&&/^[\x20-\x7E]+$/.test(txt)&&typeof qrcode!=='undefined'){const sv=cfg;cfg={...cfg,qrTexto:txt,qrImg:''};let c=null;try{c=qrCanvas(5,9999)}finally{cfg=sv}
+let ok=false;if(c){try{const blob=await new Promise(r=>c.toBlob(r,'image/png')),back=await leerQR(new File([blob],'q.png',{type:'image/png'}));ok=back===txt}catch(e){ok=false}}
+if(ok)draft.qrTexto=txt}
+if(!draft.qrTexto)draft.qrImg=await reducir(url,420);
+qrStatus();renderPrev()}
+function iniVend(){const v=$('#vend');if(!v)return;let l=null,lst=[];try{l=localStorage.getItem('lastVend');lst=JSON.parse(localStorage.getItem('vendList')||'[]')}catch(e){}v.value=l!==null?l:(cfg.vendedorDef||'');const names=[...new Set([cfg.vendedorDef,...lst].filter(Boolean))];$('#vds').innerHTML=names.map(n=>`<option value="${esc(n)}">`).join('')}
+const mg=(p,c)=>c>0?(p-c)/c*100:0;
+const warnM=(p,c)=>p<c?' <b class="warn">⚠ por debajo del costo</b>':(mg(p,c)<cfg.mMin?` <b class="warn">⚠ ganancia ${Math.round(mg(p,c))}%</b>`:'');
+let TOP=[],CST={},CR=[];let catLow=false,hv='rec',hisShown=100;
+function lowList(){return P.filter(p=>p.precio_venta!=null&&mg(Number(p.precio_venta),Number(p.precio_compra))<cfg.mMin)}
+function rLow(){const n=lowList().length,b=$('#lowb');b.hidden=!n&&!catLow;b.innerHTML=catLow?`<button class="row warnrow" id="lowx">Mostrando ${n} con ganancia baja · Quitar filtro</button>`:(n?`<button class="row warnrow" id="lowm">⚠ ${n} producto${n>1?'s':''} con ganancia menor a ${cfg.mMin}% · Ver</button>`:'')}
+function rVue(k){const ef=$('#fp').value==='Efectivo';$('#efw').hidden=!ef;const rc=+$('#rec').value||0;$('#vue').textContent=!ef||!rc||!cart.length?'':(rc>=k.total?'Vueltos: '+money(rc-k.total):'Faltan '+money(k.total-rc))}
+function rango(){const v=$('#hp').value,n=new Date(),d0=new Date(n.getFullYear(),n.getMonth(),n.getDate()),day=864e5;let a,b;
+if(v==='hoy'){a=d0;b=new Date(d0.getTime()+day)}
+else if(v==='sem'){a=new Date(d0.getTime()-((d0.getDay()+6)%7)*day);b=new Date(a.getTime()+7*day)}
+else if(v==='mes'){a=new Date(n.getFullYear(),n.getMonth(),1);b=new Date(n.getFullYear(),n.getMonth()+1,1)}
+else if(v==='mant'){a=new Date(n.getFullYear(),n.getMonth()-1,1);b=new Date(n.getFullYear(),n.getMonth(),1)}
+else if(v==='30'){a=new Date(d0.getTime()-29*day);b=new Date(d0.getTime()+day)}
+else if(v==='rango'){const x=$('#hd1').value,y=$('#hd2').value;a=x?new Date(x+'T00:00:00'):new Date(2000,0,1);b=y?new Date(new Date(y+'T00:00:00').getTime()+day):new Date(d0.getTime()+day)}
+else{a=new Date(2000,0,1);b=new Date(d0.getTime()+day)}
+return[a,b]}
+function hisFiltered(){const q=norm($('#hq').value);return q?H.filter(r=>norm((r.cliente_nombre||'')+' '+r.numero+' '+pad(r.numero)).includes(q)):H}
+async function loadHis(){const[a,b]=rango();let o=[],f=0;for(;;){const{data,error}=await sb.from('recibos_app').select('*').gte('creado_en',a.toISOString()).lt('creado_en',b.toISOString()).order('creado_en',{ascending:false}).order('id').range(f,f+999);if(error)throw error;o=o.concat(data);if(data.length<1000)break;f+=1000}H=o;hisShown=100;rHis();if(hv==='res')await rResumen()}
+function rHis(){const L=hisFiltered(),V=L.filter(r=>!r.anulado),s=V.reduce((a,r)=>a+Number(r.total),0),g=esAdminDrosalud()?V.reduce((a,r)=>a+Number(r.ganancia),0):null;$('#hs').textContent=money(s);if(esAdminDrosalud())$('#hg').textContent=money(g);$('#hn').textContent=V.length+(V.length===1?' recibo':' recibos')+(L.length>V.length?' · '+(L.length-V.length)+' anulado'+(L.length-V.length>1?'s':''):'')+' en este período';
+$('#hl').innerHTML=L.length?L.slice(0,hisShown).map(r=>`<button class="row${r.anulado?' anul':''}" data-rc="${r.id}"><span class="nm">Recibo ${pad(r.numero)}${r.cliente_nombre?' · '+esc(tcase(r.cliente_nombre)):''}<small>${esc(fmt(r.creado_en))}${r.anulado?' · ANULADO':''}</small></span><span class="pr">${money(r.total)}${esAdminDrosalud()?`<small>ganancia ${money(r.ganancia)}</small>`:''}</span></button>`).join(''):'<p class="mut">No hay recibos en este período.</p>';$('#hmore').hidden=L.length<=hisShown}
+async function itemsDe(rs){let it=[];for(let i=0;i<rs.length;i+=40){const ids=rs.slice(i,i+40).map(r=>r.id);const{data,error}=await sb.from('recibo_items_app').select('*').in('recibo_id',ids);if(error)throw error;it=it.concat(data)}return it}
+function setHV(v){if(v==='res'&&!esAdminDrosalud()){toast('El resumen de ganancias es exclusivo del administrador.');return}hv=v;document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.hv===v)));$('#hrec').hidden=v!=='rec';$('#hres').hidden=v!=='res';if(v==='res')go(rResumen)}
+const hisValid=()=>hisFiltered().filter(r=>!r.anulado);
+async function rResumen(){if(!esAdminDrosalud())return;const L=hisValid(),box=$('#hres');if(!L.length){box.innerHTML='<p class="mut">No hay ventas en este período.</p>';return}
+box.innerHTML='<p class="mut">Calculando…</p>';const it=await itemsDe(L),T=L.reduce((a,r)=>a+Number(r.total),0),G=L.reduce((a,r)=>a+Number(r.ganancia),0),D=L.reduce((a,r)=>a+Number(r.domicilio||0),0),M=L.reduce((a,r)=>a+Number(r.costo_mensajero||0),0),base=T-D;
+const mp=new Map();it.forEach(i=>{const o=mp.get(i.nombre)||{n:i.nombre,u:0,v:0,g:0};o.u+=i.cantidad;o.v+=i.precio_venta*i.cantidad;o.g+=(i.precio_venta-(i.costo_real_unitario==null?i.precio_compra:i.costo_real_unitario))*i.cantidad;mp.set(i.nombre,o)});
+const top=[...mp.values()].sort((a,b)=>b.g-a.g).slice(0,8),mx=Math.max(1,...top.map(x=>x.g));
+const fp={};L.forEach(r=>{const k=r.forma_pago||'Sin dato';fp[k]=(fp[k]||0)+Number(r.total)});
+const low=it.filter(i=>i.precio_venta<i.precio_compra||mg(i.precio_venta,i.precio_compra)<cfg.mMin).length;
+const ds=L.map(r=>new Date(r.creado_en).getTime()),mn=new Date(Math.min(...ds)),mxd=new Date(Math.max(...ds)),byM=(mxd-mn)/864e5>62,key=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+(byM?'':'-'+String(d.getDate()).padStart(2,'0'));
+const sv={};L.forEach(r=>{const k=key(new Date(r.creado_en));sv[k]=(sv[k]||0)+Number(r.total)});
+const keys=[],c=byM?new Date(mn.getFullYear(),mn.getMonth(),1):new Date(mn.getFullYear(),mn.getMonth(),mn.getDate());while(c<=mxd){keys.push(key(c));if(byM)c.setMonth(c.getMonth()+1);else c.setDate(c.getDate()+1)}
+const vd={};L.forEach(r=>{const k=(r.vendedor||'').trim()||'Sin vendedor';vd[k]=(vd[k]||0)+Number(r.total)});const vdH=Object.keys(vd).length>=2?'<h2>Por vendedor</h2>'+Object.entries(vd).sort((a,b)=>b[1]-a[1]).map(e=>`<div class="rk"><span>${esc(e[0])}</span><b>${money(e[1])}</b></div>`).join(''):'';
+const vmax=Math.max(1,...keys.map(k=>sv[k]||0)),lab=k=>byM?k.slice(5)+'/'+k.slice(2,4):k.slice(8);
+box.innerHTML=`<div class="kpi"><div>Ventas<b>${money(T)}</b></div><div>Ganancia<b>${money(G)}</b></div><div>Recibos<b>${L.length}</b></div><div>Ticket promedio<b>${money(T/L.length)}</b></div><div>Ganancia sobre ventas<b>${base>0?(G/base*100).toFixed(1).replace('.',','):0}%</b></div><div>Domicilios cobrados<b>${money(D)}</b></div><div>Pagos a mensajeros<b>${money(M)}</b></div></div>
+<h2>Ventas por ${byM?'mes':'día'}</h2><div class="bars">${keys.map(k=>`<div title="${k}: ${money(sv[k]||0)}"><i style="height:${Math.round((sv[k]||0)/vmax*100)}%"></i>${lab(k)}</div>`).join('')}</div>
+<h2>Productos que más ganancia dejan</h2>${top.map((x,n)=>{const w=Math.round(x.g/mx*100);return `<div class="rk" style="background:linear-gradient(90deg,var(--soft) ${w}%,var(--card) ${w}%)"><span>${n+1}. ${esc(x.n)}<small>${x.u} und · ${money(x.v)} vendido</small></span><b>${money(x.g)}</b></div>`}).join('')}
+<h2>Por forma de pago</h2>${Object.entries(fp).sort((a,b)=>b[1]-a[1]).map(e=>`<div class="rk"><span>${esc(e[0])}</span><b>${money(e[1])}</b></div>`).join('')}${vdH}
+${low?`<p class="warn">⚠ ${low} línea${low>1?'s':''} vendida${low>1?'s':''} con ganancia menor a ${cfg.mMin}%.</p>`:''}
+<p class="mut sm">La ganancia por producto es antes de descuentos. La ganancia del recibo ya resta el descuento y no cuenta el domicilio.</p>`}
+async function cambios(){const{data,error}=await sb.from('historial_precios').select('*').order('creado_en',{ascending:false}).limit(30);if(error)throw error;const nm=id=>(P.find(p=>p.id===id)||{}).nombre||'Producto eliminado';
+openM(`<h2 style="margin-top:0">Cambios recientes de precio</h2>${data.length?data.map(x=>{const d=(x.precio_nuevo-x.precio_anterior)/x.precio_anterior*100;return `<div class="item"><div class="top"><span>${esc(nm(x.producto_id))}</span></div><small class="mut">${esc(fd(x.creado_en))} · ${money(x.precio_anterior)} → ${money(x.precio_nuevo)} <b class="${d>0?'warn':''}">(${d>0?'+':''}${d.toFixed(1).replace('.',',')}%)</b></small></div>`}).join(''):'<p class="mut">Aún no hay cambios registrados.</p>'}<div class="acts"><button class="btn alt full" id="cx2">Cerrar</button></div>`);$('#cx2').onclick=closeM}
+async function excel(scope){if(typeof XLSX==='undefined'){toast('La descarga no está disponible en la demostración');return}
+toast('Preparando el Excel…');const wb=XLSX.utils.book_new(),nm=id=>(P.find(p=>p.id===id)||{}).nombre||'';
+const add=(n,rows,w)=>{const ws=XLSX.utils.json_to_sheet(rows.length?rows:[{Aviso:'Sin datos'}],{dateNF:'yyyy-mm-dd hh:mm',cellDates:true});if(w)ws['!cols']=w.map(x=>({wch:x}));XLSX.utils.book_append_sheet(wb,ws,n)};
+let rs,it;if(scope==='periodo'){rs=hisFiltered();it=await itemsDe(rs)}else{rs=await all('recibos','creado_en');it=await all('recibo_items','recibo_id')}
+rs=[...rs].sort((a,b)=>a.numero-b.numero);const rm=new Map(rs.map(r=>[r.id,r]));
+add('Recibos',rs.map(r=>({'N° recibo':r.numero,'Fecha':new Date(r.creado_en),'Cliente':tcase(r.cliente_nombre||''),'Vendedor':r.vendedor||'','Cédula o NIT':r.cliente_cedula||'','Teléfono':r.cliente_telefono||'','Dirección':r.cliente_direccion||'','Descuento':Number(r.descuento||0),'Domicilio':Number(r.domicilio||0),'Forma de pago':r.forma_pago||'','Recibido':r.recibido==null?'':Number(r.recibido),'Total':Number(r.total),'Ganancia':Number(r.ganancia),'Estado':r.anulado?'ANULADO':'Válido','Motivo de anulación':r.motivo_anulacion||''})),[10,17,26,16,14,14,22,11,11,14,11,12,12,10,28]);
+add('Ventas por producto',it.filter(i=>rm.has(i.recibo_id)&&!rm.get(i.recibo_id).anulado).map(i=>{const r=rm.get(i.recibo_id);return{'N° recibo':r.numero,'Fecha':new Date(r.creado_en),'Cliente':tcase(r.cliente_nombre||''),'Vendedor':r.vendedor||'','Producto':i.nombre,'Incremento de venta (unidades)':Number(i.unidades_por_presentacion||1),'Cantidad (unidades)':i.cantidad,'Precio de compra por unidad':Number(i.precio_compra),'Precio de venta por unidad':Number(i.precio_venta),'Total':Number(i.precio_venta)*i.cantidad,'Ganancia':(Number(i.precio_venta)-Number(i.precio_compra))*i.cantidad,'Forma de pago':r.forma_pago||''}}).sort((a,b)=>a['N° recibo']-b['N° recibo']),[10,17,26,16,44,25,9,18,18,12,12,14]);
+if(scope==='todo'){add('Productos',P.map(p=>({'Código':p.codigo||'','Producto':p.nombre,'Laboratorio':p.laboratorio||'','Venta fraccionada':p.fraccionable?'Sí':'No','Unidades por empaque':Number(p.unidades_por_caja||1),'Unidades por venta':Number(p.unidades_por_venta||1),'Precio de compra del empaque':Number(p.precio_compra),'Precio de venta fijo del empaque':p.precio_venta==null?'':Number(p.precio_venta),'Precio de venta actual del empaque':pv(p),'Ganancia %':Math.round(mg(pv(p),Number(p.precio_compra))*10)/10,'Actualizado':new Date(p.actualizado_en)})),[14,46,22,16,18,17,23,24,24,11,17]);
+add('Clientes',C.map(c=>({'Nombre':tcase(c.nombre),'Teléfono':c.telefono||'','Cédula o NIT':c.cedula||'','Dirección':c.direccion||''})),[28,14,14,30]);
+let hp=[];try{hp=await all('historial_precios','creado_en')}catch(e){}add('Historial de precios',hp.map(x=>({'Fecha':new Date(x.creado_en),'Producto':nm(x.producto_id),'Precio anterior':Number(x.precio_anterior),'Precio nuevo':Number(x.precio_nuevo),'Cambio %':Math.round((x.precio_nuevo-x.precio_anterior)/x.precio_anterior*1000)/10})),[17,46,14,14,10])}
+const day=t=>new Date(t).toISOString().slice(0,10),hoy=day(Date.now());let fn;if(scope==='todo')fn=`drosalud-respaldo-${hoy}.xlsx`;else{const[a,b]=rango();fn=`drosalud-ventas-${day(a)}-a-${day(new Date(Math.min(b.getTime()-864e5,Date.now())))}.xlsx`}
+XLSX.writeFile(wb,fn,{cellDates:true});if(scope==='todo'){try{await saveCfgDb({...cfg,ultimoRespaldo:new Date().toISOString()});rBk()}catch(e){}}toast('Excel descargado')}
+document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;const d=t.dataset,id=t.id;
+if(d.v==='mas'){const m=$('#more-menu'),open=m.hidden;m.hidden=!open;t.setAttribute('aria-expanded',String(open));return}
+if(d.v)return show(d.v);
+if(d.hv)return setHV(d.hv);
+if(id==='retry')return loadAllSafe();
+if(d.ajuOpen){$('#aju-menu').hidden=true;$('#aju-pages').hidden=false;document.querySelectorAll('[data-aju-page]').forEach(x=>x.hidden=x.dataset.ajuPage!==d.ajuOpen);$('#aju-back').hidden=false;return}
+if(id==='aju-back'){$('#aju-pages').hidden=true;$('#aju-menu').hidden=false;return}
+if(d.ajuSave){return go(async()=>{if(!String(draft.biz).trim()){toast('Escribe el nombre del negocio');return}draft.m=Math.max(0,+draft.m||0);draft.mMin=Math.max(0,+draft.mMin||0);applyPalette();await saveCfgDb(draft);iniVend();rRes();rCat();rCart();toast('Ajustes guardados')})}
+if(id==='qrx'){if(draft){draft.qrTexto='';draft.qrImg='';qrStatus();renderPrev()}return}
+if(id==='scan')return abrirScan('venta');
+if(id==='scan2')return abrirScan('cat');
+if(d.demoscan){closeM();return onCodigo(d.demoscan,scMode)}
+if(d.cv)return setCV(d.cv);
+if(d.cok){contact[d.cok]=Date.now();try{localStorage.setItem('contactados',JSON.stringify(contact))}catch(e){}return rRet()}
+if(id==='bkd')return go(()=>excel('todo'));
+if(id==='bkl'){try{localStorage.setItem('bkSnooze',String(Date.now()+3*864e5))}catch(e){}return rBk()}
+if(id==='tgp'){const q=$('#pw');q.type=q.type==='password'?'text':'password';t.textContent=q.type==='password'?'Mostrar':'Ocultar';return}
+if(id==='fgt')return go(doForgot);
+if(id==='rsok')return go(doReset);
+if(id==='upb')return actualizar();
+if(id==='cot')return go(cotizar);
+if(d.cotid){const r=CO.find(x=>x.id===d.cotid);if(r)return go(()=>abrirCotizacion(r))}
+if(d.rcc){const r=CR.find(x=>x.id===d.rcc);return go(()=>abrirRec(r))}
+if(id==='hmore'){hisShown+=100;return rHis()}
+if(id==='lowm'){catLow=true;return rCat()}
+if(id==='lowx'){catLow=false;return rCat()}
+if(id==='chg')return go(cambios);
+if(id==='xlsT')return go(()=>excel('todo'));
+if(id==='xlsH')return go(()=>excel('periodo'));
+if(d.add){const p=P.find(x=>x.id===d.add);if(p)addCart(p);$('#q').value='';rRes();return}
+if(d.inc!==undefined){const i=cart[d.inc];i.q+=i.unidadesPorPresentacion||1;return rCart()}
+if(d.dec!==undefined){const i=cart[d.dec],step=i.unidadesPorPresentacion||1;if(i.q>step)i.q-=step;return rCart()}
+if(d.rm!==undefined){cart.splice(d.rm,1);return rCart()}
+if(d.ed)return editP(d.ed);
+if(d.ec)return editC(d.ec);
+if(d.rc!==undefined){const r=H.find(x=>x.id===d.rc);return go(async()=>{const{data,error}=await sb.from('recibo_items_app').select('*').eq('recibo_id',r.id).order('id');if(error)throw error;showRec(r,data)})}
+if(id==='newp')return editP('');
+if(id==='newc')return editC('');
+if(id==='clr'){cart=[];if($('#cons'))$('#cons').checked=false;['#cli','#tel','#dircli','#ced','#dsc','#dom','#mens','#rec'].forEach(s=>{$(s).value=''});return rCart()}
+if(id==='mk')return go(crear);
+if(id==='impb')return go(importar);
+
+if(id==='mfa-on')return go(mfaActivar);
+if(id==='mfa-off')return go(mfaDesactivar);
+if(id==='mfx')return go(async()=>{await sb.auth.signOut();showLogin()});
+if(id==='rf')return loadAllSafe();
+if(id==='out'||id==='out-top')return go(async()=>{const{error}=await sb.auth.signOut();if(error)throw error;P=[];C=[];H=[];cart=[];showLogin()});
+});
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeM()});
+$('#back-home').addEventListener('click',showHome);
+ $('#home').addEventListener('click',e=>{const b=e.target.closest('[data-home]');if(!b)return;const v=b.dataset.home;if(v==='neg'){const target=document.querySelector('#more-menu [data-v="neg"]');if(target)target.click();return}show(v)});
+$('#coq').addEventListener('input',renderCotizaciones);
+$('#q').addEventListener('input',rRes);
+$('#q2').addEventListener('input',rCat);
+$('#ced').addEventListener('change',()=>{const c=buscarCliente($('#ced').value,$('#tel').value);if(c){const p=partesNombre(c.nombre);$('#nombres').value=p.nombres;$('#apellidos').value=p.apellidos;$('#tel').value=c.telefono||'';$('#dircli').value=c.direccion||''}});
+$('#cart').addEventListener('change',e=>{const k=e.target.dataset.pr;if(k===undefined)return;cart[k].p=Math.max(0,+e.target.value||0);rCart()});
+document.querySelector('#v-aju').addEventListener('input',e=>{const t=e.target,k=t.dataset&&t.dataset.k;if(!k||!draft)return;draft[k]=t.type==='checkbox'?t.checked:(t.type==='number'||(t.tagName==='SELECT'&&k==='r')?(+t.value||0):t.value);renderPrev();if(k.startsWith('color'))applyPalette()});
+$('#dsc').addEventListener('input',rCart);$('#dom').addEventListener('input',rCart);$('#mens').addEventListener('input',rCart);
+$('#fp').addEventListener('change',rCart);$('#rec').addEventListener('input',rCart);
+$('#hp').addEventListener('change',()=>{$('#hr').hidden=$('#hp').value!=='rango';go(loadHis)});['#hd1','#hd2'].forEach(s=>$(s).addEventListener('change',()=>go(loadHis)));
+$('#hq').addEventListener('input',()=>{hisShown=100;rHis();if(hv==='res')go(rResumen)});
+$('#qc').addEventListener('input',rCli);$('#qrf').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(f&&draft)go(()=>cargarQR(f)).then(()=>{e.target.value=''})});$('#rtf').addEventListener('change',rRet);
+window.addEventListener('offline',()=>{$('#net').hidden=false;$('#net').innerHTML='<span>Sin conexión a internet. Puedes ver lo cargado, pero no guardar.</span>'});
+window.addEventListener('online',()=>{loadAllSafe()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-lastVer>3e5)checkVer()});
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+$('#lv').textContent='v'+VERSION;
+$('#lf').addEventListener('submit',e=>{e.preventDefault();doLogin()});
+$('#mf').addEventListener('submit',e=>{e.preventDefault();doMfa()});
+sb.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY')showReset()});
+showLogin();
+(async()=>{try{const{data,error}=await sb.auth.getSession();if(error)throw error;if(data.session)await start()}catch(e){console.error('No se pudo comprobar la sesión al iniciar:',e);showLogin()}})();
+</script>
+
+<script>
+(()=>{
+ const $n=s=>document.querySelector(s), moneyN=n=>'$'+Math.round(Number(n)||0).toLocaleString('es-CO'); 
+ let tab='pend',providers=[],buys=[],quotes=[];
+ const escN=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ async function owner(){const {data,error}=await sb.auth.getUser();if(error)throw error;if(!data.user)throw new Error('Inicia sesión nuevamente.');return data.user.id}
+ async function load(){
+  const uid=await owner();
+  const [p,b,q]=await Promise.all([
+   sb.from('proveedores').select('*').order('nombre'),
+   sb.from('compras_pendientes').select('*').eq('owner_id',uid).order('creado_en',{ascending:false}),
+   sb.from('cotizaciones_proveedor').select('*').eq('owner_id',uid).order('consultado_en',{ascending:false})
+  ]);
+  for(const x of [p,b,q])if(x.error)throw x.error;
+  providers=p.data||[];buys=b.data||[];quotes=q.data||[];
+  render();
+ }
+ function render(){
+  const open=buys.filter(x=>!['entregado','cancelado'].includes(x.estado));
+  $n('#neg-kpi').innerHTML='<div>Solicitudes abiertas<b>'+open.length+'</b></div><div>Compras registradas<b>'+buys.filter(x=>x.costo_real!=null).length+'</b></div>';
+  $n('#neg-provider-list').innerHTML=providers.length?providers.map(p=>'<div class="item"><div class="top"><span>'+escN(p.nombre)+'</span><span class="mut">'+(p.activo?'Activo':'Inactivo')+'</span></div><p class="sm mut">'+[p.contacto,p.telefono,p.whatsapp,p.email].filter(Boolean).map(escN).join(' · ')+'</p>'+(p.notas?'<p class="sm">'+escN(p.notas)+'</p>':'')+'<div class="acts"><button class="btn alt full" data-neg-edit-provider="'+p.id+'">Editar proveedor</button><button class="btn bad full" data-neg-delete-provider="'+p.id+'">Eliminar proveedor</button></div></div>').join(''):'<p class="mut">Todavía no tienes proveedores registrados.</p>';
+  $n('#neg-buy-list').innerHTML=buys.length?buys.map(b=>{
+   const p=providers.find(x=>x.id===b.proveedor_id),qs=quotes.filter(q=>q.compra_id===b.id);
+   return '<div class="item"><div class="top"><span>'+escN(b.producto_nombre)+'</span><span>'+escN(b.estado)+'</span></div><p class="sm mut">Cantidad: '+b.cantidad+' · '+(p?escN(p.nombre):'Sin proveedor asignado')+'</p><p class="sm">Costo estimado: '+(b.costo_estimado==null?'—':moneyN(b.costo_estimado))+' · Costo real: '+(b.costo_real==null?'Pendiente':moneyN(b.costo_real))+'</p><p class="sm mut">'+qs.length+' cotización(es)</p><div class="acts"><button class="btn alt full" data-neg-quote="'+b.id+'">Registrar cotización</button><button class="btn alt full" data-neg-edit-buy="'+b.id+'">Actualizar compra</button></div></div>'
+  }).join(''):'<p class="mut">No tienes medicamentos pendientes por conseguir.</p>';
+ }
+ function form(title,fields,values={}){return '<h2 style="margin-top:0">'+title+'</h2>'+fields.map(f=>'<label>'+f.label+'</label>'+ (f.type==='select'?'<select id="nf-'+f.key+'">'+f.options.map(o=>'<option value="'+escN(o.value)+'" '+(String(values[f.key]??f.default??'')===String(o.value)?'selected':'')+'>'+escN(o.label)+'</option>').join('')+'</select>':'<input id="nf-'+f.key+'" type="'+(f.type||'text')+'" value="'+escN(values[f.key]??'')+'" '+(f.required?'required':'')+' '+(f.min!==undefined?'min="'+f.min+'"':'')+'>')).join('')+'<div class="acts"><button class="btn full" id="neg-save">Guardar</button><button class="btn alt full" id="neg-cancel">Cancelar</button></div>'}
+ function modal(content){$n('#modal').hidden=false;$n('#sheet').innerHTML=content;$n('#neg-cancel').onclick=()=>{$n('#modal').hidden=true};}
+ async function saveProvider(id){
+  const uid=await owner(),v=k=>$n('#nf-'+k).value.trim();
+  const row={owner_id:uid,nombre:v('nombre'),contacto:v('contacto'),telefono:v('telefono'),whatsapp:v('whatsapp'),email:v('email'),notas:v('notas'),activo:v('activo')==='true'};
+  if(!row.nombre)throw new Error('Escribe el nombre del proveedor.');
+  const clean=s=>String(s||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  const phone=s=>String(s||'').replace(/\\D/g,'');
+  const duplicate=providers.find(p=>p.id!==id&&(
+   clean(p.nombre)===clean(row.nombre)||
+   (phone(row.telefono).length>=7&&phone(p.telefono)===phone(row.telefono))||
+   (phone(row.whatsapp).length>=7&&(phone(p.whatsapp)===phone(row.whatsapp)||phone(p.telefono)===phone(row.whatsapp)))||
+   (phone(row.telefono).length>=7&&phone(p.whatsapp)===phone(row.telefono))
+  ));
+  if(duplicate)throw new Error('Este proveedor ya está registrado ('+duplicate.nombre+'). Busca el registro existente y edítalo; no crees otro.');
+  const res=id?await sb.from('proveedores').update(row).eq('id',id).eq('owner_id',uid):await sb.from('proveedores').insert(row);
+  if(res.error)throw res.error;$n('#modal').hidden=true;await load();
+ }
+ async function deleteProvider(id){
+  const uid=await owner(),p=providers.find(x=>x.id===id);if(!p)return;
+  const hasBuys=buys.some(x=>x.proveedor_id===id),hasQuotes=quotes.some(x=>x.proveedor_id===id);
+  if(hasBuys||hasQuotes)throw new Error('No se puede eliminar '+p.nombre+' porque tiene compras o cotizaciones asociadas. Edítalo y cámbialo a Inactivo para conservar el historial.');
+  if(!confirm('¿Eliminar definitivamente al proveedor "'+p.nombre+'"? Esta acción no se puede deshacer.'))return;
+  const {error}=await sb.from('proveedores').delete().eq('id',id).eq('owner_id',uid);
+  if(error)throw error;
+  await load();
+ }
+ function providerForm(id){const p=providers.find(x=>x.id===id)||{};modal(form(id?'Editar proveedor':'Nuevo proveedor',[
+  {key:'nombre',label:'Nombre del proveedor',required:true},{key:'contacto',label:'Persona de contacto'},{key:'telefono',label:'Teléfono'},{key:'whatsapp',label:'WhatsApp'},{key:'email',label:'Correo',type:'email'},{key:'notas',label:'Notas'},
+  {key:'activo',label:'Estado',type:'select',default:'true',options:[{value:'true',label:'Activo'},{value:'false',label:'Inactivo'}]}
+ ],p));$n('#neg-save').onclick=()=>run(()=>saveProvider(id));}
+ async function saveBuy(id){
+  const uid=await owner(),v=k=>$n('#nf-'+k).value.trim(),n=k=>v(k)===''?null:Number(v(k));
+  const costoReal=n('costo_real'), reciboItemId=v('recibo_item_id')||null, reciboId=v('recibo_id')||null;
+  const anterior=buys.find(x=>x.id===id);
+  if(anterior?.recibo_item_id && anterior.costo_real!=null &&
+     (anterior.recibo_item_id!==reciboItemId || anterior.recibo_id!==reciboId || costoReal===null)){
+   throw new Error('Esta compra ya actualizó la ganancia de un recibo. Conserva el mismo recibo y la misma línea; no borres el costo real.');
+  }
+  const row={owner_id:uid,producto_nombre:v('producto_nombre'),cantidad:n('cantidad')||1,proveedor_id:v('proveedor_id')||null,costo_estimado:n('costo_estimado'),costo_real:reciboItemId?null:costoReal,estado:v('estado'),notas:v('notas'),recibo_id:reciboId,recibo_item_id:reciboItemId};
+  if(!row.producto_nombre)throw new Error('Escribe el medicamento.');
+  if(costoReal!==null&&reciboItemId){
+   const {error}=await sb.rpc('guardar_compra_con_costo_real',{
+    p_compra_id:id||null,p_producto_nombre:row.producto_nombre,p_cantidad:row.cantidad,
+    p_proveedor_id:row.proveedor_id,p_costo_estimado:row.costo_estimado,
+    p_estado:row.estado,p_notas:row.notas,p_recibo_id:reciboId,
+    p_recibo_item_id:reciboItemId,p_costo_real:costoReal
+   });
+   if(error)throw error;
+  }else if(id){
+   const res=await sb.from('compras_pendientes').update(row).eq('id',id).eq('owner_id',uid);if(res.error)throw res.error;
+  }else{
+   const {error}=await sb.from('compras_pendientes').insert(row);if(error)throw error;
+  }
+  $n('#modal').hidden=true;await load();
+ }
+ async function buyForm(id){
+  const b=buys.find(x=>x.id===id)||{};
+  const {data:receipts,error}=await sb.from('recibos').select('id,numero,cliente_nombre,creado_en').order('creado_en',{ascending:false}).limit(100);
+  if(error)throw error;
+  const opts=[{value:'',label:'Sin vincular a un recibo'},...(receipts||[]).map(r=>({value:r.id,label:'Recibo '+r.numero+' · '+(r.cliente_nombre||'Sin cliente')+' · '+new Date(r.creado_en).toLocaleDateString('es-CO')}))];
+  modal(form(id?'Actualizar solicitud':'Medicamento por conseguir',[
+   {key:'producto_nombre',label:'Medicamento o producto',required:true},
+   {key:'cantidad',label:'Cantidad',type:'number',min:1},
+   {key:'proveedor_id',label:'Proveedor',type:'select',default:'',options:[{value:'',label:'Sin asignar'},...providers.map(p=>({value:p.id,label:p.nombre}))]},
+   {key:'costo_estimado',label:'Costo estimado por unidad',type:'number',min:0},
+   {key:'recibo_id',label:'Vincular con recibo (opcional)',type:'select',default:'',options:opts},
+   {key:'recibo_item_id',label:'Línea del recibo para actualizar costo',type:'select',default:'',options:[{value:'',label:'Selecciona primero un recibo'}]},
+   {key:'costo_real',label:'Costo real por unidad',type:'number',min:0},
+   {key:'estado',label:'Estado',type:'select',default:'pendiente',options:['pendiente','cotizando','comprado','entregado','cancelado'].map(x=>({value:x,label:x[0].toUpperCase()+x.slice(1)}))},
+   {key:'notas',label:'Notas'}
+  ],{cantidad:1,estado:'pendiente',...b}));
+  const receipt=$n('#nf-recibo_id'),item=$n('#nf-recibo_item_id');
+  async function itemsForReceipt(receiptId,selected){
+   item.innerHTML='<option value="">Cargando líneas…</option>';
+   if(!receiptId){item.innerHTML='<option value="">Selecciona primero un recibo</option>';return}
+   const {data,error}=await sb.from('recibo_items_app').select('id,nombre,cantidad,precio_venta').eq('recibo_id',receiptId).order('id');
+   if(error)throw error;
+   item.innerHTML='<option value="">No actualizar costo de una línea</option>'+(data||[]).map(x=>'<option value="'+x.id+'">'+escN(x.nombre)+' × '+x.cantidad+' · '+moneyN(x.precio_venta)+'</option>').join('');
+   if(selected)item.value=selected;
+  }
+  receipt.addEventListener('change',()=>run(()=>itemsForReceipt(receipt.value,'')));
+  if(b.recibo_id)await itemsForReceipt(b.recibo_id,b.recibo_item_id);
+  $n('#neg-save').onclick=()=>run(()=>saveBuy(id));
+ }
+ async function quoteForm(id){
+  const b=buys.find(x=>x.id===id);if(!b)return;
+  if(!providers.length){alert('Primero registra un proveedor.');return}
+  modal(form('Cotización para '+b.producto_nombre,[
+   {key:'proveedor_id',label:'Proveedor',type:'select',options:providers.map(p=>({value:p.id,label:p.nombre}))},
+   {key:'precio_unitario',label:'Precio por unidad',type:'number',min:0,required:true},
+   {key:'disponible',label:'Disponibilidad',type:'select',default:'true',options:[{value:'true',label:'Disponible'},{value:'false',label:'No disponible'}]},
+   {key:'notas',label:'Notas'}
+  ],{proveedor_id:providers[0].id,disponible:'true'}));
+  $n('#neg-save').onclick=()=>run(async()=>{const uid=await owner(),price=Number($n('#nf-precio_unitario').value);if(!(price>=0))throw new Error('Ingresa un precio válido.');const {error}=await sb.from('cotizaciones_proveedor').insert({owner_id:uid,compra_id:b.id,proveedor_id:$n('#nf-proveedor_id').value,precio_unitario:price,disponible:$n('#nf-disponible').value==='true',notas:$n('#nf-notas').value});if(error)throw error;$n('#modal').hidden=true;await load()});
+ }
+ async function run(fn){try{await fn()}catch(e){console.error(e);alert(e.message||'No se pudo guardar. Revisa la conexión y la migración SQL.')}} 
+ function setTab(t){tab=t;$n('#neg-pend').hidden=t!=='pend';$n('#neg-prov').hidden=t!=='prov';document.querySelectorAll('[data-neg-tab]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.negTab===t)))}
+ document.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.v==='neg'){e.preventDefault();e.stopImmediatePropagation();document.querySelectorAll('main section[id^="v-"]').forEach(s=>s.hidden=true);$n('#v-neg').hidden=false;$n('#more-menu').hidden=true;$n('#nav [data-v="mas"]').setAttribute('aria-expanded','false');document.querySelectorAll('#nav button').forEach(x=>x.setAttribute('aria-current',String(x.dataset.v==='mas')));$n('#ttl').textContent='Gestión del negocio';run(load);window.scrollTo(0,0);return}
+  if(b.dataset.negTab){setTab(b.dataset.negTab);return}
+  if(b.id==='neg-new-provider'){providerForm();return}
+  if(b.id==='neg-new-buy'){buyForm();return}
+  if(b.dataset.negEditProvider){providerForm(b.dataset.negEditProvider);return}
+  if(b.dataset.negDeleteProvider){run(()=>deleteProvider(b.dataset.negDeleteProvider));return}
+  if(b.dataset.negEditBuy){buyForm(b.dataset.negEditBuy);return}
+  if(b.dataset.negQuote){quoteForm(b.dataset.negQuote);return}
+ },true);
+})();
+</script>
+</body>
+</html>
