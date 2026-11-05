@@ -1,4 +1,4 @@
-# Objetivo: hacer una consulta liviana a Supabase cada día.
+# Objetivo: hacer una consulta liviana a la base de datos.
 name: Mantener Supabase activo
 
 on:
@@ -11,6 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Consulta liviana a la base de datos
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          curl -sS -f "${{ secrets.SUPABASE_URL }}/rest/v1/ajustes?select=id&limit=1" \
-            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}"
+          curl --silent --show-error --fail-with-body \
+            "${SUPABASE_URL}/rest/v1/ajustes?select=id&limit=1" \
+            -H "apikey: ${SUPABASE_ANON_KEY}"
