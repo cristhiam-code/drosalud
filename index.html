@@ -207,6 +207,13 @@ nav button[aria-current="true"]{color:var(--pri);font-weight:800;box-shadow:inse
 #lg h1,#rsx h1{font-size:1.3rem;text-align:center;margin:8px 0 2px}
 #lg .sub{color:var(--mut);margin:0 0 6px;text-align:center}
 #lg .card,#rsx .card{width:100%;padding:22px;box-shadow:0 10px 30px rgba(0,0,0,.09);margin-top:18px}
+#mfa{max-width:440px;margin:0 auto;padding:34px 20px 28px;display:flex;flex-direction:column;align-items:center}
+#mfa .brand{width:min(250px,68%);margin:6px 0 4px}
+#mfa h1{font-size:1.3rem;text-align:center;margin:8px 0 2px}
+#mfa .sub{color:var(--mut);margin:0 0 6px;text-align:center}
+#mfa .card{width:100%;padding:22px;box-shadow:0 10px 30px rgba(0,0,0,.09);margin-top:18px}
+.aju-mfa{border-top:1px solid var(--line);padding-top:8px;margin-top:18px}
+.aju-mfa h2{margin-top:8px}
 .pwrow{display:flex;gap:8px;align-items:flex-start}.pwrow input{flex:1;min-width:0}.pwrow button{flex:none;margin-top:4px;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);font-weight:600;color:var(--pri);font-size:.85rem}
 .msg{min-height:1.3em;font-size:.88rem;margin:12px 0 0;text-align:center}.msg.bad{color:var(--bad)}.msg.ok{color:var(--ink)}
 .lk{background:none;color:var(--pri);font-weight:600;width:100%;padding:12px;margin-top:4px}
@@ -269,6 +276,18 @@ nav button{font-size:.78rem}
   <button type="button" class="lk" id="fgt">¿Olvidaste tu contraseña?</button>
  </form>
  <p class="foot">Acceso privado · Conexión segura · <span id="lv"></span></p>
+</section>
+<section id="mfa" hidden>
+ <img class="brand" src="logo.png" alt="Drosalud">
+ <h1>Verificación en dos pasos</h1>
+ <p class="sub">Escribe el código de 6 dígitos de tu app autenticadora</p>
+ <form class="card" id="mf" autocomplete="off">
+  <label for="mfc">Código</label>
+  <input id="mfc" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code">
+  <button class="btn full" id="mfv" type="submit" style="margin-top:6px">Verificar</button>
+  <p class="msg" id="mfm" role="alert"></p>
+  <button type="button" class="lk" id="mfx">Cancelar y cerrar sesión</button>
+ </form>
 </section>
 <section id="rsx" hidden>
  <img class="brand" src="logo.png" alt="Drosalud">
@@ -403,6 +422,11 @@ nav button{font-size:.78rem}
    <label for="rd3">Recordar el respaldo cada (días)</label><input id="rd3" type="number" inputmode="numeric" min="7" data-k="respDias">
    <p class="mut sm" id="bkt"></p>
    <button class="btn full" data-aju-save type="button">Guardar frecuencia del respaldo</button>
+   <div class="aju-mfa" data-admin-only>
+    <h2>Verificación en dos pasos</h2>
+    <p class="mut sm" id="mfa-st">Comprobando…</p>
+    <div class="acts"><button class="btn alt full" id="mfa-on" type="button" hidden>Activar verificación en dos pasos</button><button class="btn bad full" id="mfa-off" type="button" hidden>Desactivar</button></div>
+   </div>
    <div class="acts"><button class="btn alt full" id="xlsT">Descargar respaldo en Excel</button><button class="btn alt full" id="rf">Recargar datos</button><button class="btn bad full" id="out">Cerrar sesión</button></div>
    <p class="mut sm" id="who"></p><p class="mut sm" id="ver"></p>
   </div>
@@ -467,7 +491,7 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;',
 const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 const money=n=>'$'+Math.round(n).toLocaleString('es-CO');
 const DEF={m:25,r:100,biz:'DROGUERIA DROSALUD.SAS',nit:'900.109.443-0',ciu:'Cúcuta',tel:'3112581564',dir:'',msg:'Gracias por su compra',nota:'Resolución de facturación electrónica N° 1845101586525 de 2025-11-12. Vigencia 24 meses.',sHora:true,sCed:true,sTel:true,sPago:true,big:false,sLogo:true,mMin:10,colorPri:'#0E6B55',colorBg:'#F2F6F3',colorCard:'#FFFFFF',colorInk:'#12261F',cotDias:3,cotNota:'Precios sujetos a cambio y disponibilidad.',respDias:30,breb:'3112581564',pagoTitular:'',pagoCot:true,pagoRec:'siempre',qrTexto:'',qrImg:'',vendedorDef:'',msgRetomar:'Hola {nombre}, ¿cómo estás? Te escribimos de Drosalud. Hace un tiempo no sabemos de ti, ¿te ayudamos con algo? Tu salud, nuestra prioridad.'};
-const VERSION='2026-11-03.1-cost-visible-price-fallback';
+const VERSION='2026-11-04.2-mfa-admin';
 let P=[],C=[],H=[],CO=[],cart=[],savingVenta=false,savingCotizacion=false,cfg={...DEF},draft=null,usuarioDrosalud=null,rolDrosalud=null;
 // Control de interfaz por rol. La autorización definitiva debe aplicarse también en RLS.
 async function cargarRolDrosalud(){const{data,error}=await sb.auth.getUser();if(error)throw error;if(!data.user)throw new Error('Inicia sesión nuevamente.');const{data:perfil,error:ep}=await sb.from('usuarios_drosalud').select('rol,activo').eq('user_id',data.user.id).maybeSingle();if(ep)throw ep;if(!perfil||perfil.activo!==true||!['admin','vendedor'].includes(perfil.rol))throw new Error('Tu usuario no tiene un rol activo en Drosalud. Solicita al administrador que lo habilite.');usuarioDrosalud=data.user;rolDrosalud=perfil.rol;return perfil.rol}
@@ -477,7 +501,7 @@ const LOGO={c:new Image(),b:new Image()};LOGO.c.src='logo.png';LOGO.b.src='logo-
 async function loadCfg(){try{const{data,error}=await sb.from('ajustes').select('datos').eq('id',1).maybeSingle();if(error)throw error;const saved=(data&&data.datos)||{};cfg={...DEF,...saved};const oldPalette={colorPri:'#3DBE9A',colorBg:'#0D1613',colorCard:'#16231E',colorInk:'#E7F1EC'};const isOldDefault=Object.keys(oldPalette).every(k=>String(saved[k]||'').toUpperCase()===oldPalette[k]);if(isOldDefault){cfg={...cfg,...DEF};await saveCfgDb(cfg)}draft=null;applyPalette()}catch(e){console.error(e);if(/Failed to fetch|NetworkError|Load failed|fetch failed/i.test(String(e&&e.message)))throw e;toast('No se pudieron cargar los ajustes (¿falta crear la tabla ajustes?)')}}
 async function saveCfgDb(d){const{error}=await sb.from('ajustes').upsert({id:1,datos:d,actualizado_en:new Date().toISOString()});if(error)throw error;cfg={...DEF,...d}}
 function applyPalette(){const root=document.documentElement;[['--pri','colorPri'],['--bg','colorBg'],['--card','colorCard'],['--ink','colorInk']].forEach(([css,k])=>{const v=draft?.[k]||cfg[k];if(v&&/^#[0-9a-f]{6}$/i.test(v))root.style.setProperty(css,v)});const hex=draft?.colorPri||cfg.colorPri||'#0E6B55',n=parseInt(hex.slice(1),16),lum=.299*(n>>16&255)+.587*(n>>8&255)+.114*(n&255);root.style.setProperty('--pri-ink',lum>160?'#12261F':'#FFFFFF')}
-function fillAju(){$('#aju-menu').hidden=false;$('#aju-pages').hidden=true;document.querySelectorAll('[data-aju-page]').forEach(x=>x.hidden=true);$('#ver').textContent='Versión de la app: '+VERSION;$('#bkt').textContent=cfg.ultimoRespaldo?'Último respaldo: '+fd(cfg.ultimoRespaldo):'Todavía no has descargado un respaldo.';draft={...cfg};applyPalette();document.querySelectorAll('#v-aju [data-k]').forEach(e=>{const v=draft[e.dataset.k];if(e.type==='checkbox')e.checked=!!v;else e.value=v==null?'':v});qrStatus();renderPrev()}
+function fillAju(){$('#aju-menu').hidden=false;$('#aju-pages').hidden=true;document.querySelectorAll('[data-aju-page]').forEach(x=>x.hidden=true);$('#ver').textContent='Versión de la app: '+VERSION;$('#bkt').textContent=cfg.ultimoRespaldo?'Último respaldo: '+fd(cfg.ultimoRespaldo):'Todavía no has descargado un respaldo.';draft={...cfg};applyPalette();document.querySelectorAll('#v-aju [data-k]').forEach(e=>{const v=draft[e.dataset.k];if(e.type==='checkbox')e.checked=!!v;else e.value=v==null?'':v});qrStatus();renderPrev();if(esAdminDrosalud())mfaEstado()}
 function renderPrev(){const it=[{nombre:'ACETAMINOFEN 500 MG * 100 TAB',cantidad:2,precio_venta:12500},{nombre:'SUERO ORAL SABOR UVA',cantidad:1,precio_venta:5600}];const r={numero:1,creado_en:new Date().toISOString(),cliente_nombre:'Cliente de ejemplo',vendedor:'Cristhiam',forcePago:true,cliente_cedula:'123456789',cliente_telefono:'3001234567',cliente_direccion:'Calle 10 # 12-34',descuento:1000,domicilio:3000,forma_pago:'Efectivo',recibido:50000,total:sub(it)+2000};const sv=cfg;cfg=draft;try{$('#prev').innerHTML=tkt(r,it)}finally{cfg=sv}}
 const price=c=>{const v=c*(1+cfg.m/100);return cfg.r?Math.ceil(v/cfg.r-1e-9)*cfg.r:Math.round(v)};
 const pv=p=>p.precio_venta!=null?Number(p.precio_venta):(Number(p.precio_compra)>0?price(Number(p.precio_compra)):null);
@@ -503,8 +527,17 @@ function find(q,lim){const t=norm(q).split(/\s+/).filter(Boolean),a=[];for(const
 const fmt=t=>new Date(t).toLocaleDateString('es-CO',{day:'numeric',month:'long',year:'numeric'})+', '+new Date(t).toLocaleTimeString('es-CO',{hour:'numeric',minute:'2-digit'});
 const pad=n=>String(n).padStart(4,'0');
 async function loadAll(){await cargarRolDrosalud();aplicarInterfazRol();if(esAdminDrosalud()){await loadCfg();if(!cfg.primerUso){try{await saveCfgDb({...cfg,primerUso:new Date().toISOString()})}catch(e){}}}else{cfg={...DEF};applyPalette()}rBk();iniVend();P=await all('productos_app','nombre');idx();C=await all('clientes','nombre');H=[];$('#imp').hidden=!esAdminDrosalud()||P.length>0;$('#cls').innerHTML=C.map(c=>`<option value="${esc(c.nombre)}">`).join('');rRes();rCart();rCat();rCli();rHis();if(esAdminDrosalud())loadTop();else{TOP=[];rTop()}}
-async function start(){$('#spl').hidden=true;$('#lg').hidden=true;$('#rsx').hidden=true;$('#app').hidden=false;const{data}=await sb.auth.getUser();$('#who').textContent=data&&data.user?'Sesión: '+data.user.email:'';await loadAllSafe();showHome();checkVer()}
-function showLogin(){$('#spl').hidden=true;$('#app').hidden=true;$('#rsx').hidden=true;$('#lg').hidden=false;try{const e=localStorage.getItem('lastEmail');if(e&&!$('#em').value){$('#em').value=e;$('#pw').focus()}}catch(x){}}
+async function start(){const rol=await cargarRolDrosalud();if(rol==='admin'&&(await mfaNivel()).pedir){showMfa();return}$('#spl').hidden=true;$('#mfa').hidden=true;$('#lg').hidden=true;$('#rsx').hidden=true;$('#app').hidden=false;const{data}=await sb.auth.getUser();$('#who').textContent=data&&data.user?'Sesión: '+data.user.email:'';await loadAllSafe();showHome();checkVer()}
+async function mfaNivel(){if(!sb.auth.mfa)throw new Error('La verificación en dos pasos no está disponible.');const{data,error}=await sb.auth.mfa.getAuthenticatorAssuranceLevel();if(error)throw error;return{pedir:data.nextLevel==='aal2'&&data.currentLevel!=='aal2'}}
+function showMfa(){$('#spl').hidden=true;$('#app').hidden=true;$('#rsx').hidden=true;$('#lg').hidden=true;$('#mfa').hidden=false;$('#mfc').value='';$('#mfm').textContent='';setTimeout(()=>$('#mfc').focus(),50)}
+async function doMfa(){const m=$('#mfm'),b=$('#mfv'),code=$('#mfc').value.replace(/\s/g,'');m.className='msg bad';m.textContent='';if(!/^\d{6}$/.test(code)){m.textContent='Escribe los 6 dígitos del código.';return}b.disabled=true;b.textContent='Verificando…';try{const{data:l,error:e1}=await sb.auth.mfa.listFactors();if(e1)throw e1;const f=(l.totp||[])[0];if(!f)throw new Error('Sin factor verificado');const{error}=await sb.auth.mfa.challengeAndVerify({factorId:f.id,code});if(error){m.textContent=/rate|too many|limit/i.test(String(error.message))?'Demasiados intentos. Espera unos minutos.':'Código incorrecto o vencido. Revisa tu app e intenta de nuevo.';return}$('#mfa').hidden=true;await start()}catch(e){console.error(e);m.textContent=/Failed to fetch|network/i.test(String(e&&e.message))?'Sin conexión. Revisa tu internet.':'No se pudo verificar. Intenta de nuevo.'}finally{b.disabled=false;b.textContent='Verificar'}}
+async function mfaEstado(){const st=$('#mfa-st'),on=$('#mfa-on'),off=$('#mfa-off');if(!st)return;if(!sb.auth.mfa){st.textContent='No disponible en esta versión de la app.';on.hidden=true;off.hidden=true;return}try{const{data,error}=await sb.auth.mfa.listFactors();if(error)throw error;const act=(data.totp||[]).length>0;st.textContent=act?'Activada: al entrar te pediremos un código de tu app autenticadora.':'Desactivada. Actívala para proteger tu cuenta de administrador.';on.hidden=act;off.hidden=!act}catch(e){console.error(e);st.textContent='No se pudo comprobar el estado.';on.hidden=true;off.hidden=true}}
+async function mfaActivar(){if(!sb.auth.mfa){toast('No disponible en esta versión de la app.');return}const{data:l,error:e0}=await sb.auth.mfa.listFactors();if(e0)throw e0;for(const f of(l.all||[]).filter(x=>x.status==='unverified')){await sb.auth.mfa.unenroll({factorId:f.id})}const{data,error}=await sb.auth.mfa.enroll({factorType:'totp',friendlyName:'Drosalud administrador'});if(error)throw error;
+openM(`<h2 style="margin-top:0">Activar verificación en dos pasos</h2><p class="mut sm">1. Abre Google Authenticator, toca «+» y elige «Escanear código QR».</p><div style="text-align:center"><img alt="Código QR" src="${data.totp.qr_code}" style="width:200px;height:200px;background:#fff"></div><p class="mut sm">¿No puedes escanear? Escribe esta clave a mano:</p><p class="sm" style="word-break:break-all;font-weight:700">${esc(data.totp.secret)}</p><p class="mut sm">2. Escribe el código de 6 dígitos que muestra la app.</p><input id="mfa-code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000"><p class="msg bad" id="mfa-msg" role="alert"></p><div class="acts"><button class="btn full" id="mfa-ok">Confirmar y activar</button><button class="btn alt full" id="mfa-no">Cancelar</button></div>`);
+$('#mfa-no').onclick=async()=>{try{await sb.auth.mfa.unenroll({factorId:data.id})}catch(e){}closeM()};
+$('#mfa-ok').onclick=()=>go(async()=>{const code=$('#mfa-code').value.replace(/\s/g,''),m=$('#mfa-msg');m.textContent='';if(!/^\d{6}$/.test(code)){m.textContent='Escribe los 6 dígitos del código.';return}const{error:ev}=await sb.auth.mfa.challengeAndVerify({factorId:data.id,code});if(ev){m.textContent='Código incorrecto o vencido. Revisa tu app e intenta de nuevo.';return}closeM();toast('Verificación en dos pasos activada');mfaEstado()})}
+async function mfaDesactivar(){const{data:l,error:e0}=await sb.auth.mfa.listFactors();if(e0)throw e0;const f=(l.totp||[])[0];if(!f){mfaEstado();return}if(!confirm('¿Desactivar la verificación en dos pasos? Tu cuenta quedará protegida solo con la contraseña.'))return;const{error}=await sb.auth.mfa.unenroll({factorId:f.id});if(error){toast(/aal2|assurance|verif/i.test(String(error.message))?'Para desactivarla debes haber entrado con tu código.':'No se pudo desactivar. Intenta de nuevo.');return}toast('Verificación en dos pasos desactivada');mfaEstado()}
+function showLogin(){$('#spl').hidden=true;$('#app').hidden=true;$('#rsx').hidden=true;$('#mfa').hidden=true;$('#lg').hidden=false;try{const e=localStorage.getItem('lastEmail');if(e&&!$('#em').value){$('#em').value=e;$('#pw').focus()}}catch(x){}}
 const TT={venta:'Recibo',cat:'Catálogo',cli:'Clientes',his:'Historial',cot:'Cotizaciones',aju:'Ajustes'};
 function showHome(){$('#back-home').hidden=true;$('#home').hidden=false;['venta','cat','cli','his','cot','aju','neg'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=true});$('#more-menu').hidden=true;$('#ttl').textContent='Drosalud';window.scrollTo(0,0)}
  function show(v){$('#back-home').hidden=false;$('#home').hidden=true;['venta','cat','cli','his','cot','aju','neg'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=k!==v});$('#more-menu').hidden=true;$('#nav [data-v="mas"]').setAttribute('aria-expanded','false');document.querySelectorAll('#nav button').forEach(b=>{if(b.dataset.v!=='mas')b.setAttribute('aria-current',String(b.dataset.v===v));else b.setAttribute('aria-current',String(!['venta','cat','cli'].includes(v)))});$('#ttl').textContent=TT[v]||'Negocio';if(v==='aju')fillAju();if(v==='his')go(loadHis);if(v==='cli')loadCST().catch(()=>{});if(v==='cot')go(loadCotizaciones);window.scrollTo(0,0)}
@@ -608,7 +641,7 @@ openM(`<h2 style="margin-top:0">Escanear código de barras</h2><div id="reader" 
 try{const F=Html5QrcodeSupportedFormats;scn=new Html5Qrcode('reader',{formatsToSupport:[F.EAN_13,F.EAN_8,F.UPC_A,F.UPC_E,F.CODE_128,F.CODE_39],experimentalFeatures:{useBarCodeDetectorIfSupported:true},verbose:false});
 await scn.start({facingMode:'environment'},{fps:10,qrbox:(w,h)=>({width:Math.floor(w*.85),height:Math.floor(Math.min(h*.55,150))})},camOk,()=>{});if($('#scs'))$('#scs').textContent='Apunta al código de barras de la caja.'}catch(e){scn=null;if($('#scs'))$('#scs').textContent='No se pudo abrir la cámara. Permite el acceso a la cámara en el navegador e intenta de nuevo.'}}
 document.addEventListener('keydown',e=>{const t=e.target,tag=(t.tagName||'').toLowerCase();if(!(tag==='body'||t.id==='q'||t.id==='q2')||e.ctrlKey||e.metaKey||e.altKey||!$('#modal').hidden)return;const n=Date.now();if(e.key==='Enter'){if(kb.length>=6&&/^\w+$/.test(kb)){e.preventDefault();const c=kb;kb='';if(t.id==='q'||t.id==='q2'){t.value='';t.dispatchEvent(new Event('input',{bubbles:true}))}onCodigo(c,t.id==='q2'?'cat':'venta')}else kb='';return}if(e.key.length!==1)return;if(n-kt>60)kb='';kt=n;kb+=e.key});
-function showReset(){$('#spl').hidden=true;$('#lg').hidden=true;$('#app').hidden=true;$('#rsx').hidden=false}
+function showReset(){$('#spl').hidden=true;$('#lg').hidden=true;$('#mfa').hidden=true;$('#app').hidden=true;$('#rsx').hidden=false}
 async function doReset(){const a=$('#np1').value,b=$('#np2').value,m=$('#rsm');m.textContent='';if(a.length<8){m.textContent='Usa al menos 8 caracteres.';return}if(a!==b){m.textContent='Las contraseñas no coinciden.';return}const{error}=await sb.auth.updateUser({password:a});if(error){m.textContent='No se pudo cambiar la contraseña. Intenta de nuevo.';return}$('#np1').value='';$('#np2').value='';$('#rsx').hidden=true;toast('Contraseña actualizada');await start()}
 async function doForgot(){const em=$('#em').value.trim(),m=$('#lgm');if(!em){m.className='msg bad';m.textContent='Escribe tu correo arriba y toca de nuevo.';return}const{error}=await sb.auth.resetPasswordForEmail(em,{redirectTo:location.origin+location.pathname});m.className='msg '+(error?'bad':'ok');m.textContent=error?'No se pudo enviar el enlace. Intenta en unos minutos.':'Si el correo está registrado, te enviamos un enlace para crear una nueva contraseña. Revisa también el correo no deseado.'}
 async function doLogin(){const em=$('#em').value.trim(),pw=$('#pw').value,m=$('#lgm'),b=$('#in');m.className='msg bad';m.textContent='';if(!em||!pw){m.textContent='Escribe tu correo y tu contraseña.';return}b.disabled=true;b.textContent='Entrando…';
@@ -729,6 +762,10 @@ if(id==='clr'){cart=[];['#cli','#tel','#dircli','#ced','#dsc','#dom','#mens','#r
 if(id==='mk')return go(crear);
 if(id==='impb')return go(importar);
 
+if(id==='mfa-on')return go(mfaActivar);
+if(id==='mfa-off')return go(mfaDesactivar);
+if(id==='mfx')return go(async()=>{await sb.auth.signOut();showLogin()});
+
 if(id==='rf')return loadAllSafe();
 if(id==='out'||id==='out-top')return go(async()=>{const{error}=await sb.auth.signOut();if(error)throw error;P=[];C=[];H=[];cart=[];showLogin()});
 });
@@ -752,6 +789,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now(
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 $('#lv').textContent='v'+VERSION;
 $('#lf').addEventListener('submit',e=>{e.preventDefault();doLogin()});
+$('#mf').addEventListener('submit',e=>{e.preventDefault();doMfa()});
 sb.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY')showReset()});
 showLogin();
 (async()=>{try{const{data,error}=await sb.auth.getSession();if(error)throw error;if(data.session)await start()}catch(e){console.error('No se pudo comprobar la sesión al iniciar:',e);showLogin()}})();
