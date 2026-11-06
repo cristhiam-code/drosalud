@@ -241,6 +241,18 @@ nav button[aria-current="true"]{color:var(--pri);font-weight:800;box-shadow:inse
 .bars{display:flex;align-items:flex-end;gap:3px;height:130px;overflow-x:auto;padding:6px 4px 4px;background:var(--card);border:1px solid var(--line);border-radius:12px}
 .bars div{flex:1;min-width:16px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;font-size:.62rem;color:var(--mut)}
 .bars i{display:block;width:100%;background:var(--pri);border-radius:4px 4px 0 0;min-height:2px}
+.cj-history-tools{margin:10px 0 14px}
+.cj-history-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0}
+.cj-history-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.cj-history-head strong{font-size:.96rem}
+.cj-history-meta{color:var(--mut);font-size:.8rem;margin-top:4px}
+.cj-history-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.cj-history-grid div{background:var(--bg);border-radius:9px;padding:9px;font-size:.78rem;color:var(--mut)}
+.cj-history-grid b{display:block;color:var(--ink);font-size:.95rem;margin-top:3px}
+.cj-history-note{font-size:.82rem;color:var(--mut);margin:10px 0 0;overflow-wrap:anywhere}
+.cj-history-empty{padding:14px;border:1px dashed var(--line);border-radius:12px;color:var(--mut);font-size:.88rem}
+.cj-history-error{padding:12px;border-radius:10px;background:#FFF6F6;color:var(--bad);font-size:.85rem}
+.help-card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:15px;margin:12px 0}.help-card h2{margin:0 0 12px}.help-card details{padding:11px 0;border-top:1px solid var(--line)}.help-card details:first-of-type{border-top:0}.help-card summary{font-weight:700;cursor:pointer}.help-card details p{margin:7px 0 0}.help-status{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:.9rem}.help-status:last-of-type{border-bottom:0}.help-status strong{font-weight:700;text-align:right}
 /* Unifica estos controles con el azul del rediseño. */
 .aju-save,#neg-new-buy{background:#2366a5;color:#fff}
 .bars i{background:#2366a5}
@@ -379,6 +391,7 @@ nav button{font-size:.78rem}
    <button class="home-tile" data-home="neg"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 7h18v13H3zM3 7l2-4h14l2 4M9 12h6"/></svg></span><strong>Gestión del negocio</strong><small>Medicamentos por conseguir y proveedores</small></button>
    <button class="home-tile" data-home="caja"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 8h18v11H3zM3 12h18M7 16h3M6 8V5h12v3"/></svg></span><strong>Caja</strong><small id="caja-sub">Cierre de jornada</small></button>
    <button class="home-tile" data-home="aju"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.8 1.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5v.1h-2.6v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1-1.8-1.8.1-.1A1.7 1.7 0 0 0 8 15a1.7 1.7 0 0 0-1.5-1H6.4v-2.6h.1A1.7 1.7 0 0 0 8 10a1.7 1.7 0 0 0-.3-1.9l-.1-.1 1.8-1.8.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5V5h2.6v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.8 1.8-.1.1A1.7 1.7 0 0 0 19.4 10a1.7 1.7 0 0 0 1.5 1h.1v2.6h-.1a1.7 1.7 0 0 0-1.5 1.4z"/></svg></span><strong>Ajustes</strong><small>Configurar Drosalud</small></button>
+   <button class="home-tile" data-home="ayuda"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M9.6 9a2.5 2.5 0 1 1 4.2 1.8c-1.2 1.1-1.8 1.3-1.8 2.7M12 17h.01"/></svg></span><strong>Ayuda y sistema</strong><small>Guía, conexión y herramientas</small></button>
   </div>
  </section>
 <div id="imp" hidden><b>Tu catálogo está vacío.</b><p class="sm">Carga los productos de tu Excel una sola vez.</p><button class="btn full" id="impb">Cargar productos del Excel</button></div>
@@ -474,8 +487,44 @@ nav button{font-size:.78rem}
 <section id="v-caja" hidden>
  <label for="cj-f">Fecha de la jornada</label>
  <input id="cj-f" type="date">
+ <div class="cj-history-tools"><button type="button" class="btn alt full" id="cj-history-toggle">Ver historial de cierres</button></div>
  <div id="cj-pend"></div>
  <div id="cj-body"></div>
+</section>
+<section id="v-cajahistorial" hidden>
+ <button type="button" class="btn alt full" data-cj-back style="margin-bottom:14px">← Volver a Caja</button>
+ <h2>Historial de cierres</h2>
+ <p class="mut sm">Consulta las jornadas cerradas y las modificaciones realizadas, sin mezclar esta información con el cierre de la jornada actual.</p>
+ <div id="cj-history"></div>
+</section>
+<section id="v-ayuda" hidden>
+ <p class="mut sm">Recursos para utilizar, consultar y mantener Drosalud.</p>
+ <div class="help-card">
+  <h2>Herramientas del sistema</h2>
+  <button class="btn alt full" id="rf" type="button">↻ Recargar datos</button>
+  <p class="mut sm">Vuelve a consultar la información disponible en la aplicación. No crea ni modifica ventas, productos o cierres.</p>
+  <button class="btn alt full" id="xlsT" type="button">Descargar respaldo en Excel</button>
+  <p class="mut sm">Descarga una copia de los datos incluidos en el respaldo de Drosalud.</p>
+ </div>
+ <div class="help-card">
+  <h2>Estado del sistema</h2>
+  <div class="help-status"><span>Conexión a internet</span><strong id="ayuda-online">Comprobando…</strong></div>
+  <div class="help-status"><span>Sesión de usuario</span><strong id="ayuda-session">Comprobando…</strong></div>
+  <button class="btn alt full" id="ayuda-check" type="button" style="margin-top:12px">Comprobar estado</button>
+ </div>
+ <div class="help-card">
+  <h2>Guía de uso</h2>
+  <details><summary>Ventas y recibos</summary><p class="mut sm">Busca los productos, agrégalos al recibo, verifica cantidades, precios y forma de pago. Antes de crear el recibo, revisa el total.</p></details>
+  <details><summary>Catálogo y clientes</summary><p class="mut sm">En Catálogo puedes consultar y administrar productos. En Clientes puedes consultar, registrar y dar seguimiento a tus clientes.</p></details>
+  <details><summary>Caja e historial de cierres</summary><p class="mut sm">Caja permite consultar la jornada, registrar gastos y realizar el cierre. El historial muestra los cierres guardados y las modificaciones anteriores.</p></details>
+  <details><summary>Cotizaciones y gestión del negocio</summary><p class="mut sm">Las cotizaciones permiten preparar ofertas sin crear un recibo. Gestión del negocio reúne los medicamentos por conseguir y los proveedores.</p></details>
+  <details><summary>Ajustes</summary><p class="mut sm">Aquí se configuran precios, apariencia, datos del negocio, recibos, vendedor y medios de pago.</p></details>
+ </div>
+ <div class="help-card">
+  <h2>Acerca de Drosalud</h2>
+  <div class="help-status"><span>Versión instalada</span><strong id="ayuda-version"></strong></div>
+  <p class="mut sm">Drosalud · Sistema de gestión para droguerías.</p>
+ </div>
 </section>
 <section id="v-aju" hidden>
  <div id="aju-menu">
@@ -499,7 +548,7 @@ nav button{font-size:.78rem}
     <p class="mut sm" id="mfa-st">Comprobando…</p>
     <div class="acts"><button class="btn alt full" id="mfa-on" type="button" hidden>Activar verificación en dos pasos</button><button class="btn bad full" id="mfa-off" type="button" hidden>Desactivar</button></div>
    </div>
-   <div class="acts"><button class="btn alt full" id="xlsT">Descargar respaldo en Excel</button><button class="btn alt full" id="rf">Recargar datos</button><button class="btn bad full" id="out">Cerrar sesión</button></div>
+   <div class="acts"><button class="btn bad full" id="out">Cerrar sesión</button></div>
    <p class="mut sm" id="who"></p><p class="mut sm" id="ver"></p>
   </div>
  </div>
@@ -590,6 +639,7 @@ async function loadCotizaciones(){const{data,error}=await sb.from('cotizaciones_
 function renderCotizaciones(){const q=norm($('#coq').value),L=CO.filter(r=>!q||norm((r.cliente_nombre||'')+' '+r.numero).includes(q));$('#colist').innerHTML=L.length?L.map(r=>'<button class="row" data-cotid="'+r.id+'"><span class="nm">Cotización '+pad(r.numero)+(r.cliente_nombre?' · '+esc(tcase(r.cliente_nombre)):'')+'<small>'+esc(fmt(r.creado_en))+' · '+esc(r.estado)+(r.valida_hasta?' · válida hasta '+esc(fd(r.valida_hasta)):'')+'</small></span><span class="pr">'+money(r.total)+'</span></button>').join(''):'<p class="mut">No hay cotizaciones guardadas.</p>'}
 async function abrirCotizacion(r){const{data,error}=await sb.from('cotizacion_venta_items_app').select('*').eq('cotizacion_id',r.id).order('id');if(error)throw error;showRec({...r,cot:true},(data||[]).map(i=>({nombre:i.nombre,cantidad:i.cantidad,precio_venta:i.precio_venta,presentacion:i.presentacion,unidades_por_presentacion:i.unidades_por_presentacion})));}
 async function loadAllSafe(){try{await loadAll();$('#net').hidden=true}catch(e){console.error(e);$('#net').hidden=false;$('#net').innerHTML='<span>'+esc(msgErr(e))+'</span><button id="retry">Reintentar</button>'}}
+async function loadAyudaEstado(){const online=$('#ayuda-online'),session=$('#ayuda-session');if(online)online.textContent=navigator.onLine?'Conectado':'Sin conexión';if(session)session.textContent='Comprobando…';try{const{data,error}=await sb.auth.getSession();if(error)throw error;if(session)session.textContent=data.session?'Sesión activa':'Sesión no disponible'}catch(e){if(session)session.textContent='No se pudo comprobar'}}
 let lastVer=0;async function checkVer(){lastVer=Date.now();try{const t=await(await fetch('index.html',{cache:'no-store'})).text(),m=t.match(/const VERSION='([^']+)'/);if(m&&m[1]!==VERSION){$('#upd').hidden=false;$('#upd').innerHTML='<span>Hay una versión nueva de la app</span><button id="upb">Actualizar</button>'}}catch(e){}}
 async function actualizar(){try{const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(e){}location.reload()}
 async function copy(t){try{await navigator.clipboard.writeText(t);toast('Copiado')}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}a.remove();toast(ok?'Copiado':'No se pudo copiar')}}
@@ -610,7 +660,7 @@ $('#mfa-no').onclick=async()=>{try{await sb.auth.mfa.unenroll({factorId:data.id}
 $('#mfa-ok').onclick=()=>go(async()=>{const code=$('#mfa-code').value.replace(/\s/g,''),m=$('#mfa-msg');m.textContent='';if(!/^\d{6}$/.test(code)){m.textContent='Escribe los 6 dígitos del código.';return}const{error:ev}=await sb.auth.mfa.challengeAndVerify({factorId:data.id,code});if(ev){m.textContent='Código incorrecto o vencido. Revisa tu app e intenta de nuevo.';return}closeM();toast('Verificación en dos pasos activada');mfaEstado()})}
 async function mfaDesactivar(){const{data:l,error:e0}=await sb.auth.mfa.listFactors();if(e0)throw e0;const f=(l.totp||[])[0];if(!f){mfaEstado();return}if(!confirm('¿Desactivar la verificación en dos pasos? Tu cuenta quedará protegida solo con la contraseña.'))return;const{error}=await sb.auth.mfa.unenroll({factorId:f.id});if(error){toast(/aal2|assurance|verif/i.test(String(error.message))?'Para desactivarla debes haber entrado con tu código.':'No se pudo desactivar. Intenta de nuevo.');return}toast('Verificación en dos pasos desactivada');mfaEstado()}
 function showLogin(){$('#spl').hidden=true;$('#app').hidden=true;$('#rsx').hidden=true;$('#mfa').hidden=true;$('#lg').hidden=false;try{const e=localStorage.getItem('lastEmail');if(e&&!$('#em').value){$('#em').value=e;$('#pw').focus()}}catch(x){}}
-const TT={venta:'Recibo',cat:'Catálogo',cli:'Clientes',his:'Historial',cot:'Cotizaciones',aju:'Ajustes',caja:'Caja'}
+const TT={venta:'Recibo',cat:'Catálogo',cli:'Clientes',his:'Historial',cot:'Cotizaciones',aju:'Ajustes',caja:'Caja',cajahistorial:'Historial de cierres',ayuda:'Ayuda y sistema'}
 /*CAJA-INICIO*/
 let CJ={fecha:null,res:null,gastos:[]},savingCaja=false;
 const hoyCO=()=>new Date().toLocaleDateString('en-CA',{timeZone:'America/Bogota'});
@@ -619,6 +669,29 @@ function fechaLarga(f){const[y,m,d]=f.split('-').map(Number);return new Date(y,m
 function fechaCorta(f){return f.slice(8,10)+'/'+f.slice(5,7)}
 async function cajaBadge(){try{const{data,error}=await sb.rpc('jornadas_pendientes_drosalud');if(error)throw error;const n=(data||[]).length,s=$('#caja-sub');if(s)s.textContent=n?n+(n===1?' jornada sin cerrar':' jornadas sin cerrar'):'Cierre de jornada'}catch(e){}}
 async function loadCaja(){const f=$('#cj-f');f.max=hoyCO();if(!f.value)f.value=hoyCO();await cajaPend();await cajaVer(f.value)}
+let cajaHistorialAbierto=false;
+const cajaHistMoney=n=>money(Number(n)||0);
+async function loadHistorialCierres(){
+ const box=$('#cj-history');if(!box)return;
+ box.hidden=false;box.innerHTML='<p class="mut sm">Cargando cierres…</p>';
+ try{
+  const [cierres,historial]=await Promise.all([
+   sb.from('cierres_caja').select('id,fecha,base_inicial,ventas_efectivo,ventas_total,gastos_efectivo,efectivo_esperado,efectivo_contado,diferencia,estado,cerrado_en').order('fecha',{ascending:false}).limit(500),
+   sb.from('cierres_caja_historial').select('id,fecha,version,motivo,registrado_en,registrado_por').order('registrado_en',{ascending:false}).limit(100)
+  ]);
+  if(cierres.error)throw cierres.error;if(historial.error)throw historial.error;
+  const moneyHist=n=>cajaHistMoney(n),difHist=n=>{const d=Number(n)||0;return d===0?'$0':(d<0?'Faltante ':'Sobrante ')+moneyHist(Math.abs(d))};
+  const estadoHist=e=>e==='cerrada'?'Cerrada':e==='reabierta'?'Reabierta':(e||'—');
+  const lista=(cierres.data||[]).map(x=>'<article class="cj-history-card"><div class="cj-history-head"><div><strong>Jornada '+fechaLarga(String(x.fecha))+'</strong><div class="cj-history-meta">Cierre actual · '+estadoHist(x.estado)+'</div></div><span class="cj-tag">'+estadoHist(x.estado)+'</span></div><div class="cj-history-grid"><div>Base inicial<b>'+moneyHist(x.base_inicial)+'</b></div><div>Efectivo contado<b>'+moneyHist(x.efectivo_contado)+'</b></div><div>Efectivo esperado<b>'+moneyHist(x.efectivo_esperado)+'</b></div><div>Diferencia<b>'+difHist(x.diferencia)+'</b></div><div>Ventas totales<b>'+moneyHist(x.ventas_total)+'</b></div><div>Ventas en efectivo<b>'+moneyHist(x.ventas_efectivo)+'</b></div><div>Gastos en efectivo<b>'+moneyHist(x.gastos_efectivo)+'</b></div></div><button type="button" class="btn alt full" data-cj-history-date="'+esc(String(x.fecha))+'" style="margin-top:10px">Consultar esta jornada</button></article>').join('');
+  const cambios=(historial.data||[]).map(x=>{
+   const v=x.version||{},uid=x.registrado_por?String(x.registrado_por).slice(-6):'No disponible';
+   const motivo=x.motivo==='reapertura'?'Reapertura':x.motivo==='recierre'?'Recierre':String(x.motivo||'Modificación');
+   const fechaRegistro=x.registrado_en?new Date(x.registrado_en).toLocaleString('es-CO',{dateStyle:'medium',timeStyle:'short'}):'—';
+   return '<article class="cj-history-card"><div class="cj-history-head"><div><strong>Jornada '+fechaCorta(String(x.fecha))+'</strong><div class="cj-history-meta">'+motivo+' · '+fechaRegistro+'</div></div><span class="cj-tag">Estado anterior: '+estadoHist(v.estado)+'</span></div><div class="cj-history-grid"><div>Base<b>'+moneyHist(v.base_inicial)+'</b></div><div>Efectivo contado<b>'+moneyHist(v.efectivo_contado)+'</b></div><div>Efectivo esperado<b>'+moneyHist(v.efectivo_esperado)+'</b></div><div>Diferencia<b>'+difHist(v.diferencia)+'</b></div></div><p class="cj-history-note">Ventas: '+moneyHist(v.ventas_total)+' · Efectivo vendido: '+moneyHist(v.ventas_efectivo)+' · Usuario …'+uid+'</p>'+(v.motivo_reapertura?'<p class="cj-history-note">Nota del cierre anterior: '+esc(v.motivo_reapertura)+'</p>':'')+(v.notas?'<p class="cj-history-note">Observación: '+esc(v.notas)+'</p>':'')+'</article>';
+  }).join('');
+  box.innerHTML='<h2>Todos los cierres</h2><p class="mut sm">Aquí aparecen todas las jornadas guardadas, aunque nunca se hayan reabierto. Los valores corresponden al cierre actual de cada día.</p>'+(lista||'<div class="cj-history-empty">Todavía no hay jornadas cerradas.</div>')+'<h2>Historial de modificaciones</h2><p class="mut sm">Reaperturas y recierres. Cada registro conserva cómo estaba el cierre antes del cambio.</p>'+(cambios||'<div class="cj-history-empty">No hay modificaciones registradas.</div>');
+ }catch(e){console.error('No se pudo cargar el historial de cierres:',e);box.innerHTML='<div class="cj-history-error">No se pudieron consultar los cierres. Verifica los permisos de lectura de tu cuenta y vuelve a intentarlo.</div><button type="button" class="btn alt full" id="cj-history-retry" style="margin-top:8px">Reintentar</button>'}
+}
 async function cajaPend(){const{data,error}=await sb.rpc('jornadas_pendientes_drosalud');if(error)throw error;$('#cj-pend').innerHTML=(data||[]).length?'<p class="mut sm" style="margin:6px 0 2px">Jornadas sin cerrar:</p><div class="chips">'+data.map(r=>`<button type="button" class="chip" data-cj-f="${esc(r.fecha)}">${fechaCorta(r.fecha)} · ${r.ventas} venta${r.ventas===1?'':'s'}${r.gastos?' · '+r.gastos+' gasto'+(r.gastos===1?'':'s'):''}</button>`).join('')+'</div>':'<p class="mut sm">No hay jornadas sin cerrar.</p>'}
 async function cajaVer(f){if(!f)return;CJ.fecha=f;const[a,g]=await Promise.all([sb.rpc('resumen_caja_drosalud',{p_fecha:f}),sb.from('gastos').select('id,concepto,categoria,monto,forma_pago,anulado,motivo_anulacion,creado_en').eq('fecha',f).order('creado_en',{ascending:true})]);if(a.error)throw a.error;if(g.error)throw g.error;CJ.res=a.data;CJ.gastos=g.data||[];pintarCaja()}
 function pintarCaja(){const r=CJ.res,c=r.cierre,cer=r.estado==='cerrada',adm=esAdminDrosalud(),b=$('#cj-body');
@@ -646,8 +719,8 @@ function cajaMotivo(titulo,boton,fn){openM(`<h2 style="margin-top:0">${esc(titul
 function cajaClics(e){const t=e.target.closest('button');if(!t)return;if(t.dataset.cjF){$('#cj-f').value=t.dataset.cjF;go(()=>cajaVer(t.dataset.cjF));return}if(t.id==='cj-add'){cajaGastoForm();return}if(t.id==='cj-close'){go(cajaCerrar);return}if(t.id==='cj-reopen'){cajaMotivo('Reabrir jornada','Reabrir',async m=>{const{error}=await sb.rpc('reabrir_caja_drosalud',{p_fecha:CJ.fecha,p_motivo:m});if(error)throw error;toast('Jornada reabierta');await cajaPend();await cajaVer(CJ.fecha);cajaBadge()});return}if(t.dataset.cjAnular){const id=t.dataset.cjAnular;cajaMotivo('Anular gasto','Anular gasto',async m=>{const{error}=await sb.rpc('anular_gasto_drosalud',{p_id:id,p_motivo:m});if(error)throw error;toast('Gasto anulado');await cajaPend();await cajaVer(CJ.fecha);cajaBadge()})}}
 /*CAJA-FIN*/;
 function renderHomeDate(){const el=$('#home-date');if(!el)return;const mobile=window.matchMedia('(max-width: 620px)').matches;const opts=mobile?{weekday:'short',day:'numeric',month:'short',timeZone:'America/Bogota'}:{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'America/Bogota'};const s=new Intl.DateTimeFormat('es-CO',opts).format(new Date());el.textContent=s.charAt(0).toLocaleUpperCase('es-CO')+s.slice(1)}
-function showHome(){cajaBadge();renderHomeDate();$('#back-home').hidden=true;$('#home').hidden=false;['venta','cat','cli','his','cot','aju','neg','caja'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=true});$('#more-menu').hidden=true;$('#ttl').textContent='Drosalud';window.scrollTo(0,0)}
- function show(v){$('#back-home').hidden=false;$('#home').hidden=true;['venta','cat','cli','his','cot','aju','neg','caja'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=k!==v});$('#more-menu').hidden=true;$('#nav [data-v="mas"]').setAttribute('aria-expanded','false');document.querySelectorAll('#nav button').forEach(b=>{if(b.dataset.v!=='mas')b.setAttribute('aria-current',String(b.dataset.v===v));else b.setAttribute('aria-current',String(!['venta','cat','cli'].includes(v)))});$('#ttl').textContent=TT[v]||'Negocio';if(v==='aju')fillAju();if(v==='caja')go(loadCaja);if(v==='his')go(loadHis);if(v==='cli')loadCST().catch(()=>{});if(v==='cot')go(loadCotizaciones);window.scrollTo(0,0)}
+function showHome(){cajaBadge();renderHomeDate();$('#back-home').hidden=true;$('#home').hidden=false;['venta','cat','cli','his','cot','aju','neg','caja','cajahistorial','ayuda'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=true});$('#more-menu').hidden=true;$('#ttl').textContent='Drosalud';window.scrollTo(0,0)}
+ function show(v){$('#back-home').hidden=false;$('#home').hidden=true;['venta','cat','cli','his','cot','aju','neg','caja','cajahistorial','ayuda'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=k!==v});$('#more-menu').hidden=true;$('#nav [data-v="mas"]').setAttribute('aria-expanded','false');document.querySelectorAll('#nav button').forEach(b=>{if(b.dataset.v!=='mas')b.setAttribute('aria-current',String(b.dataset.v===v));else b.setAttribute('aria-current',String(!['venta','cat','cli'].includes(v)))});$('#ttl').textContent=TT[v]||'Negocio';if(v==='aju')fillAju();if(v==='caja')go(loadCaja);if(v==='cajahistorial')go(loadHistorialCierres);if(v==='ayuda'){go(loadAyudaEstado);$('#ayuda-version').textContent='v'+VERSION}if(v==='his')go(loadHis);if(v==='cli')loadCST().catch(()=>{});if(v==='cot')go(loadCotizaciones);window.scrollTo(0,0)}
 function rRes(){rTop();const q=$('#q').value.trim(),b=$('#res');if(!q){b.innerHTML='';return}const a=find(q,20);b.innerHTML=a.length?a.map(p=>`<button class="row" data-add="${p.id}"><span class="nm">${esc(p.nombre)}<small>${esc(p.laboratorio||'')}</small></span><span class="pr">${pv(p)==null?'Precio pendiente':money(pv(p))}<small>compra ${money(p.precio_compra)}</small></span></button>`).join(''):'<p class="mut">No hay resultados. Agrégalo en Catálogo.</p>'}
 function calc(){const st=cart.reduce((s,i)=>s+i.p*i.q,0),g=esAdminDrosalud()?cart.reduce((s,i)=>s+(i.p-(i.c||0))*i.q,0):null,ds=Math.max(0,+$('#dsc').value||0),dm=Math.max(0,+$('#dom').value||0),mens=Math.max(0,+$('#mens').value||0);return{st,ds,dm,mens,total:Math.max(0,st-ds+dm),gan:g==null?null:g-ds+dm-mens}}
 function rCart(){const b=$('#cart');b.innerHTML=cart.length?cart.map((i,k)=>`<div class="item"><div class="top"><span>${esc(i.n)}</span><button class="rm" data-rm="${k}" aria-label="Quitar">✕</button></div><div class="ctl"><div class="step"><button data-dec="${k}" aria-label="Menos">−</button><span>${i.q} ${i.q===1?'unidad':'unidades'}</span><button data-inc="${k}" aria-label="Más">+</button></div><label class="pp">$<input type="number" inputmode="numeric" data-pr="${k}" value="${i.p}" aria-label="Precio de venta por unidad"></label><span class="lt">${money(i.p*i.q)}</span></div><small class="mut">${esc(etiquetaCarrito(i))}· Compra ${money(i.c)} c/u${esAdminDrosalud()?` · ganas ${money((i.p-i.c)*i.q)}${warnM(i.p,i.c)}`:''}</small></div>`).join(''):'<p class="mut">Busca un producto y tócalo para agregarlo.</p>';const k=calc(),n=cart.reduce((s,i)=>s+i.q,0);$('#tot').textContent=money(k.total);$('#gn').textContent=esAdminDrosalud()&&cart.length?'Ganancia estimada (productos + domicilio − mensajero − descuento): '+money(k.gan):'';const e=$('#bg');e.hidden=!n;e.textContent=n;rVue(k)}
@@ -881,12 +954,15 @@ if(id==='mfa-on')return go(mfaActivar);
 if(id==='mfa-off')return go(mfaDesactivar);
 if(id==='mfx')return go(async()=>{await sb.auth.signOut();showLogin()});
 if(id==='rf')return loadAllSafe();
+if(id==='ayuda-check')return go(loadAyudaEstado);
 if(id==='out'||id==='out-top')return go(async()=>{const{error}=await sb.auth.signOut();if(error)throw error;P=[];C=[];H=[];cart=[];showLogin()});
 });
 $('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeM()});
 $('#back-home').addEventListener('click',showHome);
  $('#home').addEventListener('click',e=>{const b=e.target.closest('[data-home]');if(!b)return;const v=b.dataset.home;if(v==='neg'){const target=document.querySelector('#more-menu [data-v="neg"]');if(target)target.click();return}show(v)});
 $('#v-caja').addEventListener('click',cajaClics);
+$('#cj-history-toggle').addEventListener('click',()=>show('cajahistorial'));
+$('#v-cajahistorial').addEventListener('click',e=>{if(e.target.closest('[data-cj-back]')){show('caja');return}if(e.target.closest('#cj-history-retry'))return loadHistorialCierres();const b=e.target.closest('[data-cj-history-date]');if(b){const f=b.dataset.cjHistoryDate;$('#cj-f').value=f;show('caja')}});
 $('#v-caja').addEventListener('input',e=>{if(e.target.id==='cj-base'||e.target.id==='cj-cont')cajaCalc()});
 $('#cj-f').addEventListener('change',e=>go(()=>cajaVer(e.target.value)));
 $('#coq').addEventListener('input',renderCotizaciones);
