@@ -485,10 +485,15 @@ nav button{font-size:.78rem}
 <section id="v-caja" hidden>
  <label for="cj-f">Fecha de la jornada</label>
  <input id="cj-f" type="date">
- <div class="cj-history-tools"><button type="button" class="btn alt full" id="cj-history-toggle" aria-expanded="false">Ver historial de cierres</button></div>
- <div id="cj-history" hidden></div>
+ <div class="cj-history-tools"><button type="button" class="btn alt full" id="cj-history-toggle">Ver historial de cierres</button></div>
  <div id="cj-pend"></div>
  <div id="cj-body"></div>
+</section>
+<section id="v-cajahistorial" hidden>
+ <button type="button" class="btn alt full" data-cj-back style="margin-bottom:14px">← Volver a Caja</button>
+ <h2>Historial de cierres</h2>
+ <p class="mut sm">Consulta las jornadas cerradas y las modificaciones realizadas, sin mezclar esta información con el cierre de la jornada actual.</p>
+ <div id="cj-history"></div>
 </section>
 <section id="v-aju" hidden>
  <div id="aju-menu">
@@ -623,7 +628,7 @@ $('#mfa-no').onclick=async()=>{try{await sb.auth.mfa.unenroll({factorId:data.id}
 $('#mfa-ok').onclick=()=>go(async()=>{const code=$('#mfa-code').value.replace(/\s/g,''),m=$('#mfa-msg');m.textContent='';if(!/^\d{6}$/.test(code)){m.textContent='Escribe los 6 dígitos del código.';return}const{error:ev}=await sb.auth.mfa.challengeAndVerify({factorId:data.id,code});if(ev){m.textContent='Código incorrecto o vencido. Revisa tu app e intenta de nuevo.';return}closeM();toast('Verificación en dos pasos activada');mfaEstado()})}
 async function mfaDesactivar(){const{data:l,error:e0}=await sb.auth.mfa.listFactors();if(e0)throw e0;const f=(l.totp||[])[0];if(!f){mfaEstado();return}if(!confirm('¿Desactivar la verificación en dos pasos? Tu cuenta quedará protegida solo con la contraseña.'))return;const{error}=await sb.auth.mfa.unenroll({factorId:f.id});if(error){toast(/aal2|assurance|verif/i.test(String(error.message))?'Para desactivarla debes haber entrado con tu código.':'No se pudo desactivar. Intenta de nuevo.');return}toast('Verificación en dos pasos desactivada');mfaEstado()}
 function showLogin(){$('#spl').hidden=true;$('#app').hidden=true;$('#rsx').hidden=true;$('#mfa').hidden=true;$('#lg').hidden=false;try{const e=localStorage.getItem('lastEmail');if(e&&!$('#em').value){$('#em').value=e;$('#pw').focus()}}catch(x){}}
-const TT={venta:'Recibo',cat:'Catálogo',cli:'Clientes',his:'Historial',cot:'Cotizaciones',aju:'Ajustes',caja:'Caja'}
+const TT={venta:'Recibo',cat:'Catálogo',cli:'Clientes',his:'Historial',cot:'Cotizaciones',aju:'Ajustes',caja:'Caja',cajahistorial:'Historial de cierres'}
 /*CAJA-INICIO*/
 let CJ={fecha:null,res:null,gastos:[]},savingCaja=false;
 const hoyCO=()=>new Date().toLocaleDateString('en-CA',{timeZone:'America/Bogota'});
@@ -682,8 +687,8 @@ function cajaMotivo(titulo,boton,fn){openM(`<h2 style="margin-top:0">${esc(titul
 function cajaClics(e){const t=e.target.closest('button');if(!t)return;if(t.dataset.cjF){$('#cj-f').value=t.dataset.cjF;go(()=>cajaVer(t.dataset.cjF));return}if(t.id==='cj-add'){cajaGastoForm();return}if(t.id==='cj-close'){go(cajaCerrar);return}if(t.id==='cj-reopen'){cajaMotivo('Reabrir jornada','Reabrir',async m=>{const{error}=await sb.rpc('reabrir_caja_drosalud',{p_fecha:CJ.fecha,p_motivo:m});if(error)throw error;toast('Jornada reabierta');await cajaPend();await cajaVer(CJ.fecha);cajaBadge()});return}if(t.dataset.cjAnular){const id=t.dataset.cjAnular;cajaMotivo('Anular gasto','Anular gasto',async m=>{const{error}=await sb.rpc('anular_gasto_drosalud',{p_id:id,p_motivo:m});if(error)throw error;toast('Gasto anulado');await cajaPend();await cajaVer(CJ.fecha);cajaBadge()})}}
 /*CAJA-FIN*/;
 function renderHomeDate(){const el=$('#home-date');if(!el)return;const mobile=window.matchMedia('(max-width: 620px)').matches;const opts=mobile?{weekday:'short',day:'numeric',month:'short',timeZone:'America/Bogota'}:{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'America/Bogota'};const s=new Intl.DateTimeFormat('es-CO',opts).format(new Date());el.textContent=s.charAt(0).toLocaleUpperCase('es-CO')+s.slice(1)}
-function showHome(){cajaBadge();renderHomeDate();$('#back-home').hidden=true;$('#home').hidden=false;['venta','cat','cli','his','cot','aju','neg','caja'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=true});$('#more-menu').hidden=true;$('#ttl').textContent='Drosalud';window.scrollTo(0,0)}
- function show(v){$('#back-home').hidden=false;$('#home').hidden=true;['venta','cat','cli','his','cot','aju','neg','caja'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=k!==v});$('#more-menu').hidden=true;$('#nav [data-v="mas"]').setAttribute('aria-expanded','false');document.querySelectorAll('#nav button').forEach(b=>{if(b.dataset.v!=='mas')b.setAttribute('aria-current',String(b.dataset.v===v));else b.setAttribute('aria-current',String(!['venta','cat','cli'].includes(v)))});$('#ttl').textContent=TT[v]||'Negocio';if(v==='aju')fillAju();if(v==='caja')go(loadCaja);if(v==='his')go(loadHis);if(v==='cli')loadCST().catch(()=>{});if(v==='cot')go(loadCotizaciones);window.scrollTo(0,0)}
+function showHome(){cajaBadge();renderHomeDate();$('#back-home').hidden=true;$('#home').hidden=false;['venta','cat','cli','his','cot','aju','neg','caja','cajahistorial'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=true});$('#more-menu').hidden=true;$('#ttl').textContent='Drosalud';window.scrollTo(0,0)}
+ function show(v){$('#back-home').hidden=false;$('#home').hidden=true;['venta','cat','cli','his','cot','aju','neg','caja','cajahistorial'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=k!==v});$('#more-menu').hidden=true;$('#nav [data-v="mas"]').setAttribute('aria-expanded','false');document.querySelectorAll('#nav button').forEach(b=>{if(b.dataset.v!=='mas')b.setAttribute('aria-current',String(b.dataset.v===v));else b.setAttribute('aria-current',String(!['venta','cat','cli'].includes(v)))});$('#ttl').textContent=TT[v]||'Negocio';if(v==='aju')fillAju();if(v==='caja')go(loadCaja);if(v==='cajahistorial')go(loadHistorialCierres);if(v==='his')go(loadHis);if(v==='cli')loadCST().catch(()=>{});if(v==='cot')go(loadCotizaciones);window.scrollTo(0,0)}
 function rRes(){rTop();const q=$('#q').value.trim(),b=$('#res');if(!q){b.innerHTML='';return}const a=find(q,20);b.innerHTML=a.length?a.map(p=>`<button class="row" data-add="${p.id}"><span class="nm">${esc(p.nombre)}<small>${esc(p.laboratorio||'')}</small></span><span class="pr">${pv(p)==null?'Precio pendiente':money(pv(p))}<small>compra ${money(p.precio_compra)}</small></span></button>`).join(''):'<p class="mut">No hay resultados. Agrégalo en Catálogo.</p>'}
 function calc(){const st=cart.reduce((s,i)=>s+i.p*i.q,0),g=esAdminDrosalud()?cart.reduce((s,i)=>s+(i.p-(i.c||0))*i.q,0):null,ds=Math.max(0,+$('#dsc').value||0),dm=Math.max(0,+$('#dom').value||0),mens=Math.max(0,+$('#mens').value||0);return{st,ds,dm,mens,total:Math.max(0,st-ds+dm),gan:g==null?null:g-ds+dm-mens}}
 function rCart(){const b=$('#cart');b.innerHTML=cart.length?cart.map((i,k)=>`<div class="item"><div class="top"><span>${esc(i.n)}</span><button class="rm" data-rm="${k}" aria-label="Quitar">✕</button></div><div class="ctl"><div class="step"><button data-dec="${k}" aria-label="Menos">−</button><span>${i.q} ${i.q===1?'unidad':'unidades'}</span><button data-inc="${k}" aria-label="Más">+</button></div><label class="pp">$<input type="number" inputmode="numeric" data-pr="${k}" value="${i.p}" aria-label="Precio de venta por unidad"></label><span class="lt">${money(i.p*i.q)}</span></div><small class="mut">${esc(etiquetaCarrito(i))}· Compra ${money(i.c)} c/u${esAdminDrosalud()?` · ganas ${money((i.p-i.c)*i.q)}${warnM(i.p,i.c)}`:''}</small></div>`).join(''):'<p class="mut">Busca un producto y tócalo para agregarlo.</p>';const k=calc(),n=cart.reduce((s,i)=>s+i.q,0);$('#tot').textContent=money(k.total);$('#gn').textContent=esAdminDrosalud()&&cart.length?'Ganancia estimada (productos + domicilio − mensajero − descuento): '+money(k.gan):'';const e=$('#bg');e.hidden=!n;e.textContent=n;rVue(k)}
@@ -923,8 +928,8 @@ $('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeM()});
 $('#back-home').addEventListener('click',showHome);
  $('#home').addEventListener('click',e=>{const b=e.target.closest('[data-home]');if(!b)return;const v=b.dataset.home;if(v==='neg'){const target=document.querySelector('#more-menu [data-v="neg"]');if(target)target.click();return}show(v)});
 $('#v-caja').addEventListener('click',cajaClics);
-$('#cj-history-toggle').addEventListener('click',async()=>{cajaHistorialAbierto=!cajaHistorialAbierto;const b=$('#cj-history-toggle'),box=$('#cj-history');b.setAttribute('aria-expanded',String(cajaHistorialAbierto));b.textContent=cajaHistorialAbierto?'Ocultar historial de cierres':'Ver historial de cierres';if(cajaHistorialAbierto)await loadHistorialCierres();else box.hidden=true});
-$('#cj-history').addEventListener('click',e=>{if(e.target.closest('#cj-history-retry'))return loadHistorialCierres();const b=e.target.closest('[data-cj-history-date]');if(b){const f=b.dataset.cjHistoryDate;$('#cj-f').value=f;go(()=>cajaVer(f));window.scrollTo({top:0,behavior:'smooth'})}});
+$('#cj-history-toggle').addEventListener('click',()=>show('cajahistorial'));
+$('#v-cajahistorial').addEventListener('click',e=>{if(e.target.closest('[data-cj-back]')){show('caja');return}if(e.target.closest('#cj-history-retry'))return loadHistorialCierres();const b=e.target.closest('[data-cj-history-date]');if(b){const f=b.dataset.cjHistoryDate;$('#cj-f').value=f;show('caja');go(()=>cajaVer(f))}});
 $('#v-caja').addEventListener('input',e=>{if(e.target.id==='cj-base'||e.target.id==='cj-cont')cajaCalc()});
 $('#cj-f').addEventListener('change',e=>go(()=>cajaVer(e.target.value)));
 $('#coq').addEventListener('input',renderCotizaciones);
