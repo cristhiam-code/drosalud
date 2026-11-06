@@ -241,6 +241,17 @@ nav button[aria-current="true"]{color:var(--pri);font-weight:800;box-shadow:inse
 .bars{display:flex;align-items:flex-end;gap:3px;height:130px;overflow-x:auto;padding:6px 4px 4px;background:var(--card);border:1px solid var(--line);border-radius:12px}
 .bars div{flex:1;min-width:16px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;font-size:.62rem;color:var(--mut)}
 .bars i{display:block;width:100%;background:var(--pri);border-radius:4px 4px 0 0;min-height:2px}
+.cj-history-tools{margin:10px 0 14px}
+.cj-history-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0}
+.cj-history-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.cj-history-head strong{font-size:.96rem}
+.cj-history-meta{color:var(--mut);font-size:.8rem;margin-top:4px}
+.cj-history-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.cj-history-grid div{background:var(--bg);border-radius:9px;padding:9px;font-size:.78rem;color:var(--mut)}
+.cj-history-grid b{display:block;color:var(--ink);font-size:.95rem;margin-top:3px}
+.cj-history-note{font-size:.82rem;color:var(--mut);margin:10px 0 0;overflow-wrap:anywhere}
+.cj-history-empty{padding:14px;border:1px dashed var(--line);border-radius:12px;color:var(--mut);font-size:.88rem}
+.cj-history-error{padding:12px;border-radius:10px;background:#FFF6F6;color:var(--bad);font-size:.85rem}
 /* Unifica estos controles con el azul del rediseño. */
 .aju-save,#neg-new-buy{background:#2366a5;color:#fff}
 .bars i{background:#2366a5}
@@ -474,6 +485,8 @@ nav button{font-size:.78rem}
 <section id="v-caja" hidden>
  <label for="cj-f">Fecha de la jornada</label>
  <input id="cj-f" type="date">
+ <div class="cj-history-tools"><button type="button" class="btn alt full" id="cj-history-toggle" aria-expanded="false">Ver historial de cierres</button></div>
+ <div id="cj-history" hidden></div>
  <div id="cj-pend"></div>
  <div id="cj-body"></div>
 </section>
@@ -619,6 +632,25 @@ function fechaLarga(f){const[y,m,d]=f.split('-').map(Number);return new Date(y,m
 function fechaCorta(f){return f.slice(8,10)+'/'+f.slice(5,7)}
 async function cajaBadge(){try{const{data,error}=await sb.rpc('jornadas_pendientes_drosalud');if(error)throw error;const n=(data||[]).length,s=$('#caja-sub');if(s)s.textContent=n?n+(n===1?' jornada sin cerrar':' jornadas sin cerrar'):'Cierre de jornada'}catch(e){}}
 async function loadCaja(){const f=$('#cj-f');f.max=hoyCO();if(!f.value)f.value=hoyCO();await cajaPend();await cajaVer(f.value)}
+let cajaHistorialAbierto=false;
+const cajaHistMoney=n=>money(Number(n)||0);
+async function loadHistorialCierres(){
+ const box=$('#cj-history');if(!box)return;
+ box.hidden=false;box.innerHTML='<p class="mut sm">Cargando historial…</p>';
+ try{
+  const{data,error}=await sb.from('cierres_caja_historial').select('id,fecha,version,motivo,registrado_en,registrado_por').order('registrado_en',{ascending:false}).limit(100);
+  if(error)throw error;
+  if(!data||!data.length){box.innerHTML='<div class="cj-history-empty">Todavía no hay versiones anteriores de cierres.</div>';return}
+  const labelMotivo=m=>m==='reapertura'?'Reapertura':m==='recierre'?'Recierre':String(m||'Modificación');
+  box.innerHTML='<h2>Historial de modificaciones</h2><p class="mut sm">Registro de solo consulta. Cada tarjeta muestra cómo estaba el cierre antes de modificarse.</p>'+data.map(x=>{
+   const v=x.version||{},d=Number(v.diferencia)||0,uid=x.registrado_por?String(x.registrado_por).slice(-6):'No disponible';
+   const estado=v.estado==='cerrada'?'Cerrada':v.estado==='reabierta'?'Reabierta':(v.estado||'—');
+   const dif=d===0?'$0':(d<0?'Faltante ':'Sobrante ')+cajaHistMoney(Math.abs(d));
+   const fechaRegistro=x.registrado_en?new Date(x.registrado_en).toLocaleString('es-CO',{dateStyle:'medium',timeStyle:'short'}):'—';
+   return '<article class="cj-history-card"><div class="cj-history-head"><div><strong>Jornada '+fechaCorta(String(x.fecha))+'</strong><div class="cj-history-meta">'+labelMotivo(x.motivo)+' · '+fechaRegistro+'</div></div><span class="cj-tag">'+estado+'</span></div><div class="cj-history-grid"><div>Base<b>'+cajaHistMoney(v.base_inicial)+'</b></div><div>Efectivo contado<b>'+cajaHistMoney(v.efectivo_contado)+'</b></div><div>Efectivo esperado<b>'+cajaHistMoney(v.efectivo_esperado)+'</b></div><div>Diferencia<b>'+dif+'</b></div></div><p class="cj-history-note">Ventas: '+cajaHistMoney(v.ventas_total)+' · Efectivo vendido: '+cajaHistMoney(v.ventas_efectivo)+' · Registrado por usuario …'+uid+'</p>'+(v.motivo_reapertura?'<p class="cj-history-note">Motivo de reapertura: '+esc(v.motivo_reapertura)+'</p>':'')+(v.notas?'<p class="cj-history-note">Nota: '+esc(v.notas)+'</p>':'')+'</article>';
+  }).join('');
+ }catch(e){console.error('No se pudo cargar el historial de cierres:',e);box.innerHTML='<div class="cj-history-error">No se pudo consultar el historial. Verifica los permisos de lectura de tu cuenta y vuelve a intentarlo.</div><button type="button" class="btn alt full" id="cj-history-retry" style="margin-top:8px">Reintentar</button>'}
+}
 async function cajaPend(){const{data,error}=await sb.rpc('jornadas_pendientes_drosalud');if(error)throw error;$('#cj-pend').innerHTML=(data||[]).length?'<p class="mut sm" style="margin:6px 0 2px">Jornadas sin cerrar:</p><div class="chips">'+data.map(r=>`<button type="button" class="chip" data-cj-f="${esc(r.fecha)}">${fechaCorta(r.fecha)} · ${r.ventas} venta${r.ventas===1?'':'s'}${r.gastos?' · '+r.gastos+' gasto'+(r.gastos===1?'':'s'):''}</button>`).join('')+'</div>':'<p class="mut sm">No hay jornadas sin cerrar.</p>'}
 async function cajaVer(f){if(!f)return;CJ.fecha=f;const[a,g]=await Promise.all([sb.rpc('resumen_caja_drosalud',{p_fecha:f}),sb.from('gastos').select('id,concepto,categoria,monto,forma_pago,anulado,motivo_anulacion,creado_en').eq('fecha',f).order('creado_en',{ascending:true})]);if(a.error)throw a.error;if(g.error)throw g.error;CJ.res=a.data;CJ.gastos=g.data||[];pintarCaja()}
 function pintarCaja(){const r=CJ.res,c=r.cierre,cer=r.estado==='cerrada',adm=esAdminDrosalud(),b=$('#cj-body');
@@ -887,6 +919,8 @@ $('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeM()});
 $('#back-home').addEventListener('click',showHome);
  $('#home').addEventListener('click',e=>{const b=e.target.closest('[data-home]');if(!b)return;const v=b.dataset.home;if(v==='neg'){const target=document.querySelector('#more-menu [data-v="neg"]');if(target)target.click();return}show(v)});
 $('#v-caja').addEventListener('click',cajaClics);
+$('#cj-history-toggle').addEventListener('click',async()=>{cajaHistorialAbierto=!cajaHistorialAbierto;const b=$('#cj-history-toggle'),box=$('#cj-history');b.setAttribute('aria-expanded',String(cajaHistorialAbierto));b.textContent=cajaHistorialAbierto?'Ocultar historial de cierres':'Ver historial de cierres';if(cajaHistorialAbierto)await loadHistorialCierres();else box.hidden=true});
+$('#cj-history').addEventListener('click',e=>{if(e.target.closest('#cj-history-retry'))loadHistorialCierres()});
 $('#v-caja').addEventListener('input',e=>{if(e.target.id==='cj-base'||e.target.id==='cj-cont')cajaCalc()});
 $('#cj-f').addEventListener('change',e=>go(()=>cajaVer(e.target.value)));
 $('#coq').addEventListener('input',renderCotizaciones);
