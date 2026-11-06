@@ -251,6 +251,65 @@ nav button{font-size:.78rem}
   background:transparent!important;
   color:#52677d!important;
 }
+
+/* Panel principal Premium empresarial: estilos aislados del resto de módulos. */
+#app > header.app-header{
+ max-width:1240px;margin:20px auto 0;padding:16px 28px;
+ background:#fff;border:1px solid #e5ebf1;border-radius:16px;
+ box-shadow:0 2px 10px rgba(18,43,65,.035);
+}
+#app > header.app-header h1{color:#12384a;font-size:1.18rem;letter-spacing:-.025em}
+#app > header.app-header #back-home{border-color:#dce5ec;color:#164b60;background:#f7fafc}
+#app > header.app-header #out-top{background:#fff;color:#526b7a;border:1px solid #dce5ec}
+#home{max-width:1240px;padding:34px 28px 56px}
+.home-intro{font-size:initial;margin:0 0 26px;color:inherit}
+.home-intro:before,.home-intro:after{content:none}
+.home-date-wrap{display:block}
+.home-eyebrow{margin:0 0 9px;color:#477184;font-size:.7rem;font-weight:800;letter-spacing:.14em}
+.home-date{margin:0;color:#12384a;font-size:clamp(1.55rem,3vw,2.15rem);font-weight:800;letter-spacing:-.045em;line-height:1.15}
+.home-subtitle{margin:8px 0 0;color:#718493;font-size:.98rem;font-weight:500}
+.home-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.home-tile{
+ position:relative;min-width:0;min-height:154px;padding:21px;
+ gap:12px;border:1px solid #e2eaf0;border-radius:16px;background:#fff;
+ box-shadow:0 3px 12px rgba(18,56,74,.045);color:#183b4c;
+ transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease;
+}
+.home-tile:hover{transform:translateY(-2px);border-color:#b9cdd6;box-shadow:0 9px 22px rgba(18,56,74,.085)}
+.home-tile .home-icon{width:44px;height:44px;border-radius:13px;background:#edf4f6;color:#176078}
+.home-tile .home-icon svg{width:23px;height:23px}
+.home-tile strong{font-size:1rem;font-weight:800;letter-spacing:-.02em;color:#17394a}
+.home-tile small{font-size:.83rem;line-height:1.4;color:#718493}
+.home-tile[data-home="venta"]{
+ grid-column:auto;min-height:154px;flex-direction:column;align-items:flex-start;
+ justify-content:center;padding:21px;background:#123f52;border-color:#123f52;
+ box-shadow:0 7px 18px rgba(18,63,82,.14);color:#fff;
+}
+.home-tile[data-home="venta"] .home-icon{width:44px;height:44px;background:rgba(255,255,255,.13);color:#fff}
+.home-tile[data-home="venta"] strong{font-size:1rem;color:#fff}
+.home-tile[data-home="venta"] small{color:#d1e0e6}
+.home-tile[data-home="venta"]:after{content:none}
+.home-tile:focus-visible{outline:3px solid #2b7890;outline-offset:3px}
+@media(max-width:760px){
+ #app > header.app-header{margin:10px 12px 0;padding:13px 15px;border-radius:14px}
+ #home{padding:27px 16px calc(36px + env(safe-area-inset-bottom,0px))}
+ .home-intro{margin-bottom:22px}
+ .home-date{font-size:1.55rem}
+ .home-subtitle{font-size:.92rem;margin-top:6px}
+ .home-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+ .home-tile{min-height:140px;padding:15px;border-radius:15px}
+ .home-tile[data-home="venta"]{grid-column:1/-1;min-height:102px;flex-direction:row;align-items:center;padding:16px}
+ .home-tile[data-home="venta"] .home-icon{width:46px;height:46px}
+}
+@media(max-width:360px){
+ #home{padding-left:12px;padding-right:12px}
+ .home-grid{gap:9px}
+ .home-tile{min-height:132px;padding:12px}
+ .home-tile strong{font-size:.94rem}
+ .home-tile small{font-size:.77rem}
+ .home-date{font-size:1.35rem}
+}
+@media(prefers-reduced-motion:reduce){.home-tile{transition:none}}
 </style>
 </head>
 <body>
@@ -286,7 +345,13 @@ nav button{font-size:.78rem}
 <header class="app-header"><button id="back-home" type="button" aria-label="Volver al inicio" hidden>← Inicio</button><h1 id="ttl">Drosalud</h1><button id="out-top" class="btn bad" type="button" style="min-height:40px;padding:8px 11px;font-size:.85rem">Salir</button></header>
 <div id="net" hidden></div><div id="upd" hidden></div><div id="bkb" hidden></div>
  <section id="home" aria-label="Menú principal">
-  <p class="home-intro">Accede rápidamente a las herramientas de tu negocio.</p>
+  <div class="home-intro">
+    <div class="home-date-wrap">
+     <p class="home-eyebrow">DROSALUD · PANEL PRINCIPAL</p>
+     <h2 id="home-date" class="home-date" aria-label="Fecha actual"></h2>
+     <p class="home-subtitle">Resumen de tu operación</p>
+    </div>
+   </div>
   <div class="home-grid">
    <button class="home-tile" data-home="venta"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 3h8l4 4v14H7z"/><path d="M15 3v5h4M10 13h6M10 17h6"/></svg></span><strong>Facturación POS</strong><small>Crear recibo y registrar venta</small></button>
    <button class="home-tile" data-home="cat"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16v13H4zM8 7V4h8v3M9 12h6M9 16h6"/></svg></span><strong>Productos</strong><small>Consultar y administrar catálogo</small></button>
@@ -892,6 +957,31 @@ showLogin();
   if(b.dataset.negEditBuy){buyForm(b.dataset.negEditBuy);return}
   if(b.dataset.negQuote){quoteForm(b.dataset.negQuote);return}
  },true);
+})();
+</script>
+
+<script>
+/* Fecha del panel: siempre en hora de Colombia; no interviene en #ttl ni en pantallas internas. */
+(()=> {
+ const el=document.getElementById('home-date');
+ if(!el)return;
+ const full=new Intl.DateTimeFormat('es-CO',{timeZone:'America/Bogota',weekday:'long',day:'numeric',month:'long',year:'numeric'});
+ const short=new Intl.DateTimeFormat('es-CO',{timeZone:'America/Bogota',weekday:'short',day:'numeric',month:'short'});
+ const update=()=>{
+  const now=new Date();
+  if(window.matchMedia('(max-width: 620px)').matches){
+   const p=Object.fromEntries(short.formatToParts(now).map(x=>[x.type,x.value]));
+   const weekday=p.weekday.replace(/[.,]$/,'');
+   const month=p.month.replace(/[.,]$/,'');
+   el.textContent=weekday+'. '+p.day+' '+month+'.';
+  }else{
+   el.textContent=full.format(now).toLocaleLowerCase('es-CO');
+  }
+ };
+ update();
+ window.addEventListener('resize',update,{passive:true});
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)update()});
+ window.setInterval(update,60000);
 })();
 </script>
 </body>
