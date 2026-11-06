@@ -636,20 +636,24 @@ let cajaHistorialAbierto=false;
 const cajaHistMoney=n=>money(Number(n)||0);
 async function loadHistorialCierres(){
  const box=$('#cj-history');if(!box)return;
- box.hidden=false;box.innerHTML='<p class="mut sm">Cargando historial…</p>';
+ box.hidden=false;box.innerHTML='<p class="mut sm">Cargando cierres…</p>';
  try{
-  const{data,error}=await sb.from('cierres_caja_historial').select('id,fecha,version,motivo,registrado_en,registrado_por').order('registrado_en',{ascending:false}).limit(100);
-  if(error)throw error;
-  if(!data||!data.length){box.innerHTML='<div class="cj-history-empty">Todavía no hay versiones anteriores de cierres.</div>';return}
-  const labelMotivo=m=>m==='reapertura'?'Reapertura':m==='recierre'?'Recierre':String(m||'Modificación');
-  box.innerHTML='<h2>Historial de modificaciones</h2><p class="mut sm">Registro de solo consulta. Cada tarjeta muestra cómo estaba el cierre antes de modificarse.</p>'+data.map(x=>{
-   const v=x.version||{},d=Number(v.diferencia)||0,uid=x.registrado_por?String(x.registrado_por).slice(-6):'No disponible';
-   const estado=v.estado==='cerrada'?'Cerrada':v.estado==='reabierta'?'Reabierta':(v.estado||'—');
-   const dif=d===0?'$0':(d<0?'Faltante ':'Sobrante ')+cajaHistMoney(Math.abs(d));
+  const [cierres,historial]=await Promise.all([
+   sb.from('cierres_caja').select('id,fecha,base_inicial,ventas_efectivo,ventas_total,gastos_efectivo,efectivo_esperado,efectivo_contado,diferencia,estado,cerrado_en').order('fecha',{ascending:false}).limit(500),
+   sb.from('cierres_caja_historial').select('id,fecha,version,motivo,registrado_en,registrado_por').order('registrado_en',{ascending:false}).limit(100)
+  ]);
+  if(cierres.error)throw cierres.error;if(historial.error)throw historial.error;
+  const moneyHist=n=>cajaHistMoney(n),difHist=n=>{const d=Number(n)||0;return d===0?'$0':(d<0?'Faltante ':'Sobrante ')+moneyHist(Math.abs(d))};
+  const estadoHist=e=>e==='cerrada'?'Cerrada':e==='reabierta'?'Reabierta':(e||'—');
+  const lista=(cierres.data||[]).map(x=>'<article class="cj-history-card"><div class="cj-history-head"><div><strong>Jornada '+fechaLarga(String(x.fecha))+'</strong><div class="cj-history-meta">Cierre actual · '+estadoHist(x.estado)+'</div></div><span class="cj-tag">'+estadoHist(x.estado)+'</span></div><div class="cj-history-grid"><div>Base inicial<b>'+moneyHist(x.base_inicial)+'</b></div><div>Efectivo contado<b>'+moneyHist(x.efectivo_contado)+'</b></div><div>Efectivo esperado<b>'+moneyHist(x.efectivo_esperado)+'</b></div><div>Diferencia<b>'+difHist(x.diferencia)+'</b></div><div>Ventas totales<b>'+moneyHist(x.ventas_total)+'</b></div><div>Ventas en efectivo<b>'+moneyHist(x.ventas_efectivo)+'</b></div><div>Gastos en efectivo<b>'+moneyHist(x.gastos_efectivo)+'</b></div></div><button type="button" class="btn alt full" data-cj-history-date="'+esc(String(x.fecha))+'" style="margin-top:10px">Consultar esta jornada</button></article>').join('');
+  const cambios=(historial.data||[]).map(x=>{
+   const v=x.version||{},uid=x.registrado_por?String(x.registrado_por).slice(-6):'No disponible';
+   const motivo=x.motivo==='reapertura'?'Reapertura':x.motivo==='recierre'?'Recierre':String(x.motivo||'Modificación');
    const fechaRegistro=x.registrado_en?new Date(x.registrado_en).toLocaleString('es-CO',{dateStyle:'medium',timeStyle:'short'}):'—';
-   return '<article class="cj-history-card"><div class="cj-history-head"><div><strong>Jornada '+fechaCorta(String(x.fecha))+'</strong><div class="cj-history-meta">'+labelMotivo(x.motivo)+' · '+fechaRegistro+'</div></div><span class="cj-tag">'+estado+'</span></div><div class="cj-history-grid"><div>Base<b>'+cajaHistMoney(v.base_inicial)+'</b></div><div>Efectivo contado<b>'+cajaHistMoney(v.efectivo_contado)+'</b></div><div>Efectivo esperado<b>'+cajaHistMoney(v.efectivo_esperado)+'</b></div><div>Diferencia<b>'+dif+'</b></div></div><p class="cj-history-note">Ventas: '+cajaHistMoney(v.ventas_total)+' · Efectivo vendido: '+cajaHistMoney(v.ventas_efectivo)+' · Registrado por usuario …'+uid+'</p>'+(v.motivo_reapertura?'<p class="cj-history-note">Motivo de reapertura: '+esc(v.motivo_reapertura)+'</p>':'')+(v.notas?'<p class="cj-history-note">Nota: '+esc(v.notas)+'</p>':'')+'</article>';
+   return '<article class="cj-history-card"><div class="cj-history-head"><div><strong>Jornada '+fechaCorta(String(x.fecha))+'</strong><div class="cj-history-meta">'+motivo+' · '+fechaRegistro+'</div></div><span class="cj-tag">Estado anterior: '+estadoHist(v.estado)+'</span></div><div class="cj-history-grid"><div>Base<b>'+moneyHist(v.base_inicial)+'</b></div><div>Efectivo contado<b>'+moneyHist(v.efectivo_contado)+'</b></div><div>Efectivo esperado<b>'+moneyHist(v.efectivo_esperado)+'</b></div><div>Diferencia<b>'+difHist(v.diferencia)+'</b></div></div><p class="cj-history-note">Ventas: '+moneyHist(v.ventas_total)+' · Efectivo vendido: '+moneyHist(v.ventas_efectivo)+' · Usuario …'+uid+'</p>'+(v.motivo_reapertura?'<p class="cj-history-note">Nota del cierre anterior: '+esc(v.motivo_reapertura)+'</p>':'')+(v.notas?'<p class="cj-history-note">Observación: '+esc(v.notas)+'</p>':'')+'</article>';
   }).join('');
- }catch(e){console.error('No se pudo cargar el historial de cierres:',e);box.innerHTML='<div class="cj-history-error">No se pudo consultar el historial. Verifica los permisos de lectura de tu cuenta y vuelve a intentarlo.</div><button type="button" class="btn alt full" id="cj-history-retry" style="margin-top:8px">Reintentar</button>'}
+  box.innerHTML='<h2>Todos los cierres</h2><p class="mut sm">Aquí aparecen todas las jornadas guardadas, aunque nunca se hayan reabierto. Los valores corresponden al cierre actual de cada día.</p>'+(lista||'<div class="cj-history-empty">Todavía no hay jornadas cerradas.</div>')+'<h2>Historial de modificaciones</h2><p class="mut sm">Reaperturas y recierres. Cada registro conserva cómo estaba el cierre antes del cambio.</p>'+(cambios||'<div class="cj-history-empty">No hay modificaciones registradas.</div>');
+ }catch(e){console.error('No se pudo cargar el historial de cierres:',e);box.innerHTML='<div class="cj-history-error">No se pudieron consultar los cierres. Verifica los permisos de lectura de tu cuenta y vuelve a intentarlo.</div><button type="button" class="btn alt full" id="cj-history-retry" style="margin-top:8px">Reintentar</button>'}
 }
 async function cajaPend(){const{data,error}=await sb.rpc('jornadas_pendientes_drosalud');if(error)throw error;$('#cj-pend').innerHTML=(data||[]).length?'<p class="mut sm" style="margin:6px 0 2px">Jornadas sin cerrar:</p><div class="chips">'+data.map(r=>`<button type="button" class="chip" data-cj-f="${esc(r.fecha)}">${fechaCorta(r.fecha)} · ${r.ventas} venta${r.ventas===1?'':'s'}${r.gastos?' · '+r.gastos+' gasto'+(r.gastos===1?'':'s'):''}</button>`).join('')+'</div>':'<p class="mut sm">No hay jornadas sin cerrar.</p>'}
 async function cajaVer(f){if(!f)return;CJ.fecha=f;const[a,g]=await Promise.all([sb.rpc('resumen_caja_drosalud',{p_fecha:f}),sb.from('gastos').select('id,concepto,categoria,monto,forma_pago,anulado,motivo_anulacion,creado_en').eq('fecha',f).order('creado_en',{ascending:true})]);if(a.error)throw a.error;if(g.error)throw g.error;CJ.res=a.data;CJ.gastos=g.data||[];pintarCaja()}
@@ -920,7 +924,7 @@ $('#back-home').addEventListener('click',showHome);
  $('#home').addEventListener('click',e=>{const b=e.target.closest('[data-home]');if(!b)return;const v=b.dataset.home;if(v==='neg'){const target=document.querySelector('#more-menu [data-v="neg"]');if(target)target.click();return}show(v)});
 $('#v-caja').addEventListener('click',cajaClics);
 $('#cj-history-toggle').addEventListener('click',async()=>{cajaHistorialAbierto=!cajaHistorialAbierto;const b=$('#cj-history-toggle'),box=$('#cj-history');b.setAttribute('aria-expanded',String(cajaHistorialAbierto));b.textContent=cajaHistorialAbierto?'Ocultar historial de cierres':'Ver historial de cierres';if(cajaHistorialAbierto)await loadHistorialCierres();else box.hidden=true});
-$('#cj-history').addEventListener('click',e=>{if(e.target.closest('#cj-history-retry'))loadHistorialCierres()});
+$('#cj-history').addEventListener('click',e=>{if(e.target.closest('#cj-history-retry'))return loadHistorialCierres();const b=e.target.closest('[data-cj-history-date]');if(b){const f=b.dataset.cjHistoryDate;$('#cj-f').value=f;go(()=>cajaVer(f));window.scrollTo({top:0,behavior:'smooth'})}});
 $('#v-caja').addEventListener('input',e=>{if(e.target.id==='cj-base'||e.target.id==='cj-cont')cajaCalc()});
 $('#cj-f').addEventListener('change',e=>go(()=>cajaVer(e.target.value)));
 $('#coq').addEventListener('input',renderCotizaciones);
