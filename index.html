@@ -159,6 +159,49 @@ nav button[aria-current="true"]{color:var(--pri);font-weight:800;box-shadow:inse
 .aju-page h2{margin-top:0}
 .aju-save{margin-top:8px}
 @media(min-width:700px){.aju-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* Panel principal Premium empresarial · capa visual aislada */
+#home{max-width:1180px;padding:28px 24px 48px}
+.home-overview{margin:0 0 18px}
+.home-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;padding:30px 32px;border:1px solid #dce6ef;border-radius:24px;background:linear-gradient(120deg,#fff 0%,#f4f8fc 58%,#edf4fb 100%);box-shadow:0 12px 34px rgba(23,49,77,.06)}
+.home-heading-copy{min-width:0}
+.home-kicker{display:block;margin:0 0 10px;color:#58718c;font-size:.69rem;font-weight:800;letter-spacing:.16em}
+#home-date{margin:0;color:#172b43;font-size:clamp(1.55rem,3vw,2.15rem);font-weight:800;letter-spacing:-.045em;line-height:1.15;text-transform:capitalize}
+.home-heading-copy p{margin:9px 0 0;color:#64758a;font-size:.98rem}
+.home-live{display:inline-flex;align-items:center;gap:9px;flex:none;padding:9px 13px;border:1px solid #d7e4ef;border-radius:999px;background:rgba(255,255,255,.8);color:#50657c;font-size:.78rem;font-weight:700}
+.home-live-dot{width:8px;height:8px;border-radius:50%;background:#1c9b72;box-shadow:0 0 0 4px rgba(28,155,114,.12)}
+.home-section-label{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:25px 2px 12px}
+.home-section-label span:first-child{color:#344b63;font-size:.72rem;font-weight:800;letter-spacing:.12em}
+.home-section-label span:last-child{color:#8492a2;font-size:.8rem}
+.home-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.home-tile{position:relative;min-height:174px;padding:21px;border:1px solid #e0e7ef;border-radius:19px;background:#fff;box-shadow:0 5px 18px rgba(28,48,71,.045);gap:12px;justify-content:flex-start;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.home-tile:hover{transform:translateY(-3px);border-color:#b9cde0;box-shadow:0 13px 28px rgba(28,48,71,.09)}
+.home-tile .home-icon{width:46px;height:46px;border-radius:14px;background:#edf3f9;color:#355d83}
+.home-tile strong{color:#20364d;font-size:1rem;letter-spacing:-.015em}
+.home-tile small{color:#758497;font-size:.82rem;line-height:1.4}
+.home-tile[data-home="venta"]{background:#17324d;border-color:#17324d;box-shadow:0 12px 25px rgba(23,50,77,.16)}
+.home-tile[data-home="venta"] .home-icon{background:rgba(255,255,255,.13);color:#fff}
+.home-tile[data-home="venta"] strong{color:#fff}
+.home-tile[data-home="venta"] small{color:#d1deea}
+.home-tile[data-home="caja"]{border-color:#b9d2e8;background:linear-gradient(145deg,#f4f9fe,#eaf3fb)}
+.home-tile[data-home="caja"] .home-icon{background:#dcebf8;color:#245b8a}
+.home-tile:focus-visible{outline:3px solid #4b86b8;outline-offset:3px}
+@media(min-width:760px){header.app-header{max-width:1180px;padding:24px 24px 8px}}
+@media(max-width:900px){.home-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:620px){
+ #home{padding:16px 14px 34px}
+ .home-heading{align-items:flex-start;flex-direction:column;padding:23px 20px;border-radius:20px;gap:16px}
+ #home-date{font-size:1.55rem}
+ .home-live{font-size:.73rem;padding:7px 11px}
+ .home-section-label{margin:22px 2px 11px}
+ .home-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+ .home-tile{min-height:150px;padding:15px;border-radius:16px;gap:10px}
+ .home-tile .home-icon{width:42px;height:42px}
+ .home-tile strong{font-size:.94rem}
+ .home-tile small{font-size:.77rem}
+}
+@media(max-width:350px){.home-heading{padding:19px 16px}.home-tile{padding:12px;min-height:140px}}
+
 </style>
 <style>
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:24px}
@@ -316,7 +359,17 @@ nav button{font-size:.78rem}
 <header class="app-header"><button id="back-home" type="button" aria-label="Volver al inicio" hidden>← Inicio</button><h1 id="ttl">Drosalud</h1><button id="out-top" class="btn bad" type="button" style="min-height:40px;padding:8px 11px;font-size:.85rem">Salir</button></header>
 <div id="net" hidden></div><div id="upd" hidden></div><div id="bkb" hidden></div>
  <section id="home" aria-label="Menú principal">
-  <p class="home-intro">Accede rápidamente a las herramientas de tu negocio.</p>
+  <section class="home-overview" aria-label="Resumen del panel">
+   <div class="home-heading">
+    <div class="home-heading-copy">
+     <span class="home-kicker">DROSALUD · GESTIÓN FARMACÉUTICA</span>
+     <h2 id="home-date">Cargando fecha…</h2>
+     <p>Resumen de tu operación</p>
+    </div>
+    <div class="home-live"><span class="home-live-dot"></span> Panel de gestión</div>
+   </div>
+   <div class="home-section-label"><span>ÁREAS DE TRABAJO</span><span>Accesos principales</span></div>
+  </section>
   <div class="home-grid">
    <button class="home-tile" data-home="venta"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 3h8l4 4v14H7z"/><path d="M15 3v5h4M10 13h6M10 17h6"/></svg></span><strong>Facturación POS</strong><small>Crear recibo y registrar venta</small></button>
    <button class="home-tile" data-home="cat"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16v13H4zM8 7V4h8v3M9 12h6M9 16h6"/></svg></span><strong>Productos</strong><small>Consultar y administrar catálogo</small></button>
@@ -592,7 +645,8 @@ function cajaGastoForm(){openM(`<h2 style="margin-top:0">Agregar gasto</h2><labe
 function cajaMotivo(titulo,boton,fn){openM(`<h2 style="margin-top:0">${esc(titulo)}</h2><label for="cm-t">Motivo (mínimo 5 letras)</label><input id="cm-t" maxlength="200" autocomplete="off"><div class="acts"><button class="btn full" id="cm-ok">${esc(boton)}</button><button class="btn alt full" id="cm-no">Cancelar</button></div>`);$('#cm-no').onclick=closeM;$('#cm-ok').onclick=()=>go(async()=>{const m=$('#cm-t').value.trim();if(m.length<5){toast('Escribe el motivo (mínimo 5 letras)');return}await fn(m);closeM()})}
 function cajaClics(e){const t=e.target.closest('button');if(!t)return;if(t.dataset.cjF){$('#cj-f').value=t.dataset.cjF;go(()=>cajaVer(t.dataset.cjF));return}if(t.id==='cj-add'){cajaGastoForm();return}if(t.id==='cj-close'){go(cajaCerrar);return}if(t.id==='cj-reopen'){cajaMotivo('Reabrir jornada','Reabrir',async m=>{const{error}=await sb.rpc('reabrir_caja_drosalud',{p_fecha:CJ.fecha,p_motivo:m});if(error)throw error;toast('Jornada reabierta');await cajaPend();await cajaVer(CJ.fecha);cajaBadge()});return}if(t.dataset.cjAnular){const id=t.dataset.cjAnular;cajaMotivo('Anular gasto','Anular gasto',async m=>{const{error}=await sb.rpc('anular_gasto_drosalud',{p_id:id,p_motivo:m});if(error)throw error;toast('Gasto anulado');await cajaPend();await cajaVer(CJ.fecha);cajaBadge()})}}
 /*CAJA-FIN*/;
-function showHome(){cajaBadge();$('#back-home').hidden=true;$('#home').hidden=false;['venta','cat','cli','his','cot','aju','neg','caja'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=true});$('#more-menu').hidden=true;$('#ttl').textContent='Drosalud';window.scrollTo(0,0)}
+function renderHomeDate(){const el=$('#home-date');if(!el)return;const mobile=window.matchMedia('(max-width: 620px)').matches;const opts=mobile?{weekday:'short',day:'numeric',month:'short',timeZone:'America/Bogota'}:{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'America/Bogota'};const s=new Intl.DateTimeFormat('es-CO',opts).format(new Date());el.textContent=s.charAt(0).toLocaleUpperCase('es-CO')+s.slice(1)}
+function showHome(){cajaBadge();renderHomeDate();$('#back-home').hidden=true;$('#home').hidden=false;['venta','cat','cli','his','cot','aju','neg','caja'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=true});$('#more-menu').hidden=true;$('#ttl').textContent='Drosalud';window.scrollTo(0,0)}
  function show(v){$('#back-home').hidden=false;$('#home').hidden=true;['venta','cat','cli','his','cot','aju','neg','caja'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=k!==v});$('#more-menu').hidden=true;$('#nav [data-v="mas"]').setAttribute('aria-expanded','false');document.querySelectorAll('#nav button').forEach(b=>{if(b.dataset.v!=='mas')b.setAttribute('aria-current',String(b.dataset.v===v));else b.setAttribute('aria-current',String(!['venta','cat','cli'].includes(v)))});$('#ttl').textContent=TT[v]||'Negocio';if(v==='aju')fillAju();if(v==='caja')go(loadCaja);if(v==='his')go(loadHis);if(v==='cli')loadCST().catch(()=>{});if(v==='cot')go(loadCotizaciones);window.scrollTo(0,0)}
 function rRes(){rTop();const q=$('#q').value.trim(),b=$('#res');if(!q){b.innerHTML='';return}const a=find(q,20);b.innerHTML=a.length?a.map(p=>`<button class="row" data-add="${p.id}"><span class="nm">${esc(p.nombre)}<small>${esc(p.laboratorio||'')}</small></span><span class="pr">${pv(p)==null?'Precio pendiente':money(pv(p))}<small>compra ${money(p.precio_compra)}</small></span></button>`).join(''):'<p class="mut">No hay resultados. Agrégalo en Catálogo.</p>'}
 function calc(){const st=cart.reduce((s,i)=>s+i.p*i.q,0),g=esAdminDrosalud()?cart.reduce((s,i)=>s+(i.p-(i.c||0))*i.q,0):null,ds=Math.max(0,+$('#dsc').value||0),dm=Math.max(0,+$('#dom').value||0),mens=Math.max(0,+$('#mens').value||0);return{st,ds,dm,mens,total:Math.max(0,st-ds+dm),gan:g==null?null:g-ds+dm-mens}}
