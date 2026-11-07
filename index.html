@@ -203,29 +203,32 @@ nav button[aria-current="true"]{color:var(--pri);font-weight:800;box-shadow:inse
 @media(max-width:350px){.home-heading{padding:19px 16px}.home-tile{padding:12px;min-height:140px}}
 
 
-/* POS: cliente en una sola fila; datos personales solo en el modal. */
-#v-venta .pos-panel{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:12px;margin:0 0 10px}
-#v-venta .pos-customer-row{display:grid;grid-template-columns:minmax(110px,1fr) 44px auto minmax(0,1.5fr);align-items:center;gap:9px}
-#v-venta .pos-customer-row input{min-width:0;margin:0;padding:11px 12px}
-#v-venta .pos-client-action{height:44px;width:44px;border:1px solid var(--line);border-radius:11px;background:var(--soft);color:var(--pri);font-size:1.45rem;font-weight:800}
-#v-venta .pos-status{white-space:nowrap;border-radius:99px;padding:6px 10px;background:var(--soft);color:var(--mut);font-size:.72rem;font-weight:800}
+/* POS: encabezado compacto de cliente y vendedor; adaptable a móvil. */
+#v-venta .pos-header{display:grid;grid-template-columns:minmax(0,1fr) minmax(210px,260px);align-items:center;gap:16px;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:10px 12px;margin:0 0 12px}
+#v-venta .pos-customer-row{display:grid;grid-template-columns:auto minmax(130px,210px) 38px auto minmax(100px,1fr);align-items:center;gap:8px;min-width:0}
+#v-venta .pos-inline-label{font-size:.82rem;font-weight:700;color:var(--ink);white-space:nowrap;margin:0}
+#v-venta .pos-header input{height:38px;min-width:0;width:100%;margin:0;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg,var(--card));font-size:.9rem}
+#v-venta .pos-client-action{height:38px;width:38px;display:grid;place-items:center;border:1px solid var(--line);border-radius:8px;background:var(--soft);color:var(--pri);font-size:1.25rem;font-weight:700;cursor:pointer}
+#v-venta .pos-status{white-space:nowrap;border-radius:99px;padding:5px 9px;background:var(--soft);color:var(--mut);font-size:.68rem;font-weight:800;text-align:center}
 #v-venta .pos-status.is-known{background:#e7f5ed;color:#16845d}
 #v-venta .pos-status.is-new{color:var(--pri)}
 #v-venta .pos-status.is-guest{background:#eef1f4;color:#526171}
-#v-venta .pos-client-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.9rem;font-weight:700;color:var(--ink)}
+#v-venta .pos-client-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.86rem;font-weight:700;color:var(--ink)}
+#v-venta .pos-vendor-inline{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:9px;min-width:0}
 #v-venta .pos-client-hidden{display:none!important}
-#v-venta .pos-vendor{padding-bottom:8px}
-#v-venta .pos-vendor .pos-panel-head{margin-bottom:4px}
-#v-venta .pos-vendor .pos-field input{margin-bottom:0}
 #v-venta>h2{margin-top:18px}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-@media(max-width:520px){
- #v-venta .pos-panel{padding:10px}
- #v-venta .pos-customer-row{grid-template-columns:minmax(90px,1fr) 40px auto;gap:7px}
- #v-venta .pos-client-action{width:40px;height:42px}
- #v-venta .pos-client-name{grid-column:1/-1;padding-left:2px}
+@media(max-width:760px){
+ #v-venta .pos-header{grid-template-columns:minmax(0,1fr);gap:9px;padding:10px}
+ #v-venta .pos-vendor-inline{padding-top:8px;border-top:1px solid var(--line)}
 }
-</style>
+@media(max-width:520px){
+ #v-venta .pos-customer-row{grid-template-columns:58px minmax(0,1fr) 38px;gap:7px}
+ #v-venta .pos-customer-row .pos-status{grid-column:2;justify-self:start}
+ #v-venta .pos-client-name{grid-column:1/-1;padding:1px 0 0 65px;white-space:normal;line-height:1.25}
+ #v-venta .pos-inline-label{font-size:.78rem}
+ #v-venta .pos-header input{font-size:16px}
+}</style>
 <style>
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:24px}
 #lg{max-width:420px;margin:0 auto;padding:40px 16px}
@@ -420,27 +423,27 @@ nav button{font-size:.78rem}
 <div id="imp" hidden><b>Tu catálogo está vacío.</b><p class="sm">Carga los productos de tu Excel una sola vez.</p><button class="btn full" id="impb">Cargar productos del Excel</button></div>
 <main>
 <section id="v-venta">
- <div class="pos-panel pos-customer">
-  <div class="pos-customer-row">
-   <label class="sr-only" for="ced">Cédula o NIT</label>
-   <input id="ced" inputmode="numeric" autocomplete="off" placeholder="Cédula o NIT del cliente" aria-label="Cédula o NIT del cliente">
-   <button type="button" id="btn-cliente-pos" class="pos-client-action" aria-label="Registrar o editar cliente" title="Registrar o editar cliente">♙</button>
-   <span id="cliente-estado" class="pos-status">Sin identificar</span>
-   <span id="cliente-nombre-pos" class="pos-client-name" aria-live="polite"></span>
-  </div>
-  <div id="cliente-datos" class="pos-client-hidden" hidden>
-   <input id="nombres" autocomplete="given-name">
-   <input id="apellidos" autocomplete="family-name">
-   <input id="tel" type="tel" inputmode="tel">
-   <input id="dircli" autocomplete="street-address">
-   <datalist id="cls"></datalist>
-   <div id="consv" class="pos-consent"></div>
-  </div>
+ <div class="pos-header">
+ <div class="pos-customer-row">
+  <label class="pos-inline-label" for="ced">Cliente</label>
+  <input id="ced" inputmode="numeric" autocomplete="off" placeholder="Cédula o NIT" aria-label="Cédula o NIT del cliente">
+  <button type="button" id="btn-cliente-pos" class="pos-client-action" aria-label="Registrar o editar cliente" title="Registrar o editar cliente">♙</button>
+  <span id="cliente-estado" class="pos-status">Sin identificar</span>
+  <span id="cliente-nombre-pos" class="pos-client-name" aria-live="polite"></span>
  </div>
- <div class="pos-panel pos-vendor">
-  <div class="pos-panel-head"><div><h2>Vendedor</h2><p>Responsable de esta venta.</p></div></div>
-  <div class="pos-field"><label for="vend">Vendedor</label><input id="vend" list="vds" placeholder="Quién hace la venta" autocomplete="off"><datalist id="vds"></datalist></div>
+ <div class="pos-vendor-inline">
+  <label class="pos-inline-label" for="vend">Vendedor</label>
+  <input id="vend" list="vds" placeholder="Seleccionar vendedor" autocomplete="off"><datalist id="vds"></datalist>
  </div>
+ <div id="cliente-datos" class="pos-client-hidden" hidden>
+  <input id="nombres" autocomplete="given-name">
+  <input id="apellidos" autocomplete="family-name">
+  <input id="tel" type="tel" inputmode="tel">
+  <input id="dircli" autocomplete="street-address">
+  <datalist id="cls"></datalist>
+  <div id="consv" class="pos-consent"></div>
+ </div>
+</div>
  <label for="q">Buscar producto</label>
  <input id="q" type="search" placeholder="Nombre, laboratorio o código" autocomplete="off">
  <button class="btn alt full" id="scan" style="margin:0 0 10px">Escanear código de barras</button>
