@@ -202,6 +202,48 @@ nav button[aria-current="true"]{color:var(--pri);font-weight:800;box-shadow:inse
 }
 @media(max-width:350px){.home-heading{padding:19px 16px}.home-tile{padding:12px;min-height:140px}}
 
+
+/* Facturación compacta: capa de presentación, conserva IDs y lógica existente. */
+#v-venta{max-width:1180px;width:100%;margin:0 auto}
+#v-venta .sale-layout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(330px,.85fr);gap:18px;align-items:start}
+#v-venta .sale-main,#v-venta .sale-summary{min-width:0}
+#v-venta .sale-panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:0 0 14px;box-shadow:0 3px 14px rgba(25,48,75,.035)}
+#v-venta .sale-panel h2{margin:0 0 12px;font-size:1rem}
+#v-venta .sale-client-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px}
+#v-venta .sale-client-grid .sale-field{min-width:0}
+#v-venta .sale-client-grid input{margin:4px 0 8px;padding:10px 11px}
+#v-venta #consv{grid-column:1/-1}
+#v-venta .sale-vendor{max-width:100%}
+#v-venta .sale-search{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end}
+#v-venta .sale-search input{margin:4px 0 8px}
+#v-venta #scan{width:auto;min-height:43px;padding:10px 14px;margin:4px 0 8px!important;white-space:nowrap}
+#v-venta #topw{margin:4px 0 10px}
+#v-venta #res{margin-top:4px}
+#v-venta .sale-summary{position:sticky;top:12px}
+#v-venta .sale-summary .sale-panel{margin-bottom:12px}
+#v-venta .sale-summary .item{padding:10px;margin-bottom:7px}
+#v-venta .sale-summary .two{gap:8px}
+#v-venta .sale-summary input,#v-venta .sale-summary select{padding:10px;margin:4px 0 8px}
+#v-venta .sale-summary .tot{font-size:1.45rem;margin:10px 0}
+#v-venta .sale-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#v-venta .sale-actions #mk{grid-column:1/-1}
+#v-venta .sale-actions .btn{min-height:44px;padding:10px}
+@media(max-width:760px){
+ #v-venta{padding-left:0;padding-right:0}
+ #v-venta .sale-layout{grid-template-columns:1fr;gap:0}
+ #v-venta .sale-summary{position:static}
+ #v-venta .sale-panel{padding:13px;border-radius:14px}
+ #v-venta .sale-client-grid{gap:0 10px}
+ #v-venta .sale-search{grid-template-columns:1fr}
+ #v-venta #scan{width:100%;margin:0 0 9px!important}
+ #v-venta .sale-actions{grid-template-columns:1fr 1fr}
+}
+@media(max-width:380px){
+ #v-venta .sale-client-grid{grid-template-columns:1fr}
+ #v-venta #consv{grid-column:auto}
+ #v-venta .sale-actions{grid-template-columns:1fr}
+ #v-venta .sale-actions #mk{grid-column:auto}
+}
 </style>
 <style>
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:24px}
@@ -397,35 +439,48 @@ nav button{font-size:.78rem}
 <div id="imp" hidden><b>Tu catálogo está vacío.</b><p class="sm">Carga los productos de tu Excel una sola vez.</p><button class="btn full" id="impb">Cargar productos del Excel</button></div>
 <main>
 <section id="v-venta">
- <label for="ced">Cédula o NIT</label>
- <input id="ced" inputmode="numeric" autocomplete="off">
- <label for="nombres">Nombres</label>
- <input id="nombres" autocomplete="given-name">
- <label for="apellidos">Apellidos</label>
- <input id="apellidos" autocomplete="family-name">
- <datalist id="cls"></datalist>
- <label for="tel">Teléfono del cliente</label>
- <input id="tel" type="tel" inputmode="tel" placeholder="Para enviarle el recibo por WhatsApp">
- <label for="dircli">Dirección</label>
- <input id="dircli" autocomplete="street-address">
- <div id="consv"></div>
- <label for="vend">Vendedor (opcional)</label>
- <input id="vend" list="vds" placeholder="Quién hace la venta" autocomplete="off">
- <datalist id="vds"></datalist>
- <label for="q">Buscar producto</label>
- <input id="q" type="search" placeholder="Nombre, laboratorio o código" autocomplete="off">
- <button class="btn alt full" id="scan" style="margin:0 0 10px">Escanear código de barras</button>
- <div id="topw" hidden><label>Más vendidos (últimos 60 días)</label><div class="chips" id="top"></div></div>
- <div id="res"></div>
- <h2>Productos del recibo</h2>
- <div id="cart"></div>
- <div class="two"><div><label for="dsc">Descuento</label><input id="dsc" type="number" inputmode="numeric" placeholder="0"></div><div><label for="dom">Domicilio cobrado</label><input id="dom" type="number" inputmode="numeric" placeholder="0"></div></div><label for="mens">Pago al mensajero (0 si entregas tú)</label><input id="mens" type="number" inputmode="numeric" min="0" placeholder="0">
- <label for="fp">Forma de pago</label>
- <select id="fp"><option>Efectivo</option><option>Transferencia</option><option>Nequi</option><option>Daviplata</option><option>Tarjeta</option></select>
- <div id="efw"><label for="rec">Recibido en efectivo (opcional)</label><input id="rec" type="number" inputmode="numeric" placeholder="Con cuánto paga el cliente"><p class="gain" id="vue"></p></div>
- <div class="tot"><span>Total a pagar</span><span id="tot">$0</span></div>
- <div class="gain sm" id="gn"></div>
- <div class="acts"><button class="btn full" id="mk">Crear recibo</button><button class="btn alt full" id="cot">Crear cotización (sin recibo)</button><button class="btn alt full" id="clr">Vaciar recibo</button></div>
+ <div class="sale-layout">
+  <div class="sale-main">
+   <section class="sale-panel">
+    <h2>Datos del cliente</h2>
+    <div class="sale-client-grid">
+     <div class="sale-field"><label for="ced">Cédula o NIT</label><input id="ced" inputmode="numeric" autocomplete="off"></div>
+     <div class="sale-field"><label for="nombres">Nombres</label><input id="nombres" autocomplete="given-name"></div>
+     <div class="sale-field"><label for="apellidos">Apellidos</label><input id="apellidos" autocomplete="family-name"></div>
+     <div class="sale-field"><label for="tel">Teléfono del cliente</label><input id="tel" type="tel" inputmode="tel" placeholder="Para enviarle el recibo por WhatsApp"></div>
+     <div class="sale-field"><label for="dircli">Dirección</label><input id="dircli" autocomplete="street-address"></div>
+     <datalist id="cls"></datalist>
+     <div id="consv"></div>
+    </div>
+   </section>
+   <section class="sale-panel">
+    <div class="sale-field sale-vendor"><label for="vend">Vendedor (opcional)</label><input id="vend" list="vds" placeholder="Quién hace la venta" autocomplete="off"><datalist id="vds"></datalist></div>
+    <h2>Agregar productos</h2>
+    <div class="sale-search"><div><label for="q">Buscar por nombre, laboratorio o código</label><input id="q" type="search" placeholder="Escribe el producto o código" autocomplete="off"></div><button class="btn alt" id="scan">Escanear código</button></div>
+    <div id="topw" hidden><label>Más vendidos (últimos 60 días)</label><div class="chips" id="top"></div></div>
+    <div id="res"></div>
+   </section>
+  </div>
+  <aside class="sale-summary">
+   <section class="sale-panel">
+    <h2>Productos de la venta</h2>
+    <div id="cart"></div>
+   </section>
+   <section class="sale-panel">
+    <h2>Descuentos, domicilio y pago</h2>
+    <div class="two"><div><label for="dsc">Descuento</label><input id="dsc" type="number" inputmode="numeric" placeholder="0"></div><div><label for="dom">Domicilio cobrado</label><input id="dom" type="number" inputmode="numeric" placeholder="0"></div></div>
+    <label for="mens">Pago al mensajero (0 si entregas tú)</label><input id="mens" type="number" inputmode="numeric" min="0" placeholder="0">
+    <label for="fp">Forma de pago</label><select id="fp"><option>Efectivo</option><option>Transferencia</option><option>Nequi</option><option>Daviplata</option><option>Tarjeta</option></select>
+    <div id="efw"><label for="rec">Recibido en efectivo (opcional)</label><input id="rec" type="number" inputmode="numeric" placeholder="Con cuánto paga el cliente"><p class="gain" id="vue"></p></div>
+    <div class="tot"><span>Total a pagar</span><span id="tot">$0</span></div>
+    <div class="gain sm" id="gn"></div>
+   </section>
+   <section class="sale-panel">
+    <h2>Finalizar operación</h2>
+    <div class="sale-actions"><button class="btn full" id="mk">Crear recibo</button><button class="btn alt full" id="cot">Crear cotización</button><button class="btn alt full" id="clr">Vaciar venta</button></div>
+   </section>
+  </aside>
+ </div>
 </section>
 <section id="v-cat" hidden>
  <label for="q2">Buscar en el catálogo</label>
