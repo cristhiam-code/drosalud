@@ -202,6 +202,32 @@ nav button[aria-current="true"]{color:var(--pri);font-weight:800;box-shadow:inse
 }
 @media(max-width:350px){.home-heading{padding:19px 16px}.home-tile{padding:12px;min-height:140px}}
 
+
+/* POS: organización compacta de cliente y vendedor; conserva controles y flujos. */
+#v-venta .pos-panel{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:14px;margin:0 0 12px}
+#v-venta .pos-panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+#v-venta .pos-panel-head h2{margin:0;font-size:1rem}
+#v-venta .pos-panel-head p{margin:3px 0 0;color:var(--mut);font-size:.8rem}
+#v-venta .pos-status{flex:none;border-radius:99px;padding:5px 10px;background:var(--soft);color:var(--mut);font-size:.75rem;font-weight:700}
+#v-venta .pos-status.is-known{color:var(--gain)}
+#v-venta .pos-status.is-new{color:var(--pri)}
+#v-venta .pos-status.is-guest{background:#eef1f4;color:#526171}
+#v-venta .pos-field{min-width:0}
+#v-venta .pos-field label{display:block}
+#v-venta .pos-field input{margin-bottom:8px}
+#v-venta .pos-client-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px}
+#v-venta .pos-consent{grid-column:1/-1}
+#v-venta .pos-consent .cons{margin:4px 0 0}
+#v-venta .pos-vendor{padding-bottom:8px}
+#v-venta .pos-vendor .pos-panel-head{margin-bottom:4px}
+#v-venta .pos-vendor .pos-field input{margin-bottom:0}
+#v-venta>h2{margin-top:18px}
+@media(max-width:520px){
+ #v-venta .pos-panel{padding:12px}
+ #v-venta .pos-client-grid{grid-template-columns:1fr;column-gap:0}
+ #v-venta .pos-consent{grid-column:1}
+ #v-venta .pos-panel-head{align-items:flex-start}
+}
 </style>
 <style>
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:24px}
@@ -397,21 +423,22 @@ nav button{font-size:.78rem}
 <div id="imp" hidden><b>Tu catálogo está vacío.</b><p class="sm">Carga los productos de tu Excel una sola vez.</p><button class="btn full" id="impb">Cargar productos del Excel</button></div>
 <main>
 <section id="v-venta">
- <label for="ced">Cédula o NIT</label>
- <input id="ced" inputmode="numeric" autocomplete="off">
- <label for="nombres">Nombres</label>
- <input id="nombres" autocomplete="given-name">
- <label for="apellidos">Apellidos</label>
- <input id="apellidos" autocomplete="family-name">
- <datalist id="cls"></datalist>
- <label for="tel">Teléfono del cliente</label>
- <input id="tel" type="tel" inputmode="tel" placeholder="Para enviarle el recibo por WhatsApp">
- <label for="dircli">Dirección</label>
- <input id="dircli" autocomplete="street-address">
- <div id="consv"></div>
- <label for="vend">Vendedor (opcional)</label>
- <input id="vend" list="vds" placeholder="Quién hace la venta" autocomplete="off">
- <datalist id="vds"></datalist>
+ <div class="pos-panel pos-customer">
+  <div class="pos-panel-head"><div><h2>Cliente</h2><p>Identifica al cliente para recuperar sus datos.</p></div><span id="cliente-estado" class="pos-status">Sin identificar</span></div>
+  <div class="pos-field pos-id-field"><label for="ced">Cédula o NIT</label><input id="ced" inputmode="numeric" autocomplete="off" placeholder="Número de identificación"></div>
+  <div id="cliente-datos" class="pos-client-grid">
+   <div class="pos-field"><label for="nombres">Nombres</label><input id="nombres" autocomplete="given-name"></div>
+   <div class="pos-field"><label for="apellidos">Apellidos</label><input id="apellidos" autocomplete="family-name"></div>
+   <div class="pos-field"><label for="tel">Teléfono del cliente</label><input id="tel" type="tel" inputmode="tel" placeholder="Para enviarle el recibo por WhatsApp"></div>
+   <div class="pos-field"><label for="dircli">Dirección</label><input id="dircli" autocomplete="street-address"></div>
+   <datalist id="cls"></datalist>
+   <div id="consv" class="pos-consent"></div>
+  </div>
+ </div>
+ <div class="pos-panel pos-vendor">
+  <div class="pos-panel-head"><div><h2>Vendedor</h2><p>Responsable de esta venta.</p></div></div>
+  <div class="pos-field"><label for="vend">Vendedor</label><input id="vend" list="vds" placeholder="Quién hace la venta" autocomplete="off"><datalist id="vds"></datalist></div>
+ </div>
  <label for="q">Buscar producto</label>
  <input id="q" type="search" placeholder="Nombre, laboratorio o código" autocomplete="off">
  <button class="btn alt full" id="scan" style="margin:0 0 10px">Escanear código de barras</button>
@@ -634,7 +661,7 @@ if(/JWT|expired|not authenticated|invalid claim/i.test(m))return 'Tu sesión ven
 if(/42P01|42703|PGRST20[45]|does not exist|schema cache/i.test(c+' '+m))return 'Falta ejecutar el SQL de la última actualización en Supabase.';
 return 'Error: '+m};
 async function go(f){try{await f()}catch(e){console.error(e);const m=msgErr(e);if(/sesión venció/.test(m))showLogin();toast(m)}}
-async function cotizar(){if(savingCotizacion)return;if(!cart.length){toast('Agrega al menos un producto');return}savingCotizacion=true;const ventaItems=cart.map(i=>({...i}));try{const nm=nombreCompleto($('#nombres').value,$('#apellidos').value),tel=$('#tel').value.trim(),ced=$('#ced').value.trim(),dir=$('#dircli').value.trim(),vend=($('#vend').value||'').trim(),k=calc();const consOk=!!($('#cons')&&$('#cons').checked);if(faltaConsentimiento(!!(nm||ced||tel||dir),consOk,buscarCliente(ced,tel)?.id)){toast('Falta la autorización de datos del cliente: marca la casilla, o deja los datos del cliente vacíos.');return}const cliente=await guardarCliente(nm,ced,tel,dir);if(consOk&&cliente?.id)await registrarConsentimiento(cliente.id,'cotizacion');const vence=new Date();vence.setDate(vence.getDate()+(+cfg.cotDias||3));const valida=vence.getFullYear()+'-'+String(vence.getMonth()+1).padStart(2,'0')+'-'+String(vence.getDate()).padStart(2,'0');const p_cotizacion={cliente_id:cliente?.id||null,cliente_nombre:nm||cliente?.nombre||null,cliente_cedula:ced||cliente?.cedula||null,cliente_telefono:tel||cliente?.telefono||null,cliente_direccion:dir||cliente?.direccion||null,vendedor:vend||null,descuento:k.ds,domicilio:k.dm,subtotal:k.st,total:k.total,valida_hasta:valida};const p_items=ventaItems.map(i=>({producto_id:i.pid||null,nombre:i.n,cantidad:i.q,precio_venta:i.p,presentacion:i.presentacion||'Unidad',unidades_por_presentacion:i.unidadesPorPresentacion||1}));const{data:co,error}=await sb.rpc('crear_cotizacion_venta_drosalud',{p_cotizacion,p_items});if(error)throw error;CO.unshift(co);showRec({...co,cot:true},ventaItems.map(i=>({nombre:i.n,cantidad:i.q,precio_venta:i.p,presentacion:i.presentacion||'Unidad',unidades_por_presentacion:i.unidadesPorPresentacion||1})));}finally{savingCotizacion=false}}
+async function cotizar(){if(savingCotizacion)return;if(!cart.length){toast('Agrega al menos un producto');return}savingCotizacion=true;const ventaItems=cart.map(i=>({...i}));try{const nm=nombreCompleto($('#nombres').value,$('#apellidos').value),tel=$('#tel').value.trim(),ced=$('#ced').value.trim(),dir=$('#dircli').value.trim(),noInscrito=esClienteNoInscrito(ced),vend=($('#vend').value||'').trim(),k=calc();const consOk=!noInscrito&&!!($('#cons')&&$('#cons').checked);if(!noInscrito&&faltaConsentimiento(!!(nm||ced||tel||dir),consOk,buscarCliente(ced,tel)?.id)){toast('Falta la autorización de datos del cliente: marca la casilla, o deja los datos del cliente vacíos.');return}const cliente=noInscrito?null:await guardarCliente(nm,ced,tel,dir);if(consOk&&cliente?.id)await registrarConsentimiento(cliente.id,'cotizacion');const vence=new Date();vence.setDate(vence.getDate()+(+cfg.cotDias||3));const valida=vence.getFullYear()+'-'+String(vence.getMonth()+1).padStart(2,'0')+'-'+String(vence.getDate()).padStart(2,'0');const p_cotizacion={cliente_id:cliente?.id||null,cliente_nombre:nm||cliente?.nombre||null,cliente_cedula:noInscrito?'999':(ced||cliente?.cedula||null),cliente_telefono:noInscrito?null:(tel||cliente?.telefono||null),cliente_direccion:noInscrito?null:(dir||cliente?.direccion||null),vendedor:vend||null,descuento:k.ds,domicilio:k.dm,subtotal:k.st,total:k.total,valida_hasta:valida};const p_items=ventaItems.map(i=>({producto_id:i.pid||null,nombre:i.n,cantidad:i.q,precio_venta:i.p,presentacion:i.presentacion||'Unidad',unidades_por_presentacion:i.unidadesPorPresentacion||1}));const{data:co,error}=await sb.rpc('crear_cotizacion_venta_drosalud',{p_cotizacion,p_items});if(error)throw error;CO.unshift(co);showRec({...co,cot:true},ventaItems.map(i=>({nombre:i.n,cantidad:i.q,precio_venta:i.p,presentacion:i.presentacion||'Unidad',unidades_por_presentacion:i.unidadesPorPresentacion||1})));}finally{savingCotizacion=false}}
 async function loadCotizaciones(){const{data,error}=await sb.from('cotizaciones_venta_app').select('*').order('creado_en',{ascending:false}).order('numero',{ascending:false}).limit(500);if(error)throw error;CO=data||[];renderCotizaciones()}
 function renderCotizaciones(){const q=norm($('#coq').value),L=CO.filter(r=>!q||norm((r.cliente_nombre||'')+' '+r.numero).includes(q));$('#colist').innerHTML=L.length?L.map(r=>'<button class="row" data-cotid="'+r.id+'"><span class="nm">Cotización '+pad(r.numero)+(r.cliente_nombre?' · '+esc(tcase(r.cliente_nombre)):'')+'<small>'+esc(fmt(r.creado_en))+' · '+esc(r.estado)+(r.valida_hasta?' · válida hasta '+esc(fd(r.valida_hasta)):'')+'</small></span><span class="pr">'+money(r.total)+'</span></button>').join(''):'<p class="mut">No hay cotizaciones guardadas.</p>'}
 async function abrirCotizacion(r){const{data,error}=await sb.from('cotizacion_venta_items_app').select('*').eq('cotizacion_id',r.id).order('id');if(error)throw error;showRec({...r,cot:true},(data||[]).map(i=>({nombre:i.nombre,cantidad:i.cantidad,precio_venta:i.precio_venta,presentacion:i.presentacion,unidades_por_presentacion:i.unidades_por_presentacion})));}
@@ -648,7 +675,7 @@ const idx=()=>P.forEach(p=>{p._s=norm(p.nombre+' '+(p.laboratorio||'')+' '+(p.co
 function find(q,lim){const t=norm(q).split(/\s+/).filter(Boolean),a=[];for(const p of P){if(t.every(x=>p._s.includes(x))){a.push(p);if(a.length>=lim)break}}return a}
 const fmt=t=>new Date(t).toLocaleDateString('es-CO',{day:'numeric',month:'long',year:'numeric'})+', '+new Date(t).toLocaleTimeString('es-CO',{hour:'numeric',minute:'2-digit'});
 const pad=n=>String(n).padStart(4,'0');
-async function loadAll(){await cargarRolDrosalud();aplicarInterfazRol();if(esAdminDrosalud()){await loadCfg();if(!cfg.primerUso){try{await saveCfgDb({...cfg,primerUso:new Date().toISOString()})}catch(e){}}}else{cfg={...DEF};applyPalette()}rBk();iniVend();P=await all('productos_app','nombre');idx();C=await all('clientes','nombre');await cargarConsentimientos();if(!$('#consv').innerHTML)$('#consv').innerHTML=consentHTML('cons');H=[];$('#imp').hidden=!esAdminDrosalud()||P.length>0;$('#cls').innerHTML=C.map(c=>`<option value="${esc(c.nombre)}">`).join('');rRes();rCart();rCat();rCli();rHis();if(esAdminDrosalud())loadTop();else{TOP=[];rTop()}}
+async function loadAll(){await cargarRolDrosalud();aplicarInterfazRol();if(esAdminDrosalud()){await loadCfg();if(!cfg.primerUso){try{await saveCfgDb({...cfg,primerUso:new Date().toISOString()})}catch(e){}}}else{cfg={...DEF};applyPalette()}rBk();iniVend();P=await all('productos_app','nombre');idx();C=await all('clientes','nombre');await cargarConsentimientos();if(!$('#consv').innerHTML)$('#consv').innerHTML=consentHTML('cons');H=[];$('#imp').hidden=!esAdminDrosalud()||P.length>0;$('#cls').innerHTML=C.map(c=>`<option value="${esc(c.nombre)}">`).join('');actualizarEstadoClientePOS();rRes();rCart();rCat();rCli();rHis();if(esAdminDrosalud())loadTop();else{TOP=[];rTop()}}
 async function start(){const rol=await cargarRolDrosalud();if(rol==='admin'&&(await mfaNivel()).pedir){showMfa();return}$('#spl').hidden=true;$('#mfa').hidden=true;$('#lg').hidden=true;$('#rsx').hidden=true;$('#app').hidden=false;const{data}=await sb.auth.getUser();$('#who').textContent=data&&data.user?'Sesión: '+data.user.email:'';await loadAllSafe();showHome();checkVer()}
 async function mfaNivel(){if(!sb.auth.mfa)throw new Error('La verificación en dos pasos no está disponible.');const{data,error}=await sb.auth.mfa.getAuthenticatorAssuranceLevel();if(error)throw error;return{pedir:data.nextLevel==='aal2'&&data.currentLevel!=='aal2'}}
 function showMfa(){$('#spl').hidden=true;$('#app').hidden=true;$('#rsx').hidden=true;$('#lg').hidden=true;$('#mfa').hidden=false;$('#mfc').value='';$('#mfm').textContent='';setTimeout(()=>$('#mfc').focus(),50)}
@@ -790,11 +817,25 @@ function faltaConsentimiento(tieneDatos,marcada,cid){return CONSENTIMIENTO_OBLIG
 function partesNombre(n){const p=String(n||'').trim().split(/\\s+/).filter(Boolean);return{nombres:p.shift()||'',apellidos:p.join(' ')}}
 function nombreCompleto(n,a){return[n,a].map(x=>String(x||'').trim()).filter(Boolean).join(' ').replace(/\\s+/g,' ')}
 function buscarCliente(ced,tel){const ce=String(ced||'').replace(/\\D/g,'');if(ce)return C.find(x=>String(x.cedula||'').replace(/\\D/g,'')===ce)||null;const te=String(tel||'').replace(/\\D/g,'');return te?C.find(x=>String(x.telefono||'').replace(/\\D/g,'')===te)||null:null}
+function esClienteNoInscrito(ced){return String(ced||'').replace(/\D/g,'')==='999'}
+function actualizarEstadoClientePOS(){
+ const ced=$('#ced').value,guest=esClienteNoInscrito(ced),wrap=$('#cliente-datos'),status=$('#cliente-estado');
+ if(guest){
+  ['#nombres','#apellidos','#tel','#dircli'].forEach(sel=>{$(sel).value=''});
+  const ck=$('#cons');if(ck)ck.checked=false;
+  wrap.hidden=true;status.textContent='Cliente no inscrito';status.className='pos-status is-guest';
+ }else{
+  wrap.hidden=false;
+  const c=buscarCliente(ced,$('#tel').value);
+  status.textContent=c?'Cliente registrado':(String(ced||'').trim()?'Cliente nuevo':'Sin identificar');
+  status.className='pos-status '+(c?'is-known':(String(ced||'').trim()?'is-new':''));
+ }
+}
 async function guardarCliente(nm,ced,tel,dir){if(!nm&&!ced&&!tel)return null;let c=buscarCliente(ced,tel);if(!c&&ced&&tel&&buscarCliente('',tel))throw new Error('Ese teléfono ya está asociado a otro cliente. Revisa los datos.');const d={nombre:nm||c?.nombre||'Cliente sin nombre',cedula:ced||c?.cedula||null,telefono:tel||c?.telefono||null,direccion:dir||c?.direccion||null};if(c){const u={};Object.keys(d).forEach(k=>{if(d[k]&&d[k]!==c[k])u[k]=d[k]});if(Object.keys(u).length){const{error}=await sb.from('clientes').update(u).eq('id',c.id);if(error)throw error;Object.assign(c,u)}}else{const{data,error}=await sb.from('clientes').insert(d).select().single();if(error)throw error;c=data;C.push(c)}C.sort((a,b)=>a.nombre.localeCompare(b.nombre));return c}
 function editC(id){const c=id?C.find(x=>x.id===id):{nombre:'',telefono:'',cedula:'',direccion:''},p=partesNombre(c.nombre);openM(`<h2 style="margin-top:0">${id?'Editar cliente':'Cliente nuevo'}</h2><label for="cc">Cédula o NIT</label><input id="cc" inputmode="numeric" value="${esc(c.cedula)}"><label for="cn">Nombres</label><input id="cn" value="${esc(p.nombres)}"><label for="ca">Apellidos</label><input id="ca" value="${esc(p.apellidos)}"><label for="ct">Teléfono</label><input id="ct" type="tel" value="${esc(c.telefono)}"><label for="cd">Dirección</label><input id="cd" value="${esc(c.direccion)}">${id&&CONS.has(id)?'<div class="sm mut">✓ Autorización de datos registrada</div>':consentHTML('cco')}${id?'<div id="chs" class="sm mut">Cargando…</div>':''}<div class="acts">${id?'<button class="btn alt full" id="cbuy">Hacer un recibo para este cliente</button>':''}${id&&esAdminDrosalud()?'<button class="btn bad full" id="canon">Anonimizar datos del cliente</button>':''}<button class="btn full" id="cs">Guardar</button><button class="btn alt full" id="cx">Cancelar</button></div>`);$('#cx').onclick=closeM;if(id&&esAdminDrosalud()){const ba=$('#canon');if(ba)ba.onclick=()=>go(async()=>{if(!confirm('¿Anonimizar a este cliente? Se borran de forma permanente su nombre, cédula, teléfono y dirección. Sus recibos se conservan sin identificarlo.'))return;const{error}=await sb.rpc('anonimizar_cliente_drosalud',{p_cliente_id:id});if(error)throw error;closeM();await loadAllSafe();toast('Cliente anonimizado')})}if(id){cliHist(id);$('#cbuy').onclick=()=>{const z=partesNombre(c.nombre);$('#nombres').value=z.nombres;$('#apellidos').value=z.apellidos;$('#tel').value=c.telefono||'';$('#dircli').value=c.direccion||'';$('#ced').value=c.cedula||'';closeM();show('venta')}}$('#cs').onclick=()=>go(async()=>{const n=nombreCompleto($('#cn').value,$('#ca').value),t=$('#ct').value.trim(),di=$('#cd').value.trim(),ce=$('#cc').value.trim();if(!n){toast('Escribe nombres y apellidos');return}const m=buscarCliente(ce,t);if(m&&(!id||m.id!==id)){toast('Ya existe un cliente con esa cédula o teléfono.');return}const cs=!!($('#cco')&&$('#cco').checked);if(faltaConsentimiento(true,cs,id)){toast('Falta la autorización de datos del cliente. Marca la casilla.');return}if(id){const{error}=await sb.from('clientes').update({nombre:n,telefono:t||null,direccion:di||null,cedula:ce||null}).eq('id',id);if(error)throw error;Object.assign(c,{nombre:n,telefono:t||null,direccion:di||null,cedula:ce||null});if(cs)await registrarConsentimiento(id,'mostrador')}else{const nc=await guardarCliente(n,ce,t,di);if(cs&&nc)await registrarConsentimiento(nc.id,'mostrador')}closeM();rCli();toast('Guardado')})}
 async function crear(){if(savingVenta)return;if(!cart.length){toast('Agrega al menos un producto');return}savingVenta=true;const ventaItems=cart.map(i=>({...i}));try{
-const nm=nombreCompleto($('#nombres').value,$('#apellidos').value),tel=$('#tel').value.trim(),dir=$('#dircli').value.trim(),ced=$('#ced').value.trim(),k=calc(),fp=$('#fp').value,vend=($('#vend').value||'').trim(),rc=fp==='Efectivo'?(+$('#rec').value||0):0;if(rc>0&&rc<k.total){toast('El valor recibido es menor al total');return}let cid=null,cliDir=dir||null,cliente=null;const consOk=!!($('#cons')&&$('#cons').checked);if(faltaConsentimiento(!!(nm||ced||tel||dir),consOk,buscarCliente(ced,tel)?.id)){toast('Falta la autorización de datos del cliente: marca la casilla, o deja los datos del cliente vacíos.');return}if(nm||ced||tel){cliente=await guardarCliente(nm,ced,tel,dir);cid=cliente?.id||null;if(consOk&&cid)await registrarConsentimiento(cid,'mostrador');cliDir=dir||cliente?.direccion||null}
-const venta={cliente_id:cid,cliente_nombre:nm||cliente?.nombre||null,cliente_cedula:ced||cliente?.cedula||null,cliente_telefono:tel||cliente?.telefono||null,cliente_direccion:cliDir,descuento:k.ds,domicilio:k.dm,costo_mensajero:esAdminDrosalud()?k.mens:0,forma_pago:fp,recibido:rc>0?rc:null,vendedor:vend||null};
+const nm=nombreCompleto($('#nombres').value,$('#apellidos').value),tel=$('#tel').value.trim(),dir=$('#dircli').value.trim(),ced=$('#ced').value.trim(),noInscrito=esClienteNoInscrito(ced),k=calc(),fp=$('#fp').value,vend=($('#vend').value||'').trim(),rc=fp==='Efectivo'?(+$('#rec').value||0):0;if(rc>0&&rc<k.total){toast('El valor recibido es menor al total');return}let cid=null,cliDir=dir||null,cliente=null;const consOk=!noInscrito&&!!($('#cons')&&$('#cons').checked);if(!noInscrito&&faltaConsentimiento(!!(nm||ced||tel||dir),consOk,buscarCliente(ced,tel)?.id)){toast('Falta la autorización de datos del cliente: marca la casilla, o deja los datos del cliente vacíos.');return}if(!noInscrito&&(nm||ced||tel)){cliente=await guardarCliente(nm,ced,tel,dir);cid=cliente?.id||null;if(consOk&&cid)await registrarConsentimiento(cid,'mostrador');cliDir=dir||cliente?.direccion||null}
+const venta={cliente_id:cid,cliente_nombre:noInscrito?null:(nm||cliente?.nombre||null),cliente_cedula:noInscrito?'999':(ced||cliente?.cedula||null),cliente_telefono:noInscrito?null:(tel||cliente?.telefono||null),cliente_direccion:noInscrito?null:cliDir,descuento:k.ds,domicilio:k.dm,costo_mensajero:esAdminDrosalud()?k.mens:0,forma_pago:fp,recibido:rc>0?rc:null,vendedor:vend||null};
 const items=ventaItems.map(i=>({producto_id:i.pid,nombre:i.n,cantidad:i.q,precio_venta:i.p,presentacion:i.presentacion||'Unidad',unidades_por_presentacion:i.unidadesPorPresentacion||1}));
 const{data:rec,error}=await sb.rpc('registrar_venta_drosalud',{p_venta:venta,p_items:items});if(error)throw error;
 const it=ventaItems.map(i=>({nombre:i.n,cantidad:i.q,precio_venta:i.p,...(esAdminDrosalud()?{precio_compra:i.c}:{}),presentacion:i.presentacion||'Unidad',unidades_por_presentacion:i.unidadesPorPresentacion||1}));
@@ -968,7 +1009,8 @@ $('#cj-f').addEventListener('change',e=>go(()=>cajaVer(e.target.value)));
 $('#coq').addEventListener('input',renderCotizaciones);
 $('#q').addEventListener('input',rRes);
 $('#q2').addEventListener('input',rCat);
-$('#ced').addEventListener('change',()=>{const c=buscarCliente($('#ced').value,$('#tel').value);if(c){const p=partesNombre(c.nombre);$('#nombres').value=p.nombres;$('#apellidos').value=p.apellidos;$('#tel').value=c.telefono||'';$('#dircli').value=c.direccion||''}});
+$('#ced').addEventListener('input',actualizarEstadoClientePOS);
+$('#ced').addEventListener('change',()=>{if(esClienteNoInscrito($('#ced').value)){actualizarEstadoClientePOS();return}const c=buscarCliente($('#ced').value,$('#tel').value);if(c){const p=partesNombre(c.nombre);$('#nombres').value=p.nombres;$('#apellidos').value=p.apellidos;$('#tel').value=c.telefono||'';$('#dircli').value=c.direccion||''}actualizarEstadoClientePOS()});
 $('#cart').addEventListener('change',e=>{const k=e.target.dataset.pr;if(k===undefined)return;cart[k].p=Math.max(0,+e.target.value||0);rCart()});
 document.querySelector('#v-aju').addEventListener('input',e=>{const t=e.target,k=t.dataset&&t.dataset.k;if(!k||!draft)return;draft[k]=t.type==='checkbox'?t.checked:(t.type==='number'||(t.tagName==='SELECT'&&k==='r')?(+t.value||0):t.value);renderPrev();if(k.startsWith('color'))applyPalette()});
 $('#dsc').addEventListener('input',rCart);$('#dom').addEventListener('input',rCart);$('#mens').addEventListener('input',rCart);
