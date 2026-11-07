@@ -203,32 +203,23 @@ nav button[aria-current="true"]{color:var(--pri);font-weight:800;box-shadow:inse
 @media(max-width:350px){.home-heading{padding:19px 16px}.home-tile{padding:12px;min-height:140px}}
 
 
-/* POS: encabezado compacto de cliente y vendedor; adaptable a móvil. */
-#v-venta .pos-header{display:grid;grid-template-columns:minmax(0,1fr) minmax(210px,260px);align-items:center;gap:16px;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:10px 12px;margin:0 0 12px}
-#v-venta .pos-customer-row{display:grid;grid-template-columns:auto minmax(130px,210px) 38px auto minmax(100px,1fr);align-items:center;gap:8px;min-width:0}
-#v-venta .pos-inline-label{font-size:.82rem;font-weight:700;color:var(--ink);white-space:nowrap;margin:0}
-#v-venta .pos-header input{height:38px;min-width:0;width:100%;margin:0;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg,var(--card));font-size:.9rem}
-#v-venta .pos-client-action{height:38px;width:38px;display:grid;place-items:center;border:1px solid var(--line);border-radius:8px;background:var(--soft);color:var(--pri);font-size:1.25rem;font-weight:700;cursor:pointer}
+/* POS: identificación clara de cliente y vendedor, con adaptación móvil. */
+#v-venta .pos-header{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(220px,1fr);gap:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin:0 0 14px}
+#v-venta .pos-header-card{min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:var(--bg,var(--card))}
+#v-venta .pos-header-title{display:flex;align-items:center;gap:7px;margin:0 0 9px;color:var(--ink);font-size:.9rem;font-weight:750}
+#v-venta .pos-header-icon{font-size:1.05rem;line-height:1}
+#v-venta .pos-customer-controls{display:grid;grid-template-columns:minmax(0,1fr) 40px;gap:8px;align-items:center}
+#v-venta .pos-header input{height:40px;min-width:0;width:100%;margin:0;padding:8px 11px;border:1px solid var(--line);border-radius:9px;background:var(--card);font-size:.92rem}
+#v-venta .pos-client-action{height:40px;width:40px;display:grid;place-items:center;border:1px solid var(--line);border-radius:9px;background:var(--soft);color:var(--pri);font-size:1.2rem;font-weight:700;cursor:pointer}
+#v-venta .pos-customer-meta{display:flex;align-items:center;gap:9px;flex-wrap:wrap;min-height:25px;margin-top:7px}
 #v-venta .pos-status{white-space:nowrap;border-radius:99px;padding:5px 9px;background:var(--soft);color:var(--mut);font-size:.68rem;font-weight:800;text-align:center}
 #v-venta .pos-status.is-known{background:#e7f5ed;color:#16845d}
 #v-venta .pos-status.is-new{color:var(--pri)}
 #v-venta .pos-status.is-guest{background:#eef1f4;color:#526171}
-#v-venta .pos-client-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.86rem;font-weight:700;color:var(--ink)}
-#v-venta .pos-vendor-inline{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:9px;min-width:0}
+#v-venta .pos-client-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.84rem;font-weight:700;color:var(--ink)}
 #v-venta .pos-client-hidden{display:none!important}
 #v-venta>h2{margin-top:18px}
-.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-@media(max-width:760px){
- #v-venta .pos-header{grid-template-columns:minmax(0,1fr);gap:9px;padding:10px}
- #v-venta .pos-vendor-inline{padding-top:8px;border-top:1px solid var(--line)}
-}
-@media(max-width:520px){
- #v-venta .pos-customer-row{grid-template-columns:58px minmax(0,1fr) 38px;gap:7px}
- #v-venta .pos-customer-row .pos-status{grid-column:2;justify-self:start}
- #v-venta .pos-client-name{grid-column:1/-1;padding:1px 0 0 65px;white-space:normal;line-height:1.25}
- #v-venta .pos-inline-label{font-size:.78rem}
- #v-venta .pos-header input{font-size:16px}
-}</style>
+@media(max-width:640px){#v-venta .pos-header{grid-template-columns:minmax(0,1fr);gap:9px;padding:9px}#v-venta .pos-header-card{padding:10px}#v-venta .pos-header input{height:42px;font-size:16px}#v-venta .pos-customer-controls{grid-template-columns:minmax(0,1fr) 42px}#v-venta .pos-client-action{width:42px;height:42px}#v-venta .pos-customer-meta{margin-top:6px}}</style>
 <style>
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:24px}
 #lg{max-width:420px;margin:0 auto;padding:40px 16px}
@@ -424,30 +415,20 @@ nav button{font-size:.78rem}
 <main>
 <section id="v-venta">
  <div class="pos-header">
- <div class="pos-customer-row">
-  <label class="pos-inline-label" for="ced">Cliente</label>
-  <input id="ced" inputmode="numeric" autocomplete="off" placeholder="Cédula o NIT" aria-label="Cédula o NIT del cliente">
-  <button type="button" id="btn-cliente-pos" class="pos-client-action" aria-label="Registrar o editar cliente" title="Registrar o editar cliente">♙</button>
-  <span id="cliente-estado" class="pos-status">Sin identificar</span>
-  <span id="cliente-nombre-pos" class="pos-client-name" aria-live="polite"></span>
+ <div class="pos-header-card pos-customer-card">
+  <div class="pos-header-title"><span class="pos-header-icon" aria-hidden="true">👤</span><label for="ced">Cliente</label></div>
+  <div class="pos-customer-controls"><input id="ced" inputmode="numeric" autocomplete="off" placeholder="Cédula o NIT" aria-label="Cédula o NIT del cliente"><button type="button" id="btn-cliente-pos" class="pos-client-action" aria-label="Registrar o editar cliente" title="Registrar o editar cliente">🔎</button></div>
+  <div class="pos-customer-meta"><span id="cliente-estado" class="pos-status">Sin identificar</span><span id="cliente-nombre-pos" class="pos-client-name" aria-live="polite"></span></div>
  </div>
- <div class="pos-vendor-inline">
-  <label class="pos-inline-label" for="vend">Vendedor</label>
+ <div class="pos-header-card pos-vendor-card">
+  <div class="pos-header-title"><span class="pos-header-icon" aria-hidden="true">🧑‍💼</span><label for="vend">Vendedor</label></div>
   <input id="vend" list="vds" placeholder="Seleccionar vendedor" autocomplete="off"><datalist id="vds"></datalist>
  </div>
- <div id="cliente-datos" class="pos-client-hidden" hidden>
-  <input id="nombres" autocomplete="given-name">
-  <input id="apellidos" autocomplete="family-name">
-  <input id="tel" type="tel" inputmode="tel">
-  <input id="dircli" autocomplete="street-address">
-  <datalist id="cls"></datalist>
-  <div id="consv" class="pos-consent"></div>
- </div>
+ <div id="cliente-datos" class="pos-client-hidden" hidden><input id="nombres" autocomplete="given-name"><input id="apellidos" autocomplete="family-name"><input id="tel" type="tel" inputmode="tel"><input id="dircli" autocomplete="street-address"><datalist id="cls"></datalist><div id="consv" class="pos-consent"></div></div>
 </div>
  <label for="q">Buscar producto</label>
  <input id="q" type="search" placeholder="Nombre, laboratorio o código" autocomplete="off">
  <button class="btn alt full" id="scan" style="margin:0 0 10px">Escanear código de barras</button>
- <div id="topw" hidden><label>Más vendidos (últimos 60 días)</label><div class="chips" id="top"></div></div>
  <div id="res"></div>
  <h2>Productos del recibo</h2>
  <div id="cart"></div>
@@ -680,7 +661,7 @@ const idx=()=>P.forEach(p=>{p._s=norm(p.nombre+' '+(p.laboratorio||'')+' '+(p.co
 function find(q,lim){const t=norm(q).split(/\s+/).filter(Boolean),a=[];for(const p of P){if(t.every(x=>p._s.includes(x))){a.push(p);if(a.length>=lim)break}}return a}
 const fmt=t=>new Date(t).toLocaleDateString('es-CO',{day:'numeric',month:'long',year:'numeric'})+', '+new Date(t).toLocaleTimeString('es-CO',{hour:'numeric',minute:'2-digit'});
 const pad=n=>String(n).padStart(4,'0');
-async function loadAll(){await cargarRolDrosalud();aplicarInterfazRol();if(esAdminDrosalud()){await loadCfg();if(!cfg.primerUso){try{await saveCfgDb({...cfg,primerUso:new Date().toISOString()})}catch(e){}}}else{cfg={...DEF};applyPalette()}rBk();iniVend();P=await all('productos_app','nombre');idx();C=await all('clientes','nombre');await cargarConsentimientos();$('#consv').innerHTML='';H=[];$('#imp').hidden=!esAdminDrosalud()||P.length>0;$('#cls').innerHTML=C.map(c=>`<option value="${esc(c.nombre)}">`).join('');actualizarEstadoClientePOS();rRes();rCart();rCat();rCli();rHis();if(esAdminDrosalud())loadTop();else{TOP=[];rTop()}}
+async function loadAll(){await cargarRolDrosalud();aplicarInterfazRol();if(esAdminDrosalud()){await loadCfg();if(!cfg.primerUso){try{await saveCfgDb({...cfg,primerUso:new Date().toISOString()})}catch(e){}}}else{cfg={...DEF};applyPalette()}rBk();iniVend();P=await all('productos_app','nombre');idx();C=await all('clientes','nombre');await cargarConsentimientos();$('#consv').innerHTML='';H=[];$('#imp').hidden=!esAdminDrosalud()||P.length>0;$('#cls').innerHTML=C.map(c=>`<option value="${esc(c.nombre)}">`).join('');actualizarEstadoClientePOS();rRes();rCart();rCat();rCli();rHis();}
 async function start(){const rol=await cargarRolDrosalud();if(rol==='admin'&&(await mfaNivel()).pedir){showMfa();return}$('#spl').hidden=true;$('#mfa').hidden=true;$('#lg').hidden=true;$('#rsx').hidden=true;$('#app').hidden=false;const{data}=await sb.auth.getUser();$('#who').textContent=data&&data.user?'Sesión: '+data.user.email:'';await loadAllSafe();showHome();checkVer()}
 async function mfaNivel(){if(!sb.auth.mfa)throw new Error('La verificación en dos pasos no está disponible.');const{data,error}=await sb.auth.mfa.getAuthenticatorAssuranceLevel();if(error)throw error;return{pedir:data.nextLevel==='aal2'&&data.currentLevel!=='aal2'}}
 function showMfa(){$('#spl').hidden=true;$('#app').hidden=true;$('#rsx').hidden=true;$('#lg').hidden=true;$('#mfa').hidden=false;$('#mfc').value='';$('#mfm').textContent='';setTimeout(()=>$('#mfc').focus(),50)}
@@ -753,7 +734,7 @@ function cajaClics(e){const t=e.target.closest('button');if(!t)return;if(t.datas
 function renderHomeDate(){const el=$('#home-date');if(!el)return;const mobile=window.matchMedia('(max-width: 620px)').matches;const opts=mobile?{weekday:'short',day:'numeric',month:'short',timeZone:'America/Bogota'}:{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'America/Bogota'};const s=new Intl.DateTimeFormat('es-CO',opts).format(new Date());el.textContent=s.charAt(0).toLocaleUpperCase('es-CO')+s.slice(1)}
 function showHome(){cajaBadge();renderHomeDate();$('#back-home').hidden=true;$('#home').hidden=false;['venta','cat','cli','his','cot','aju','neg','caja','cajahistorial','ayuda'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=true});$('#more-menu').hidden=true;$('#ttl').textContent='Drosalud';window.scrollTo(0,0)}
  function show(v){$('#back-home').hidden=false;$('#home').hidden=true;['venta','cat','cli','his','cot','aju','neg','caja','cajahistorial','ayuda'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=k!==v});$('#more-menu').hidden=true;$('#nav [data-v="mas"]').setAttribute('aria-expanded','false');document.querySelectorAll('#nav button').forEach(b=>{if(b.dataset.v!=='mas')b.setAttribute('aria-current',String(b.dataset.v===v));else b.setAttribute('aria-current',String(!['venta','cat','cli'].includes(v)))});$('#ttl').textContent=TT[v]||'Negocio';if(v==='aju')fillAju();if(v==='caja')go(loadCaja);if(v==='cajahistorial')go(loadHistorialCierres);if(v==='ayuda'){go(loadAyudaEstado);$('#ayuda-version').textContent='v'+VERSION}if(v==='his')go(loadHis);if(v==='cli')loadCST().catch(()=>{});if(v==='cot')go(loadCotizaciones);window.scrollTo(0,0)}
-function rRes(){rTop();const q=$('#q').value.trim(),b=$('#res');if(!q){b.innerHTML='';return}const a=find(q,20);b.innerHTML=a.length?a.map(p=>`<button class="row" data-add="${p.id}"><span class="nm">${esc(p.nombre)}<small>${esc(p.laboratorio||'')}</small></span><span class="pr">${pv(p)==null?'Precio pendiente':money(pv(p))}<small>compra ${money(p.precio_compra)}</small></span></button>`).join(''):'<p class="mut">No hay resultados. Agrégalo en Catálogo.</p>'}
+function rRes(){const q=$('#q').value.trim(),b=$('#res');if(!q){b.innerHTML='';return}const a=find(q,20);b.innerHTML=a.length?a.map(p=>`<button class="row" data-add="${p.id}"><span class="nm">${esc(p.nombre)}<small>${esc(p.laboratorio||'')}</small></span><span class="pr">${pv(p)==null?'Precio pendiente':money(pv(p))}<small>compra ${money(p.precio_compra)}</small></span></button>`).join(''):'<p class="mut">No hay resultados. Agrégalo en Catálogo.</p>'}
 function calc(){const st=cart.reduce((s,i)=>s+i.p*i.q,0),g=esAdminDrosalud()?cart.reduce((s,i)=>s+(i.p-(i.c||0))*i.q,0):null,ds=Math.max(0,+$('#dsc').value||0),dm=Math.max(0,+$('#dom').value||0),mens=Math.max(0,+$('#mens').value||0);return{st,ds,dm,mens,total:Math.max(0,st-ds+dm),gan:g==null?null:g-ds+dm-mens}}
 function rCart(){const b=$('#cart');b.innerHTML=cart.length?cart.map((i,k)=>`<div class="item"><div class="top"><span>${esc(i.n)}</span><button class="rm" data-rm="${k}" aria-label="Quitar">✕</button></div><div class="ctl"><div class="step"><button data-dec="${k}" aria-label="Menos">−</button><span>${i.q} ${i.q===1?'unidad':'unidades'}</span><button data-inc="${k}" aria-label="Más">+</button></div><label class="pp">$<input type="number" inputmode="numeric" data-pr="${k}" value="${i.p}" aria-label="Precio de venta por unidad"></label><span class="lt">${money(i.p*i.q)}</span></div><small class="mut">${esc(etiquetaCarrito(i))}· Compra ${money(i.c)} c/u${esAdminDrosalud()?` · ganas ${money((i.p-i.c)*i.q)}${warnM(i.p,i.c)}`:''}</small></div>`).join(''):'<p class="mut">Busca un producto y tócalo para agregarlo.</p>';const k=calc(),n=cart.reduce((s,i)=>s+i.q,0);$('#tot').textContent=money(k.total);$('#gn').textContent=esAdminDrosalud()&&cart.length?'Ganancia estimada (productos + domicilio − mensajero − descuento): '+money(k.gan):'';const e=$('#bg');e.hidden=!n;e.textContent=n;rVue(k)}
 function rCat(){rLow();const q=$('#q2').value.trim(),a=catLow?lowList().slice(0,100):(q?find(q,50):P.slice(0,50));$('#cnt').textContent=q?`${a.length}${a.length===50?'+':''} resultados`:`${P.length} productos. Mostrando 50, escribe para buscar.`;$('#cl').innerHTML=a.map(p=>`<button class="row" data-ed="${p.id}"><span class="nm">${esc(p.nombre)}<small>${esc(p.laboratorio||'')} · actualizado ${new Date(p.actualizado_en).toLocaleDateString('es-CO',{day:'numeric',month:'short'})}</small></span><span class="pr">${pv(p)==null?'Precio pendiente':money(pv(p))}${esAdminDrosalud()?`<small>compra ${money(p.precio_compra)}</small>`:''}</span></button>`).join('')}
@@ -857,8 +838,6 @@ const{data:rec,error}=await sb.rpc('registrar_venta_drosalud',{p_venta:venta,p_i
 const it=ventaItems.map(i=>({nombre:i.n,cantidad:i.q,precio_venta:i.p,...(esAdminDrosalud()?{precio_compra:i.c}:{}),presentacion:i.presentacion||'Unidad',unidades_por_presentacion:i.unidadesPorPresentacion||1}));
 H.unshift(rec);try{localStorage.setItem('lastVend',vend);if(vend){const L=JSON.parse(localStorage.getItem('vendList')||'[]').filter(x=>x!==vend);L.unshift(vend);localStorage.setItem('vendList',JSON.stringify(L.slice(0,8)))}}catch(e){}iniVend();cart=[];if($('#cons'))$('#cons').checked=false;['#nombres','#apellidos','#tel','#dircli','#ced','#dsc','#dom','#mens','#rec'].forEach(s=>{$(s).value=''});ultimoDocConsultado='';actualizarEstadoClientePOS();$('#cls').innerHTML=C.map(x=>`<option value="${esc(x.nombre)}">`).join('');rCart();if(esAdminDrosalud())rHis();rCli();showRec(rec,it)}finally{savingVenta=false}}
 async function importar(){if(!esAdminDrosalud()){toast('Solo el administrador puede importar productos.');return}const{count,error:e0}=await sb.from('productos').select('*',{count:'exact',head:true});if(e0)throw e0;if(count>0){await loadAll();toast('El catálogo ya tiene productos');return}if(!confirm('Se cargarán '+BASE.length+' productos de tu Excel. ¿Continuar?'))return;for(let i=0;i<BASE.length;i+=250){const rows=BASE.slice(i,i+250).map(r=>({codigo:r[0],nombre:r[1],laboratorio:r[2],precio_compra:r[3]}));const{error}=await sb.from('productos').insert(rows);if(error)throw error;toast('Cargando '+Math.min(i+250,BASE.length)+' de '+BASE.length)}await loadAll();toast('Catálogo cargado')}
-async function loadTop(){if(!esAdminDrosalud()){TOP=[];rTop();return}try{const{data,error}=await sb.rpc('mas_vendidos',{dias:60});if(error)throw error;TOP=(data||[]).filter(x=>P.some(p=>p.id===x.producto_id)).slice(0,10)}catch(e){TOP=[]}rTop()}
-function rTop(){const w=$('#topw');if(!w)return;const q=$('#q').value.trim();w.hidden=!TOP.length||!!q;$('#top').innerHTML=TOP.map(x=>{const p=P.find(y=>y.id===x.producto_id);return p?`<button class="chip" data-add="${p.id}">${esc(p.nombre)} <small>${money(pv(p))}</small></button>`:''}).join('')}
 let cv='todos',contact={},scn=null,scMode='venta',scLast='',scT=0,scanAdd=false,scLog=[],kb='',kt=0;try{contact=JSON.parse(localStorage.getItem('contactados')||'{}')}catch(e){}
 const dd=t=>Math.floor((Date.now()-new Date(t).getTime())/864e5);
 const waNum=t=>{let d=String(t||'').replace(/\D/g,'');if(d.length===10)d='57'+d;return d};
@@ -914,7 +893,7 @@ qrStatus();renderPrev()}
 function iniVend(){const v=$('#vend');if(!v)return;let l=null,lst=[];try{l=localStorage.getItem('lastVend');lst=JSON.parse(localStorage.getItem('vendList')||'[]')}catch(e){}v.value=l!==null?l:(cfg.vendedorDef||'');const names=[...new Set([cfg.vendedorDef,...lst].filter(Boolean))];$('#vds').innerHTML=names.map(n=>`<option value="${esc(n)}">`).join('')}
 const mg=(p,c)=>c>0?(p-c)/c*100:0;
 const warnM=(p,c)=>p<c?' <b class="warn">⚠ por debajo del costo</b>':(mg(p,c)<cfg.mMin?` <b class="warn">⚠ ganancia ${Math.round(mg(p,c))}%</b>`:'');
-let TOP=[],CST={},CR=[];let catLow=false,hv='rec',hisShown=100;
+let CST={},CR=[];let catLow=false,hv='rec',hisShown=100;
 function lowList(){return P.filter(p=>p.precio_venta!=null&&mg(Number(p.precio_venta),Number(p.precio_compra))<cfg.mMin)}
 function rLow(){const n=lowList().length,b=$('#lowb');b.hidden=!n&&!catLow;b.innerHTML=catLow?`<button class="row warnrow" id="lowx">Mostrando ${n} con ganancia baja · Quitar filtro</button>`:(n?`<button class="row warnrow" id="lowm">⚠ ${n} producto${n>1?'s':''} con ganancia menor a ${cfg.mMin}% · Ver</button>`:'')}
 function rVue(k){const ef=$('#fp').value==='Efectivo';$('#efw').hidden=!ef;const rc=+$('#rec').value||0;$('#vue').textContent=!ef||!rc||!cart.length?'':(rc>=k.total?'Vueltos: '+money(rc-k.total):'Faltan '+money(k.total-rc))}
@@ -937,7 +916,7 @@ const hisValid=()=>hisFiltered().filter(r=>!r.anulado);
 async function rResumen(){if(!esAdminDrosalud())return;const L=hisValid(),box=$('#hres');if(!L.length){box.innerHTML='<p class="mut">No hay ventas en este período.</p>';return}
 box.innerHTML='<p class="mut">Calculando…</p>';const it=await itemsDe(L),T=L.reduce((a,r)=>a+Number(r.total),0),G=L.reduce((a,r)=>a+Number(r.ganancia),0),D=L.reduce((a,r)=>a+Number(r.domicilio||0),0),M=L.reduce((a,r)=>a+Number(r.costo_mensajero||0),0),base=T-D;
 const mp=new Map();it.forEach(i=>{const o=mp.get(i.nombre)||{n:i.nombre,u:0,v:0,g:0};o.u+=i.cantidad;o.v+=i.precio_venta*i.cantidad;o.g+=(i.precio_venta-(i.costo_real_unitario==null?i.precio_compra:i.costo_real_unitario))*i.cantidad;mp.set(i.nombre,o)});
-const top=[...mp.values()].sort((a,b)=>b.g-a.g).slice(0,8),mx=Math.max(1,...top.map(x=>x.g));
+const top=[...mp.values()].sort((a,b)=>b.g-a.g).slice(0,8),topUnidades=[...mp.values()].sort((a,b)=>b.u-a.u).slice(0,10),mx=Math.max(1,...top.map(x=>x.g));
 const fp={};L.forEach(r=>{const k=r.forma_pago||'Sin dato';fp[k]=(fp[k]||0)+Number(r.total)});
 const low=it.filter(i=>i.precio_venta<i.precio_compra||mg(i.precio_venta,i.precio_compra)<cfg.mMin).length;
 const ds=L.map(r=>new Date(r.creado_en).getTime()),mn=new Date(Math.min(...ds)),mxd=new Date(Math.max(...ds)),byM=(mxd-mn)/864e5>62,key=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+(byM?'':'-'+String(d.getDate()).padStart(2,'0'));
@@ -947,7 +926,7 @@ const vd={};L.forEach(r=>{const k=(r.vendedor||'').trim()||'Sin vendedor';vd[k]=
 const vmax=Math.max(1,...keys.map(k=>sv[k]||0)),lab=k=>byM?k.slice(5)+'/'+k.slice(2,4):k.slice(8);
 box.innerHTML=`<div class="kpi"><div>Ventas<b>${money(T)}</b></div><div>Ganancia<b>${money(G)}</b></div><div>Recibos<b>${L.length}</b></div><div>Ticket promedio<b>${money(T/L.length)}</b></div><div>Ganancia sobre ventas<b>${base>0?(G/base*100).toFixed(1).replace('.',','):0}%</b></div><div>Domicilios cobrados<b>${money(D)}</b></div><div>Pagos a mensajeros<b>${money(M)}</b></div></div>
 <h2>Ventas por ${byM?'mes':'día'}</h2><div class="bars">${keys.map(k=>`<div title="${k}: ${money(sv[k]||0)}"><i style="height:${Math.round((sv[k]||0)/vmax*100)}%"></i>${lab(k)}</div>`).join('')}</div>
-<h2>Productos que más ganancia dejan</h2>${top.map((x,n)=>{const w=Math.round(x.g/mx*100);return `<div class="rk" style="background:linear-gradient(90deg,var(--soft) ${w}%,var(--card) ${w}%)"><span>${n+1}. ${esc(x.n)}<small>${x.u} und · ${money(x.v)} vendido</small></span><b>${money(x.g)}</b></div>`}).join('')}
+<h2>Productos más vendidos</h2>${topUnidades.map((x,n)=>`<div class="rk"><span>${n+1}. ${esc(x.n)}<small>${x.u} unidades · ${money(x.v)} vendido</small></span><b>${x.u} und</b></div>`).join('')}<h2>Productos que más ganancia dejan</h2>${top.map((x,n)=>{const w=Math.round(x.g/mx*100);return `<div class="rk" style="background:linear-gradient(90deg,var(--soft) ${w}%,var(--card) ${w}%)"><span>${n+1}. ${esc(x.n)}<small>${x.u} und · ${money(x.v)} vendido</small></span><b>${money(x.g)}</b></div>`}).join('')}
 <h2>Por forma de pago</h2>${Object.entries(fp).sort((a,b)=>b[1]-a[1]).map(e=>`<div class="rk"><span>${esc(e[0])}</span><b>${money(e[1])}</b></div>`).join('')}${vdH}
 ${low?`<p class="warn">⚠ ${low} línea${low>1?'s':''} vendida${low>1?'s':''} con ganancia menor a ${cfg.mMin}%.</p>`:''}
 <p class="mut sm">La ganancia por producto es antes de descuentos. La ganancia del recibo ya resta el descuento y no cuenta el domicilio.</p>`}
