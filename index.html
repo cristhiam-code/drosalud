@@ -629,7 +629,7 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;',
 const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 const money=n=>'$'+Math.round(n).toLocaleString('es-CO');
 const DEF={m:25,r:100,biz:'DROGUERIA DROSALUD.SAS',nit:'900.109.443-0',ciu:'Cúcuta',tel:'3112581564',dir:'',msg:'Gracias por su compra',nota:'Resolución de facturación electrónica N° 1845101586525 de 2025-11-12. Vigencia 24 meses.',sHora:true,sCed:true,sTel:true,sPago:true,big:false,sLogo:true,mMin:10,colorPri:'#0E6B55',colorBg:'#F2F6F3',colorCard:'#FFFFFF',colorInk:'#12261F',cotDias:3,cotNota:'Precios sujetos a cambio y disponibilidad.',respDias:30,breb:'3112581564',pagoTitular:'',pagoCot:true,pagoRec:'siempre',qrTexto:'',qrImg:'',vendedorDef:'',msgRetomar:'Hola {nombre}, ¿cómo estás? Te escribimos de Drosalud. Hace un tiempo no sabemos de ti, ¿te ayudamos con algo? Tu salud, nuestra prioridad.'};
-const VERSION='2026-11-06.1-caja-jornada';
+const VERSION='2026-11-07.1-navegacion-respaldo';
 let P=[],C=[],H=[],CO=[],cart=[],savingVenta=false,savingCotizacion=false,cfg={...DEF},draft=null,usuarioDrosalud=null,rolDrosalud=null;
 // Control de interfaz por rol. La autorización definitiva debe aplicarse también en RLS.
 async function cargarRolDrosalud(){const{data,error}=await sb.auth.getUser();if(error)throw error;if(!data.user)throw new Error('Inicia sesión nuevamente.');const{data:perfil,error:ep}=await sb.from('usuarios_drosalud').select('rol,activo').eq('user_id',data.user.id).maybeSingle();if(ep)throw ep;if(!perfil||perfil.activo!==true||!['admin','vendedor'].includes(perfil.rol))throw new Error('Tu usuario no tiene un rol activo en Drosalud. Solicita al administrador que lo habilite.');usuarioDrosalud=data.user;rolDrosalud=perfil.rol;return perfil.rol}
@@ -955,7 +955,7 @@ if(d.hv)return setHV(d.hv);
 if(id==='retry')return loadAllSafe();
 if(d.ajuOpen){$('#aju-menu').hidden=true;$('#aju-pages').hidden=false;document.querySelectorAll('[data-aju-page]').forEach(x=>x.hidden=x.dataset.ajuPage!==d.ajuOpen);$('#aju-back').hidden=false;return}
 if(id==='aju-back'){$('#aju-pages').hidden=true;$('#aju-menu').hidden=false;return}
-if(d.ajuSave){return go(async()=>{if(!String(draft.biz).trim()){toast('Escribe el nombre del negocio');return}draft.m=Math.max(0,+draft.m||0);draft.mMin=Math.max(0,+draft.mMin||0);applyPalette();await saveCfgDb(draft);iniVend();rRes();rCat();rCart();toast('Ajustes guardados')})}
+if(d.ajuSave){return go(async()=>{if(!String(draft.biz).trim()){toast('Escribe el nombre del negocio');return}const backupField=$('#rd3');if(backupField){const days=Number(backupField.value);if(!Number.isInteger(days)||days<7){toast('La frecuencia debe ser un número entero de 7 días o más.');backupField.focus();return}draft.respDias=days}draft.m=Math.max(0,+draft.m||0);draft.mMin=Math.max(0,+draft.mMin||0);applyPalette();await saveCfgDb(draft);if(backupField)backupField.value=String(cfg.respDias);iniVend();rRes();rCat();rCart();toast(backupField?'Frecuencia del respaldo guardada: cada '+cfg.respDias+' días':'Ajustes guardados')})}
 if(id==='qrx'){if(draft){draft.qrTexto='';draft.qrImg='';qrStatus();renderPrev()}return}
 if(id==='scan')return abrirScan('venta');
 if(id==='scan2')return abrirScan('cat');
@@ -1169,7 +1169,7 @@ showLogin();
  function setTab(t){tab=t;$n('#neg-pend').hidden=t!=='pend';$n('#neg-prov').hidden=t!=='prov';document.querySelectorAll('[data-neg-tab]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.negTab===t)))}
  document.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
-  if(b.dataset.v==='neg'){e.preventDefault();e.stopImmediatePropagation();document.querySelectorAll('main section[id^="v-"]').forEach(s=>s.hidden=true);$n('#v-neg').hidden=false;$n('#more-menu').hidden=true;$n('#nav [data-v="mas"]').setAttribute('aria-expanded','false');document.querySelectorAll('#nav button').forEach(x=>x.setAttribute('aria-current',String(x.dataset.v==='mas')));$n('#ttl').textContent='Gestión del negocio';run(load);window.scrollTo(0,0);return}
+  if(b.dataset.v==='neg'){e.preventDefault();e.stopImmediatePropagation();show('neg');run(load);return}
   if(b.dataset.negTab){setTab(b.dataset.negTab);return}
   if(b.id==='neg-new-provider'){providerForm();return}
   if(b.id==='neg-new-buy'){buyForm();return}
