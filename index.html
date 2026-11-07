@@ -203,30 +203,27 @@ nav button[aria-current="true"]{color:var(--pri);font-weight:800;box-shadow:inse
 @media(max-width:350px){.home-heading{padding:19px 16px}.home-tile{padding:12px;min-height:140px}}
 
 
-/* POS: organización compacta de cliente y vendedor; conserva controles y flujos. */
-#v-venta .pos-panel{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:14px;margin:0 0 12px}
-#v-venta .pos-panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
-#v-venta .pos-panel-head h2{margin:0;font-size:1rem}
-#v-venta .pos-panel-head p{margin:3px 0 0;color:var(--mut);font-size:.8rem}
-#v-venta .pos-status{flex:none;border-radius:99px;padding:5px 10px;background:var(--soft);color:var(--mut);font-size:.75rem;font-weight:700}
-#v-venta .pos-status.is-known{color:var(--gain)}
+/* POS: cliente en una sola fila; datos personales solo en el modal. */
+#v-venta .pos-panel{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:12px;margin:0 0 10px}
+#v-venta .pos-customer-row{display:grid;grid-template-columns:minmax(110px,1fr) 44px auto minmax(0,1.5fr);align-items:center;gap:9px}
+#v-venta .pos-customer-row input{min-width:0;margin:0;padding:11px 12px}
+#v-venta .pos-client-action{height:44px;width:44px;border:1px solid var(--line);border-radius:11px;background:var(--soft);color:var(--pri);font-size:1.45rem;font-weight:800}
+#v-venta .pos-status{white-space:nowrap;border-radius:99px;padding:6px 10px;background:var(--soft);color:var(--mut);font-size:.72rem;font-weight:800}
+#v-venta .pos-status.is-known{background:#e7f5ed;color:#16845d}
 #v-venta .pos-status.is-new{color:var(--pri)}
 #v-venta .pos-status.is-guest{background:#eef1f4;color:#526171}
-#v-venta .pos-field{min-width:0}
-#v-venta .pos-field label{display:block}
-#v-venta .pos-field input{margin-bottom:8px}
-#v-venta .pos-client-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px}
-#v-venta .pos-consent{grid-column:1/-1}
-#v-venta .pos-consent .cons{margin:4px 0 0}
+#v-venta .pos-client-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.9rem;font-weight:700;color:var(--ink)}
+#v-venta .pos-client-hidden{display:none!important}
 #v-venta .pos-vendor{padding-bottom:8px}
 #v-venta .pos-vendor .pos-panel-head{margin-bottom:4px}
 #v-venta .pos-vendor .pos-field input{margin-bottom:0}
 #v-venta>h2{margin-top:18px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 @media(max-width:520px){
- #v-venta .pos-panel{padding:12px}
- #v-venta .pos-client-grid{grid-template-columns:1fr;column-gap:0}
- #v-venta .pos-consent{grid-column:1}
- #v-venta .pos-panel-head{align-items:flex-start}
+ #v-venta .pos-panel{padding:10px}
+ #v-venta .pos-customer-row{grid-template-columns:minmax(90px,1fr) 40px auto;gap:7px}
+ #v-venta .pos-client-action{width:40px;height:42px}
+ #v-venta .pos-client-name{grid-column:1/-1;padding-left:2px}
 }
 </style>
 <style>
@@ -424,13 +421,19 @@ nav button{font-size:.78rem}
 <main>
 <section id="v-venta">
  <div class="pos-panel pos-customer">
-  <div class="pos-panel-head"><div><h2>Cliente</h2><p>Identifica al cliente para recuperar sus datos.</p></div><span id="cliente-estado" class="pos-status">Sin identificar</span></div>
-  <div class="pos-field pos-id-field"><label for="ced">Cédula o NIT</label><input id="ced" inputmode="numeric" autocomplete="off" placeholder="Número de identificación"></div>
-  <div id="cliente-datos" class="pos-client-grid">
-   <div class="pos-field"><label for="nombres">Nombres</label><input id="nombres" autocomplete="given-name"></div>
-   <div class="pos-field"><label for="apellidos">Apellidos</label><input id="apellidos" autocomplete="family-name"></div>
-   <div class="pos-field"><label for="tel">Teléfono del cliente</label><input id="tel" type="tel" inputmode="tel" placeholder="Para enviarle el recibo por WhatsApp"></div>
-   <div class="pos-field"><label for="dircli">Dirección</label><input id="dircli" autocomplete="street-address"></div>
+  <div class="pos-customer-row">
+   <label class="sr-only" for="ced">Cédula o NIT</label>
+   <input id="ced" inputmode="numeric" autocomplete="off" placeholder="Cédula o NIT del cliente" aria-label="Cédula o NIT del cliente">
+   <button type="button" id="btn-cliente-pos" class="pos-client-action" aria-label="Registrar o editar cliente" title="Registrar o editar cliente">♙</button>
+   <span id="cliente-estado" class="pos-status">Sin identificar</span>
+   <span id="cliente-nombre-pos" class="pos-client-name" aria-live="polite"></span>
+  </div>
+  <div id="cliente-datos" class="pos-client-hidden" hidden>
+   <input id="nombres" autocomplete="given-name">
+   <input id="apellidos" autocomplete="family-name">
+   <input id="tel" type="tel" inputmode="tel">
+   <input id="dircli" autocomplete="street-address">
+   <input id="cons" type="checkbox">
    <datalist id="cls"></datalist>
    <div id="consv" class="pos-consent"></div>
   </div>
@@ -818,28 +821,39 @@ function partesNombre(n){const p=String(n||'').trim().split(/\\s+/).filter(Boole
 function nombreCompleto(n,a){return[n,a].map(x=>String(x||'').trim()).filter(Boolean).join(' ').replace(/\\s+/g,' ')}
 function buscarCliente(ced,tel){const ce=String(ced||'').replace(/\\D/g,'');if(ce)return C.find(x=>String(x.cedula||'').replace(/\\D/g,'')===ce)||null;const te=String(tel||'').replace(/\\D/g,'');return te?C.find(x=>String(x.telefono||'').replace(/\\D/g,'')===te)||null:null}
 function esClienteNoInscrito(ced){return String(ced||'').replace(/\D/g,'')==='999'}
-function actualizarEstadoClientePOS(){
- const ced=$('#ced').value,guest=esClienteNoInscrito(ced),wrap=$('#cliente-datos'),status=$('#cliente-estado');
+function actualizarEstadoClientePOS(clienteForzado){
+ const ced=$('#ced').value,guest=esClienteNoInscrito(ced),status=$('#cliente-estado'),name=$('#cliente-nombre-pos');
  if(guest){
   ['#nombres','#apellidos','#tel','#dircli'].forEach(sel=>{$(sel).value=''});
   const ck=$('#cons');if(ck)ck.checked=false;
-  wrap.hidden=true;status.textContent='Cliente no inscrito';status.className='pos-status is-guest';
+  status.textContent='Cliente no inscrito';status.className='pos-status is-guest';name.textContent='';
+  return;
+ }
+ const c=clienteForzado||buscarCliente(ced,$('#tel').value);
+ if(c){
+  const p=partesNombre(c.nombre);$('#nombres').value=p.nombres;$('#apellidos').value=p.apellidos;
+  $('#tel').value=c.telefono||'';$('#dircli').value=c.direccion||'';
+  status.textContent='INSCRITO';status.className='pos-status is-known';name.textContent=c.nombre||'';
  }else{
-  wrap.hidden=false;
-  const c=buscarCliente(ced,$('#tel').value);
-  status.textContent=c?'Cliente registrado':(String(ced||'').trim()?'Cliente nuevo':'Sin identificar');
-  status.className='pos-status '+(c?'is-known':(String(ced||'').trim()?'is-new':''));
+  status.textContent=String(ced||'').trim()?'No inscrito':'Sin identificar';
+  status.className='pos-status '+(String(ced||'').trim()?'is-new':'');name.textContent='';
+  ['#nombres','#apellidos','#tel','#dircli'].forEach(sel=>{$(sel).value=''});
  }
 }
+function seleccionarClientePOS(c){
+ if(!c)return;
+ $('#ced').value=c.cedula||'';
+ actualizarEstadoClientePOS(c);
+}
 async function guardarCliente(nm,ced,tel,dir){if(!nm&&!ced&&!tel)return null;let c=buscarCliente(ced,tel);if(!c&&ced&&tel&&buscarCliente('',tel))throw new Error('Ese teléfono ya está asociado a otro cliente. Revisa los datos.');const d={nombre:nm||c?.nombre||'Cliente sin nombre',cedula:ced||c?.cedula||null,telefono:tel||c?.telefono||null,direccion:dir||c?.direccion||null};if(c){const u={};Object.keys(d).forEach(k=>{if(d[k]&&d[k]!==c[k])u[k]=d[k]});if(Object.keys(u).length){const{error}=await sb.from('clientes').update(u).eq('id',c.id);if(error)throw error;Object.assign(c,u)}}else{const{data,error}=await sb.from('clientes').insert(d).select().single();if(error)throw error;c=data;C.push(c)}C.sort((a,b)=>a.nombre.localeCompare(b.nombre));return c}
-function editC(id){const c=id?C.find(x=>x.id===id):{nombre:'',telefono:'',cedula:'',direccion:''},p=partesNombre(c.nombre);openM(`<h2 style="margin-top:0">${id?'Editar cliente':'Cliente nuevo'}</h2><label for="cc">Cédula o NIT</label><input id="cc" inputmode="numeric" value="${esc(c.cedula)}"><label for="cn">Nombres</label><input id="cn" value="${esc(p.nombres)}"><label for="ca">Apellidos</label><input id="ca" value="${esc(p.apellidos)}"><label for="ct">Teléfono</label><input id="ct" type="tel" value="${esc(c.telefono)}"><label for="cd">Dirección</label><input id="cd" value="${esc(c.direccion)}">${id&&CONS.has(id)?'<div class="sm mut">✓ Autorización de datos registrada</div>':consentHTML('cco')}${id?'<div id="chs" class="sm mut">Cargando…</div>':''}<div class="acts">${id?'<button class="btn alt full" id="cbuy">Hacer un recibo para este cliente</button>':''}${id&&esAdminDrosalud()?'<button class="btn bad full" id="canon">Anonimizar datos del cliente</button>':''}<button class="btn full" id="cs">Guardar</button><button class="btn alt full" id="cx">Cancelar</button></div>`);$('#cx').onclick=closeM;if(id&&esAdminDrosalud()){const ba=$('#canon');if(ba)ba.onclick=()=>go(async()=>{if(!confirm('¿Anonimizar a este cliente? Se borran de forma permanente su nombre, cédula, teléfono y dirección. Sus recibos se conservan sin identificarlo.'))return;const{error}=await sb.rpc('anonimizar_cliente_drosalud',{p_cliente_id:id});if(error)throw error;closeM();await loadAllSafe();toast('Cliente anonimizado')})}if(id){cliHist(id);$('#cbuy').onclick=()=>{const z=partesNombre(c.nombre);$('#nombres').value=z.nombres;$('#apellidos').value=z.apellidos;$('#tel').value=c.telefono||'';$('#dircli').value=c.direccion||'';$('#ced').value=c.cedula||'';closeM();show('venta')}}$('#cs').onclick=()=>go(async()=>{const n=nombreCompleto($('#cn').value,$('#ca').value),t=$('#ct').value.trim(),di=$('#cd').value.trim(),ce=$('#cc').value.trim();if(!n){toast('Escribe nombres y apellidos');return}const m=buscarCliente(ce,t);if(m&&(!id||m.id!==id)){toast('Ya existe un cliente con esa cédula o teléfono.');return}const cs=!!($('#cco')&&$('#cco').checked);if(faltaConsentimiento(true,cs,id)){toast('Falta la autorización de datos del cliente. Marca la casilla.');return}if(id){const{error}=await sb.from('clientes').update({nombre:n,telefono:t||null,direccion:di||null,cedula:ce||null}).eq('id',id);if(error)throw error;Object.assign(c,{nombre:n,telefono:t||null,direccion:di||null,cedula:ce||null});if(cs)await registrarConsentimiento(id,'mostrador')}else{const nc=await guardarCliente(n,ce,t,di);if(cs&&nc)await registrarConsentimiento(nc.id,'mostrador')}closeM();rCli();toast('Guardado')})}
+function editC(id,selectPOS=false,docInicial=''){const c=id?C.find(x=>x.id===id):{nombre:'',telefono:'',cedula:docInicial||'',direccion:''},p=partesNombre(c.nombre);openM(`<h2 style="margin-top:0">${id?'Editar cliente':'Cliente nuevo'}</h2><label for="cc">Cédula o NIT</label><input id="cc" inputmode="numeric" value="${esc(c.cedula)}"><label for="cn">Nombres</label><input id="cn" value="${esc(p.nombres)}"><label for="ca">Apellidos</label><input id="ca" value="${esc(p.apellidos)}"><label for="ct">Teléfono</label><input id="ct" type="tel" value="${esc(c.telefono)}"><label for="cd">Dirección</label><input id="cd" value="${esc(c.direccion)}">${id&&CONS.has(id)?'<div class="sm mut">✓ Autorización de datos registrada</div>':consentHTML('cco')}${id?'<div id="chs" class="sm mut">Cargando…</div>':''}<div class="acts">${id?'<button class="btn alt full" id="cbuy">Hacer un recibo para este cliente</button>':''}${id&&esAdminDrosalud()?'<button class="btn bad full" id="canon">Anonimizar datos del cliente</button>':''}<button class="btn full" id="cs">Guardar</button><button class="btn alt full" id="cx">Cancelar</button></div>`);$('#cx').onclick=closeM;if(id&&esAdminDrosalud()){const ba=$('#canon');if(ba)ba.onclick=()=>go(async()=>{if(!confirm('¿Anonimizar a este cliente? Se borran de forma permanente su nombre, cédula, teléfono y dirección. Sus recibos se conservan sin identificarlo.'))return;const{error}=await sb.rpc('anonimizar_cliente_drosalud',{p_cliente_id:id});if(error)throw error;closeM();await loadAllSafe();toast('Cliente anonimizado')})}if(id){cliHist(id);$('#cbuy').onclick=()=>{const z=partesNombre(c.nombre);$('#nombres').value=z.nombres;$('#apellidos').value=z.apellidos;$('#tel').value=c.telefono||'';$('#dircli').value=c.direccion||'';$('#ced').value=c.cedula||'';closeM();show('venta')}}$('#cs').onclick=()=>go(async()=>{const n=nombreCompleto($('#cn').value,$('#ca').value),t=$('#ct').value.trim(),di=$('#cd').value.trim(),ce=$('#cc').value.trim();if(!n){toast('Escribe nombres y apellidos');return}const m=buscarCliente(ce,t);if(m&&(!id||m.id!==id)){toast('Ya existe un cliente con esa cédula o teléfono.');return}const cs=!!($('#cco')&&$('#cco').checked);if(faltaConsentimiento(true,cs,id)){toast('Falta la autorización de datos del cliente. Marca la casilla.');return}if(id){const{error}=await sb.from('clientes').update({nombre:n,telefono:t||null,direccion:di||null,cedula:ce||null}).eq('id',id);if(error)throw error;Object.assign(c,{nombre:n,telefono:t||null,direccion:di||null,cedula:ce||null});if(cs)await registrarConsentimiento(id,'mostrador')}else{const nc=await guardarCliente(n,ce,t,di);if(cs&&nc)await registrarConsentimiento(nc.id,'mostrador')}const guardado=id?c:buscarCliente(ce,t);if(selectPOS&&guardado)seleccionarClientePOS(guardado);closeM();rCli();toast('Guardado')})}
 async function crear(){if(savingVenta)return;if(!cart.length){toast('Agrega al menos un producto');return}savingVenta=true;const ventaItems=cart.map(i=>({...i}));try{
 const nm=nombreCompleto($('#nombres').value,$('#apellidos').value),tel=$('#tel').value.trim(),dir=$('#dircli').value.trim(),ced=$('#ced').value.trim(),noInscrito=esClienteNoInscrito(ced),k=calc(),fp=$('#fp').value,vend=($('#vend').value||'').trim(),rc=fp==='Efectivo'?(+$('#rec').value||0):0;if(rc>0&&rc<k.total){toast('El valor recibido es menor al total');return}let cid=null,cliDir=dir||null,cliente=null;const consOk=!noInscrito&&!!($('#cons')&&$('#cons').checked);if(!noInscrito&&faltaConsentimiento(!!(nm||ced||tel||dir),consOk,buscarCliente(ced,tel)?.id)){toast('Falta la autorización de datos del cliente: marca la casilla, o deja los datos del cliente vacíos.');return}if(!noInscrito&&(nm||ced||tel)){cliente=await guardarCliente(nm,ced,tel,dir);cid=cliente?.id||null;if(consOk&&cid)await registrarConsentimiento(cid,'mostrador');cliDir=dir||cliente?.direccion||null}
 const venta={cliente_id:cid,cliente_nombre:noInscrito?null:(nm||cliente?.nombre||null),cliente_cedula:noInscrito?'999':(ced||cliente?.cedula||null),cliente_telefono:noInscrito?null:(tel||cliente?.telefono||null),cliente_direccion:noInscrito?null:cliDir,descuento:k.ds,domicilio:k.dm,costo_mensajero:esAdminDrosalud()?k.mens:0,forma_pago:fp,recibido:rc>0?rc:null,vendedor:vend||null};
 const items=ventaItems.map(i=>({producto_id:i.pid,nombre:i.n,cantidad:i.q,precio_venta:i.p,presentacion:i.presentacion||'Unidad',unidades_por_presentacion:i.unidadesPorPresentacion||1}));
 const{data:rec,error}=await sb.rpc('registrar_venta_drosalud',{p_venta:venta,p_items:items});if(error)throw error;
 const it=ventaItems.map(i=>({nombre:i.n,cantidad:i.q,precio_venta:i.p,...(esAdminDrosalud()?{precio_compra:i.c}:{}),presentacion:i.presentacion||'Unidad',unidades_por_presentacion:i.unidadesPorPresentacion||1}));
-H.unshift(rec);try{localStorage.setItem('lastVend',vend);if(vend){const L=JSON.parse(localStorage.getItem('vendList')||'[]').filter(x=>x!==vend);L.unshift(vend);localStorage.setItem('vendList',JSON.stringify(L.slice(0,8)))}}catch(e){}iniVend();cart=[];if($('#cons'))$('#cons').checked=false;['#nombres','#apellidos','#tel','#dircli','#ced','#dsc','#dom','#mens','#rec'].forEach(s=>{$(s).value=''});actualizarEstadoClientePOS();$('#cls').innerHTML=C.map(x=>`<option value="${esc(x.nombre)}">`).join('');rCart();if(esAdminDrosalud())rHis();rCli();showRec(rec,it)}finally{savingVenta=false}}
+H.unshift(rec);try{localStorage.setItem('lastVend',vend);if(vend){const L=JSON.parse(localStorage.getItem('vendList')||'[]').filter(x=>x!==vend);L.unshift(vend);localStorage.setItem('vendList',JSON.stringify(L.slice(0,8)))}}catch(e){}iniVend();cart=[];if($('#cons'))$('#cons').checked=false;['#nombres','#apellidos','#tel','#dircli','#ced','#dsc','#dom','#mens','#rec'].forEach(s=>{$(s).value=''});ultimoDocConsultado='';actualizarEstadoClientePOS();$('#cls').innerHTML=C.map(x=>`<option value="${esc(x.nombre)}">`).join('');rCart();if(esAdminDrosalud())rHis();rCli();showRec(rec,it)}finally{savingVenta=false}}
 async function importar(){if(!esAdminDrosalud()){toast('Solo el administrador puede importar productos.');return}const{count,error:e0}=await sb.from('productos').select('*',{count:'exact',head:true});if(e0)throw e0;if(count>0){await loadAll();toast('El catálogo ya tiene productos');return}if(!confirm('Se cargarán '+BASE.length+' productos de tu Excel. ¿Continuar?'))return;for(let i=0;i<BASE.length;i+=250){const rows=BASE.slice(i,i+250).map(r=>({codigo:r[0],nombre:r[1],laboratorio:r[2],precio_compra:r[3]}));const{error}=await sb.from('productos').insert(rows);if(error)throw error;toast('Cargando '+Math.min(i+250,BASE.length)+' de '+BASE.length)}await loadAll();toast('Catálogo cargado')}
 async function loadTop(){if(!esAdminDrosalud()){TOP=[];rTop();return}try{const{data,error}=await sb.rpc('mas_vendidos',{dias:60});if(error)throw error;TOP=(data||[]).filter(x=>P.some(p=>p.id===x.producto_id)).slice(0,10)}catch(e){TOP=[]}rTop()}
 function rTop(){const w=$('#topw');if(!w)return;const q=$('#q').value.trim();w.hidden=!TOP.length||!!q;$('#top').innerHTML=TOP.map(x=>{const p=P.find(y=>y.id===x.producto_id);return p?`<button class="chip" data-add="${p.id}">${esc(p.nombre)} <small>${money(pv(p))}</small></button>`:''}).join('')}
@@ -987,7 +1001,7 @@ if(d.ec)return editC(d.ec);
 if(d.rc!==undefined){const r=H.find(x=>x.id===d.rc);return go(async()=>{const{data,error}=await sb.from('recibo_items_app').select('*').eq('recibo_id',r.id).order('id');if(error)throw error;showRec(r,data)})}
 if(id==='newp')return editP('');
 if(id==='newc')return editC('');
-if(id==='clr'){cart=[];if($('#cons'))$('#cons').checked=false;['#cli','#nombres','#apellidos','#tel','#dircli','#ced','#dsc','#dom','#mens','#rec'].forEach(s=>{$(s).value=''});actualizarEstadoClientePOS();return rCart()}
+if(id==='clr'){cart=[];if($('#cons'))$('#cons').checked=false;['#cli','#nombres','#apellidos','#tel','#dircli','#ced','#dsc','#dom','#mens','#rec'].forEach(s=>{$(s).value=''});ultimoDocConsultado='';actualizarEstadoClientePOS();return rCart()}
 if(id==='mk')return go(crear);
 if(id==='impb')return go(importar);
 
@@ -1009,8 +1023,22 @@ $('#cj-f').addEventListener('change',e=>go(()=>cajaVer(e.target.value)));
 $('#coq').addEventListener('input',renderCotizaciones);
 $('#q').addEventListener('input',rRes);
 $('#q2').addEventListener('input',rCat);
-$('#ced').addEventListener('input',actualizarEstadoClientePOS);
-$('#ced').addEventListener('change',()=>{if(esClienteNoInscrito($('#ced').value)){actualizarEstadoClientePOS();return}const c=buscarCliente($('#ced').value,$('#tel').value);if(c){const p=partesNombre(c.nombre);$('#nombres').value=p.nombres;$('#apellidos').value=p.apellidos;$('#tel').value=c.telefono||'';$('#dircli').value=c.direccion||''}actualizarEstadoClientePOS()});
+let ultimoDocConsultado='';
+function consultarClientePOS(){
+ const doc=$('#ced').value.trim(),norm=doc.replace(/\\D/g,'');
+ if(!doc){ultimoDocConsultado='';actualizarEstadoClientePOS();return}
+ if(esClienteNoInscrito(doc)){ultimoDocConsultado=norm;actualizarEstadoClientePOS();return}
+ if(norm===ultimoDocConsultado)return;
+ ultimoDocConsultado=norm;
+ const c=buscarCliente(doc,'');
+ if(c){seleccionarClientePOS(c);return}
+ actualizarEstadoClientePOS();
+ editC('',true,doc);
+}
+$('#ced').addEventListener('input',()=>{ultimoDocConsultado='';actualizarEstadoClientePOS()});
+$('#ced').addEventListener('change',consultarClientePOS);
+$('#ced').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();consultarClientePOS()}});
+$('#btn-cliente-pos').addEventListener('click',()=>{const c=buscarCliente($('#ced').value,'');editC(c?.id||'',true,$('#ced').value.trim())});
 $('#cart').addEventListener('change',e=>{const k=e.target.dataset.pr;if(k===undefined)return;cart[k].p=Math.max(0,+e.target.value||0);rCart()});
 document.querySelector('#v-aju').addEventListener('input',e=>{const t=e.target,k=t.dataset&&t.dataset.k;if(!k||!draft)return;draft[k]=t.type==='checkbox'?t.checked:(t.type==='number'||(t.tagName==='SELECT'&&k==='r')?(+t.value||0):t.value);renderPrev();if(k.startsWith('color'))applyPalette()});
 $('#dsc').addEventListener('input',rCart);$('#dom').addEventListener('input',rCart);$('#mens').addEventListener('input',rCart);
