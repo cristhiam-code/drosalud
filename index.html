@@ -219,7 +219,11 @@ nav button[aria-current="true"]{color:var(--pri);font-weight:800;box-shadow:inse
 #v-venta .pos-client-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.84rem;font-weight:700;color:var(--ink)}
 #v-venta .pos-client-hidden{display:none!important}
 #v-venta>h2{margin-top:18px}
-@media(max-width:640px){#v-venta .pos-header{grid-template-columns:minmax(0,1fr);gap:9px;padding:9px}#v-venta .pos-header-card{padding:10px}#v-venta .pos-header input{height:42px;font-size:16px}#v-venta .pos-customer-controls{grid-template-columns:minmax(0,1fr) 42px}#v-venta .pos-client-action{width:42px;height:42px}#v-venta .pos-customer-meta{margin-top:6px}}</style>
+@media(max-width:640px){#v-venta .pos-header{grid-template-columns:minmax(0,1fr);gap:9px;padding:9px}#v-venta .pos-header-card{padding:10px}#v-venta .pos-header input{height:42px;font-size:16px}#v-venta .pos-customer-controls{grid-template-columns:minmax(0,1fr) 42px}#v-venta .pos-client-action{width:42px;height:42px}#v-venta .pos-customer-meta{margin-top:6px}}
+#v-venta .pos-header-icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;color:var(--pri)}
+#v-venta .pos-header-icon svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#v-venta .pos-client-action svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+</style>
 <style>
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:24px}
 #lg{max-width:420px;margin:0 auto;padding:40px 16px}
@@ -416,12 +420,12 @@ nav button{font-size:.78rem}
 <section id="v-venta">
  <div class="pos-header">
  <div class="pos-header-card pos-customer-card">
-  <div class="pos-header-title"><span class="pos-header-icon" aria-hidden="true">👤</span><label for="ced">Cliente</label></div>
-  <div class="pos-customer-controls"><input id="ced" inputmode="numeric" autocomplete="off" placeholder="Cédula o NIT" aria-label="Cédula o NIT del cliente"><button type="button" id="btn-cliente-pos" class="pos-client-action" aria-label="Registrar o editar cliente" title="Registrar o editar cliente">🔎</button></div>
+  <div class="pos-header-title"><span class="pos-header-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.5-3.5 3.1-5.5 7-5.5s6.5 2 7 5.5"/></svg></span><label for="ced">Cliente</label></div>
+  <div class="pos-customer-controls"><input id="ced" inputmode="numeric" autocomplete="off" placeholder="Cédula o NIT" aria-label="Cédula o NIT del cliente"><button type="button" id="btn-cliente-pos" class="pos-client-action" aria-label="Registrar o editar cliente" title="Registrar o editar cliente"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.2 4.2"/></svg></button></div>
   <div class="pos-customer-meta"><span id="cliente-estado" class="pos-status">Sin identificar</span><span id="cliente-nombre-pos" class="pos-client-name" aria-live="polite"></span></div>
  </div>
  <div class="pos-header-card pos-vendor-card">
-  <div class="pos-header-title"><span class="pos-header-icon" aria-hidden="true">🧑‍💼</span><label for="vend">Vendedor</label></div>
+  <div class="pos-header-title"><span class="pos-header-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="7.5" r="3.2"/><path d="M5 20c.4-3.7 2.8-5.7 7-5.7s6.6 2 7 5.7M18 5.2l1.4 1.4L22 5"/></svg></span><label for="vend">Vendedor</label></div>
   <input id="vend" list="vds" placeholder="Seleccionar vendedor" autocomplete="off"><datalist id="vds"></datalist>
  </div>
  <div id="cliente-datos" class="pos-client-hidden" hidden><input id="nombres" autocomplete="given-name"><input id="apellidos" autocomplete="family-name"><input id="tel" type="tel" inputmode="tel"><input id="dircli" autocomplete="street-address"><datalist id="cls"></datalist><div id="consv" class="pos-consent"></div></div>
@@ -430,7 +434,7 @@ nav button{font-size:.78rem}
  <input id="q" type="search" placeholder="Nombre, laboratorio o código" autocomplete="off">
  <button class="btn alt full" id="scan" style="margin:0 0 10px">Escanear código de barras</button>
  <div id="res"></div>
- <h2>Productos del recibo</h2>
+ 
  <div id="cart"></div>
  <div class="two"><div><label for="dsc">Descuento</label><input id="dsc" type="number" inputmode="numeric" placeholder="0"></div><div><label for="dom">Domicilio cobrado</label><input id="dom" type="number" inputmode="numeric" placeholder="0"></div></div><label for="mens">Pago al mensajero (0 si entregas tú)</label><input id="mens" type="number" inputmode="numeric" min="0" placeholder="0">
  <label for="fp">Forma de pago</label>
