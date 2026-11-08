@@ -532,7 +532,8 @@ nav button{font-size:.78rem}
  <div class="help-card">
   <h2>Herramientas del sistema</h2>
   <button class="btn alt full" id="rf" type="button">↻ Sincronizar datos</button>
-  <p class="mut sm">Vuelve a consultar la información disponible en la aplicación. No crea ni modifica ventas, productos o cierres.</p>
+  <p class="mut sm" id="sync-state" role="status" aria-live="polite">Tiempo real desactivado. Pulsa para sincronizar y activar las actualizaciones automáticas durante esta sesión.</p>
+  <p class="mut sm">Consulta los datos guardados y activa la recepción de cambios mientras mantengas la sesión abierta.</p>
   <button class="btn alt full" id="xlsT" type="button">Descargar respaldo en Excel</button>
   <p class="mut sm">Descarga una copia de los datos incluidos en el respaldo de Drosalud.</p>
  </div>
@@ -668,8 +669,35 @@ async function cotizar(){if(savingCotizacion)return;if(!cart.length){toast('Agre
 async function loadCotizaciones(){const{data,error}=await sb.from('cotizaciones_venta_app').select('*').order('creado_en',{ascending:false}).order('numero',{ascending:false}).limit(500);if(error)throw error;CO=data||[];renderCotizaciones()}
 function renderCotizaciones(){const q=norm($('#coq').value),L=CO.filter(r=>!q||norm((r.cliente_nombre||'')+' '+r.numero).includes(q));$('#colist').innerHTML=L.length?L.map(r=>'<button class="row" data-cotid="'+r.id+'"><span class="nm">Cotización '+pad(r.numero)+(r.cliente_nombre?' · '+esc(tcase(r.cliente_nombre)):'')+'<small>'+esc(fmt(r.creado_en))+' · '+esc(r.estado)+(r.valida_hasta?' · válida hasta '+esc(fd(r.valida_hasta)):'')+'</small></span><span class="pr">'+money(r.total)+'</span></button>').join(''):'<p class="mut">No hay cotizaciones guardadas.</p>'}
 async function abrirCotizacion(r){const{data,error}=await sb.from('cotizacion_venta_items_app').select('*').eq('cotizacion_id',r.id).order('id');if(error)throw error;showRec({...r,cot:true},(data||[]).map(i=>({nombre:i.nombre,cantidad:i.cantidad,precio_venta:i.precio_venta,presentacion:i.presentacion,unidades_por_presentacion:i.unidades_por_presentacion})));}
-async function loadAllSafe(){const btn=$('#rf');const label=btn?(btn.dataset.originalText||btn.textContent||'↻ Recargar datos'):'↻ Recargar datos';if(btn){btn.dataset.originalText=label;btn.disabled=true;btn.setAttribute('aria-busy','true');btn.textContent='Sincronizando…'}
-try{await loadAll();$('#net').hidden=true;toast('Datos sincronizados')}catch(e){console.error(e);const msg=msgErr(e);$('#net').hidden=false;$('#net').innerHTML='<span>'+esc(msg)+'</span><button id="retry">Reintentar</button>';toast(msg)}finally{if(btn){btn.disabled=false;btn.removeAttribute('aria-busy');btn.textContent=label}}}
+let syncChannel=null,syncTimer=null,realtimeRequested=false;
+function syncStatus(message){const el=$('#sync-state');if(el)el.textContent=message}
+function iniciarRealtime(){
+ if(syncChannel||!realtimeRequested)return;
+ syncStatus('Conectando actualizaciones en tiempo real…');
+ const channel=sb.channel('drosalud-sync')
+  .on('postgres_changes',{event:'*',schema:'public',table:'ajustes'},()=>programarSyncRealtime())
+  .on('postgres_changes',{event:'*',schema:'public',table:'productos'},()=>programarSyncRealtime())
+  .on('postgres_changes',{event:'*',schema:'public',table:'clientes'},()=>programarSyncRealtime())
+  .on('postgres_changes',{event:'*',schema:'public',table:'cotizaciones_venta'},()=>programarSyncRealtime())
+  .on('postgres_changes',{event:'*',schema:'public',table:'compras_pendientes'},()=>programarSyncRealtime())
+  .subscribe(status=>{
+   if(status==='SUBSCRIBED')syncStatus('Tiempo real activo · cambios automáticos habilitados');
+   else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){syncStatus('No se pudo conectar al tiempo real. Pulsa Sincronizar datos para reintentar.');if(syncChannel===channel)syncChannel=null}
+   else if(status==='CLOSED'){syncStatus('Tiempo real desconectado. Pulsa Sincronizar datos para reconectar.');if(syncChannel===channel)syncChannel=null}
+  });
+ syncChannel=channel;
+}
+function programarSyncRealtime(){
+ if(syncTimer)clearTimeout(syncTimer);
+ syncTimer=setTimeout(async()=>{syncTimer=null;try{await loadAll();syncStatus('Tiempo real activo · cambios recibidos y datos actualizados')}catch(e){console.error('Error al recibir cambios en tiempo real:',e);syncStatus('Se recibió un cambio, pero no se pudo actualizar. Pulsa Sincronizar datos.')}},450);
+}
+async function detenerRealtime(){
+ realtimeRequested=false;
+ if(syncTimer){clearTimeout(syncTimer);syncTimer=null}
+ if(syncChannel){const ch=syncChannel;syncChannel=null;try{await sb.removeChannel(ch)}catch(e){console.warn('No se pudo cerrar el canal Realtime',e)}}
+}
+async function loadAllSafe(enableRealtime=false){if(enableRealtime)realtimeRequested=true;const btn=$('#rf');const label=btn?(btn.dataset.originalText||btn.textContent||'↻ Recargar datos'):'↻ Recargar datos';if(btn){btn.dataset.originalText=label;btn.disabled=true;btn.setAttribute('aria-busy','true');btn.textContent='Sincronizando…'}
+try{await loadAll();$('#net').hidden=true;if(realtimeRequested)iniciarRealtime();toast('Datos sincronizados')}catch(e){console.error(e);const msg=msgErr(e);$('#net').hidden=false;$('#net').innerHTML='<span>'+esc(msg)+'</span><button id="retry">Reintentar</button>';toast(msg)}finally{if(btn){btn.disabled=false;btn.removeAttribute('aria-busy');btn.textContent=label}}}
 async function loadAyudaEstado(){const online=$('#ayuda-online'),session=$('#ayuda-session');if(online)online.textContent=navigator.onLine?'Conectado':'Sin conexión';if(session)session.textContent='Comprobando…';try{const{data,error}=await sb.auth.getSession();if(error)throw error;if(session)session.textContent=data.session?'Sesión activa':'Sesión no disponible'}catch(e){if(session)session.textContent='No se pudo comprobar'}}
 let lastVer=0;async function checkVer(){lastVer=Date.now();try{const t=await(await fetch('index.html',{cache:'no-store'})).text(),m=t.match(/const VERSION='([^']+)'/);if(m&&m[1]!==VERSION){$('#upd').hidden=false;$('#upd').innerHTML='<span>Hay una versión nueva de la app</span><button id="upb">Actualizar</button>'}}catch(e){}}
 async function actualizar(){try{const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(e){}location.reload()}
@@ -968,7 +996,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)r
 if(d.v==='mas'){const m=$('#more-menu'),open=m.hidden;m.hidden=!open;t.setAttribute('aria-expanded',String(open));return}
 if(d.v)return show(d.v);
 if(d.hv)return setHV(d.hv);
-if(id==='retry')return loadAllSafe();
+if(id==='retry')return loadAllSafe(realtimeRequested);
 if(d.ajuOpen){$('#aju-menu').hidden=true;$('#aju-pages').hidden=false;document.querySelectorAll('[data-aju-page]').forEach(x=>x.hidden=x.dataset.ajuPage!==d.ajuOpen);$('#aju-back').hidden=false;return}
 if(id==='aju-back'){$('#aju-pages').hidden=true;$('#aju-menu').hidden=false;return}
 if(t.hasAttribute('data-aju-save')){if(t.disabled||savingAjustes)return;savingAjustes=true;const backup=!!t.closest('.aju-admin'),backupField=$('#rd3'),saveLabel=t.textContent;t.disabled=true;t.classList.add('is-saving');t.setAttribute('aria-busy','true');t.textContent='Guardando…';return go(async()=>{let payload;if(backup){const days=Number(backupField?.value);if(!Number.isInteger(days)||days<7){if(backupField)backupField.focus();throw new Error('La frecuencia debe ser un número entero de 7 días o más.')}payload={...cfg,respDias:days}}else{if(!draft||!String(draft.biz||'').trim())throw new Error('Escribe el nombre del negocio.');draft.m=Math.max(0,+draft.m||0);draft.mMin=Math.max(0,+draft.mMin||0);payload={...draft}}if(!backup)applyPalette();await saveCfgDb(payload);if(backup){if(draft)draft.respDias=cfg.respDias;if(backupField)backupField.value=String(cfg.respDias);toast('Frecuencia guardada: cada '+cfg.respDias+' días')}else{draft={...cfg};iniVend();rRes();rCat();rCart();toast('Ajustes guardados correctamente')}}).finally(()=>{savingAjustes=false;t.disabled=false;t.classList.remove('is-saving');t.removeAttribute('aria-busy');t.textContent=saveLabel})}
@@ -1008,10 +1036,10 @@ if(id==='impb')return go(importar);
 
 if(id==='mfa-on')return go(mfaActivar);
 if(id==='mfa-off')return go(mfaDesactivar);
-if(id==='mfx')return go(async()=>{await sb.auth.signOut();showLogin()});
-if(id==='rf')return loadAllSafe();
+if(id==='mfx')return go(async()=>{await detenerRealtime();await sb.auth.signOut();showLogin()});
+if(id==='rf')return loadAllSafe(true);
 if(id==='ayuda-check')return go(loadAyudaEstado);
-if(id==='out'||id==='out-top')return go(async()=>{const{error}=await sb.auth.signOut();if(error)throw error;P=[];C=[];H=[];cart=[];showLogin()});
+if(id==='out'||id==='out-top')return go(async()=>{await detenerRealtime();const{error}=await sb.auth.signOut();if(error)throw error;P=[];C=[];H=[];cart=[];showLogin()});
 });
 $('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeM()});
 $('#back-home').addEventListener('click',showHome);
