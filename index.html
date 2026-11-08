@@ -678,11 +678,9 @@ function iniciarRealtime(){
   .on('postgres_changes',{event:'*',schema:'public',table:'ajustes'},()=>programarSyncRealtime())
   .on('postgres_changes',{event:'*',schema:'public',table:'productos'},()=>programarSyncRealtime())
   .on('postgres_changes',{event:'*',schema:'public',table:'clientes'},()=>programarSyncRealtime())
-  .on('postgres_changes',{event:'*',schema:'public',table:'cotizaciones_venta'},()=>programarSyncRealtime())
-  .on('postgres_changes',{event:'*',schema:'public',table:'compras_pendientes'},()=>programarSyncRealtime())
   .subscribe(status=>{
    if(status==='SUBSCRIBED')syncStatus('Tiempo real activo · cambios automáticos habilitados');
-   else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){syncStatus('No se pudo conectar al tiempo real. Pulsa Sincronizar datos para reintentar.');if(syncChannel===channel)syncChannel=null}
+   else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){syncStatus('No se pudo conectar al tiempo real. Pulsa Sincronizar datos para reintentar.');if(syncChannel===channel){syncChannel=null;sb.removeChannel(channel).catch(e=>console.warn('No se pudo retirar el canal Realtime',e))}}
    else if(status==='CLOSED'){syncStatus('Tiempo real desconectado. Pulsa Sincronizar datos para reconectar.');if(syncChannel===channel)syncChannel=null}
   });
  syncChannel=channel;
@@ -696,7 +694,7 @@ async function detenerRealtime(){
  if(syncTimer){clearTimeout(syncTimer);syncTimer=null}
  if(syncChannel){const ch=syncChannel;syncChannel=null;try{await sb.removeChannel(ch)}catch(e){console.warn('No se pudo cerrar el canal Realtime',e)}}
 }
-async function loadAllSafe(enableRealtime=false){if(enableRealtime)realtimeRequested=true;const btn=$('#rf');const label=btn?(btn.dataset.originalText||btn.textContent||'↻ Sincronizar datos'):'↻ Sincronizar datos';if(btn){btn.dataset.originalText=label;btn.disabled=true;btn.setAttribute('aria-busy','true');btn.textContent='Sincronizando…'}
+async function loadAllSafe(enableRealtime=false){if(enableRealtime){realtimeRequested=true;syncStatus('Consultando datos guardados y preparando tiempo real…')}const btn=$('#rf');const label=btn?(btn.dataset.originalText||btn.textContent||'↻ Sincronizar datos'):'↻ Sincronizar datos';if(btn){btn.dataset.originalText=label;btn.disabled=true;btn.setAttribute('aria-busy','true');btn.textContent='Sincronizando…'}
 try{await loadAll();$('#net').hidden=true;if(realtimeRequested)iniciarRealtime();toast('Datos sincronizados')}catch(e){console.error(e);const msg=msgErr(e);$('#net').hidden=false;$('#net').innerHTML='<span>'+esc(msg)+'</span><button id="retry">Reintentar</button>';toast(msg)}finally{if(btn){btn.disabled=false;btn.removeAttribute('aria-busy');btn.textContent=label}}}
 async function loadAyudaEstado(){const online=$('#ayuda-online'),session=$('#ayuda-session');if(online)online.textContent=navigator.onLine?'Conectado':'Sin conexión';if(session)session.textContent='Comprobando…';try{const{data,error}=await sb.auth.getSession();if(error)throw error;if(session)session.textContent=data.session?'Sesión activa':'Sesión no disponible'}catch(e){if(session)session.textContent='No se pudo comprobar'}}
 let lastVer=0;async function checkVer(){lastVer=Date.now();try{const t=await(await fetch('index.html',{cache:'no-store'})).text(),m=t.match(/const VERSION='([^']+)'/);if(m&&m[1]!==VERSION){$('#upd').hidden=false;$('#upd').innerHTML='<span>Hay una versión nueva de la app</span><button id="upb">Actualizar</button>'}}catch(e){}}
