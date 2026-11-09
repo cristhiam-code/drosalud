@@ -587,10 +587,21 @@ async function confirmarRecepcion(){
  if(!p){toast('Selecciona un producto');return}if(!Number.isInteger(q)||q<=0){toast('Escribe una cantidad válida');return}
  if(!confirm('¿Confirmas la recepción física de '+q+' '+(q===1?'presentación':'presentaciones')+' de '+p.nombre+'?'))return;
  // Conserva la misma referencia si la respuesta se pierde y hay que reintentar.
- // Así una recepción confirmada en servidor no se duplica por un segundo clic.
- const key='drosalud:recepcion-pendiente';let ref=null;
- try{const saved=JSON.parse(localStorage.getItem(key)||'null');if(saved&&saved.producto_id===p.id&&saved.cantidad===q&&saved.referencia)ref=saved.referencia}catch(e){}
- if(!ref){ref=crypto.randomUUID();try{localStorage.setItem(key,JSON.stringify({producto_id:p.id,cantidad:q,referencia:ref}))}catch(e){}}
+ // No permite iniciar otra recepción distinta mientras exista una pendiente:
+ // podría haberse confirmado en servidor aunque el navegador no recibiera respuesta.
+ const key='drosalud:recepcion-pendiente';let ref=null,saved=null;
+ try{saved=JSON.parse(localStorage.getItem(key)||'null')}catch(e){}
+ if(saved&&saved.referencia){
+  if(saved.producto_id!==p.id||saved.cantidad!==q){
+   toast('Hay una recepción pendiente. Reintenta primero el mismo producto y cantidad para confirmar su resultado.');return;
+  }
+  ref=saved.referencia;
+ }
+ if(!ref){
+  ref=crypto.randomUUID();
+  try{localStorage.setItem(key,JSON.stringify({producto_id:p.id,cantidad:q,referencia:ref}))}
+  catch(e){toast('No se pudo guardar la referencia segura de recepción. Activa el almacenamiento del navegador e inténtalo de nuevo.');return}
+ }
  const{data,error}=await sb.rpc('registrar_entrada_inventario_drosalud',{p_producto_id:p.id,p_cantidad_presentaciones:q,p_referencia:ref});
  if(error)throw error;
  try{const saved=JSON.parse(localStorage.getItem(key)||'null');if(saved&&saved.referencia===ref)localStorage.removeItem(key)}catch(e){}
