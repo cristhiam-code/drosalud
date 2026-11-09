@@ -737,8 +737,8 @@ async function invCargarDatos(){
 function invImprimirKardex(){
  const labs=[...new Set(invProductos.map(p=>(p.laboratorio||'Sin laboratorio').trim()))].sort((a,b)=>a.localeCompare(b,'es',{sensitivity:'base'}));
  let h='<h2>Kardex de inventario</h2><p>Consulta: '+new Date().toLocaleString('es-CO')+'</p>';
- labs.forEach(l=>{h+='<h3>'+esc(l)+'</h3><div class="cj-line"><b>Producto</b><b>Cantidad</b><b>Unidades</b></div>';
- invProductos.filter(p=>(p.laboratorio||'Sin laboratorio').trim()===l).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es',{sensitivity:'base'})).forEach(p=>{const v=invPartes(invSaldo(p),p.unidades_por_caja);h+='<div class="cj-line"><span>'+esc(p.nombre)+'</span><b>'+v.cajas+'</b><b>'+v.sueltas+'</b></div>'})});
+ labs.forEach(l=>{h+='<h3>'+esc(l)+'</h3><div class="cj-line inv-cols"><b>Producto</b><b>Cantidad</b><b>Unidades</b></div>';
+ invProductos.filter(p=>(p.laboratorio||'Sin laboratorio').trim()===l).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es',{sensitivity:'base'})).forEach(p=>{const v=invPartes(invSaldo(p),p.unidades_por_caja);h+='<div class="cj-line inv-cols"><span>'+esc(p.nombre)+'</span><b>'+v.cajas+'</b><b>'+v.sueltas+'</b></div>'})});
  openM(h+'<div class="acts"><button class="btn alt full" onclick="closeM()">Cerrar</button></div>');document.body.classList.add('print-inventario');window.addEventListener('afterprint',()=>document.body.classList.remove('print-inventario'),{once:true});window.print();
 }
 function invImprimirPedido(){
@@ -750,7 +750,7 @@ function invFechaInicio(){
  const d=new Date();d.setDate(d.getDate()-7);return d.toISOString();
 }
 async function invCargarPedidos(){
- const recibos=await invLeerTodo(()=>sb.from('recibos').select('id').eq('anulado',false).gte('creado_en',invFechaInicio()).order('creado_en').order('id'));
+ const recibos=await invLeerTodo(()=>sb.from('recibos_app').select('id').eq('anulado',false).gte('creado_en',invFechaInicio()).order('creado_en').order('id'));
  const ventas={};
  for(let i=0;i<recibos.length;i+=100){
   const ids=recibos.slice(i,i+100).map(r=>r.id);
