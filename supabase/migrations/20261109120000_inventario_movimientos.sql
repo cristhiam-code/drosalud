@@ -8,6 +8,7 @@ create table if not exists public.inventario_movimientos (
   tipo text not null check (tipo in ('venta','anulacion','recepcion')),
   unidades_delta integer not null check (unidades_delta <> 0),
   referencia_id uuid,
+  operacion_id uuid,
   notas text,
   creado_por uuid default auth.uid() references auth.users(id),
   creado_en timestamptz not null default now()
@@ -18,6 +19,9 @@ create index if not exists inventario_movimientos_producto_fecha_idx
 create unique index if not exists inventario_movimientos_origen_unico_idx
   on public.inventario_movimientos(tipo, referencia_id)
   where referencia_id is not null and tipo in ('venta','anulacion');
+create unique index if not exists inventario_movimientos_recepcion_operacion_unico_idx
+  on public.inventario_movimientos(operacion_id)
+  where tipo='recepcion' and operacion_id is not null;
 
 alter table public.inventario_movimientos enable row level security;
 revoke all on public.inventario_movimientos from anon, authenticated;
@@ -84,7 +88,8 @@ create trigger trg_inventario_anulacion_recibo
 create or replace function public.registrar_recepcion_inventario(
   p_producto_id uuid,
   p_unidades integer,
-  p_notas text default null
+  p_notas text,
+  p_operacion_id uuid
 )
 returns uuid
 language plpgsql
@@ -93,27 +98,50 @@ set search_path = ''
 as $$
 declare
   v_id uuid;
+  v_existente public.inventario_movimientos%rowtype;
+  v_notas text;
 begin
   if auth.uid() is null or not public.es_usuario_drosalud() then
     raise exception 'Usuario no autorizado';
   end if;
-  if p_producto_id is null or p_unidades is null or p_unidades <= 0 then
-    raise exception 'Producto y unidades recibidas deben ser válidos';
+  if p_producto_id is null or p_unidades is null or p_unidades <= 0 or p_operacion_id is null then
+    raise exception 'Producto, unidades y clave de operación deben ser válidos';
   end if;
   if not exists (select 1 from public.productos where id = p_producto_id) then
     raise exception 'Producto inexistente';
   end if;
+
+  v_notas := nullif(left(trim(coalesce(p_notas,'')),500),'');
   insert into public.inventario_movimientos
-    (producto_id, tipo, unidades_delta, notas, creado_por)
+    (producto_id, tipo, unidades_delta, operacion_id, notas, creado_por)
   values
-    (p_producto_id, 'recepcion', p_unidades,
-     nullif(left(trim(coalesce(p_notas,'')),500),''), auth.uid())
+    (p_producto_id, 'recepcion', p_unidades, p_operacion_id,
+     v_notas, auth.uid())
+  on conflict (operacion_id)
+    where tipo='recepcion' and operacion_id is not null
+  do nothing
   returning id into v_id;
+
+  if v_id is null then
+    select * into v_existente
+    from public.inventario_movimientos
+    where tipo='recepcion' and operacion_id=p_operacion_id;
+
+    if not found then
+      raise exception 'No fue posible confirmar la recepción';
+    end if;
+    if v_existente.producto_id <> p_producto_id
+       or v_existente.unidades_delta <> p_unidades
+       or coalesce(v_existente.notas,'') <> coalesce(v_notas,'') then
+      raise exception 'La clave de operación ya fue utilizada con otros datos';
+    end if;
+    v_id := v_existente.id;
+  end if;
   return v_id;
 end;
 $$;
 
-revoke all on function public.registrar_recepcion_inventario(uuid,integer,text) from public, anon;
-grant execute on function public.registrar_recepcion_inventario(uuid,integer,text) to authenticated;
+revoke all on function public.registrar_recepcion_inventario(uuid,integer,text,uuid) from public, anon;
+grant execute on function public.registrar_recepcion_inventario(uuid,integer,text,uuid) to authenticated;
 
 commit;
