@@ -829,9 +829,19 @@ async function invCargarPedidos(){
  $('#inv-pedidos-list').innerHTML=invPedidos.length?invPedidos.map((x,i)=>'<div class="item"><div class="top"><b>'+esc(x.p.nombre)+'</b><span class="mut">'+esc(x.p.laboratorio||'Sin laboratorio')+'</span></div><p class="sm">Vendido: '+x.cajas+' cajas · '+x.sueltas+' unidades ('+x.unidades+' unidades en total)</p><div class="two"><div><label for="inv-c-'+i+'">Cajas a pedir</label><input id="inv-c-'+i+'" type="number" min="0" step="1" value="'+x.cajas+'"></div><div><label for="inv-s-'+i+'">Unidades sueltas</label><input id="inv-s-'+i+'" type="number" min="0" max="'+(Math.max(1,Number(x.p.unidades_por_caja)||1)-1)+'" step="1" value="'+x.sueltas+'"></div></div></div>').join(''):'<p class="mut">No hay ventas de productos en los últimos 7 días.</p>';
 }
 async function loadInventario(){
- $('#inv-status').textContent='Cargando inventario…';
- try{await invCargarDatos();await invCargarPedidos();$('#inv-status').textContent='Actualizado. Los saldos incluyen ventas, anulaciones y recepciones registradas.'}
- catch(e){console.error(e);$('#inv-status').textContent='No se pudo cargar el inventario. Verifica que la migración esté instalada en esta base de datos. Detalle: '+(e.message||'Error desconocido')}
+ $('#inv-status').textContent='Cargando productos y existencias…';
+ try{await invCargarDatos();$('#inv-status').textContent='Datos cargados. Selecciona laboratorios y genera el informe.'}
+ catch(e){console.error(e);$('#inv-status').textContent='No se pudo cargar Kardex. La migración de inventario debe estar instalada en el entorno de pruebas. '+(e.message||'')}
+}
+async function loadPedidos(){
+ $('#ped-status').textContent='Calculando ventas de los últimos 7 días…';
+ try{if(!invProductos.length)await invCargarDatos();await invCargarPedidos();$('#ped-status').textContent='Pedido sugerido calculado. Ajusta las cantidades antes de imprimir.'}
+ catch(e){console.error(e);$('#ped-status').textContent='No se pudo calcular el pedido: '+(e.message||'')}
+}
+async function loadRecepcion(){
+ $('#recep-status').textContent='Cargando catálogo…';
+ try{await invCargarDatos();$('#recep-status').textContent='Selecciona el producto y registra solo las unidades que llegaron físicamente.'}
+ catch(e){console.error(e);$('#recep-status').textContent='No se pudo cargar el catálogo: '+(e.message||'')}
 }
 async function invRegistrarRecepcion(){
  const id=$('#inv-prod').value,u=Number($('#inv-unidades').value),nota=$('#inv-notas').value.trim();
@@ -842,19 +852,21 @@ async function invRegistrarRecepcion(){
   const{error}=await sb.rpc('registrar_recepcion_inventario',{p_producto_id:id,p_unidades:u,p_notas:nota||null});
   if(error)throw error;
   $('#inv-unidades').value='';$('#inv-notas').value='';
-  toast('Recepción registrada');await loadInventario();
+  toast('Recepción registrada');$('#recep-status').textContent='Recepción guardada. El saldo fue actualizado.';await invCargarDatos();
  }catch(e){console.error(e);toast(e.message||'No se pudo registrar la recepción')}
  finally{b.disabled=false}
 }
-$('#inv-q').addEventListener('input',()=>invRenderLabs());
+$('#inv-q').addEventListener('input',invRenderLabs);
+$('#inv-labs').addEventListener('change',invLabsClick);
+document.querySelectorAll('input[name="inv-contenido"]').forEach(x=>x.addEventListener('change',()=>{}));
 document.querySelector('#v-inventario').addEventListener('click',e=>{
- if(e.target.closest('#inv-recibir'))invRegistrarRecepcion();
- if(e.target.closest('#inv-print'))invImprimirPedido();
- if(e.target.closest('#inv-print-kardex'))invImprimirKardex();
  if(e.target.closest('#inv-generar'))invGenerarKardex();
- if(e.target.closest('#inv-labs-all')){invLabsSeleccionados=new Set(invLaboratorios);invRenderLabs();invFiltrar()}
- if(e.target.closest('#inv-labs-none')){invLabsSeleccionados.clear();invRenderLabs();invFiltrar()}
+ if(e.target.closest('#inv-print-kardex'))invImprimirKardex(document.querySelector('input[name="inv-formato"]:checked')?.value==='pos');
+ if(e.target.closest('#inv-labs-all')){invLabsSeleccionados=new Set(invLaboratorios);invRenderLabs()}
+ if(e.target.closest('#inv-labs-none')){invLabsSeleccionados.clear();invRenderLabs()}
 });
+document.querySelector('#v-pedidos').addEventListener('click',e=>{if(e.target.closest('#inv-print'))invImprimirPedido()});
+document.querySelector('#v-recepcion').addEventListener('click',e=>{if(e.target.closest('#inv-recibir'))invRegistrarRecepcion()});
 
 let syncChannel=null,syncTimer=null,realtimeRequested=false;
 function syncStatus(message){const el=$('#sync-state');if(el)el.textContent=message}
