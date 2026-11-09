@@ -828,7 +828,7 @@ function invFechaInicio(){
  inicio.setUTCDate(inicio.getUTCDate()-((inicio.getUTCDay()+6)%7));
  return inicio.toISOString();
 }
-async async function invCargarPedidos(){
+async function invCargarPedidos(){
  const recibos=await invLeerTodo(()=>sb.from('recibos_app').select('id').eq('anulado',false).gte('creado_en',invFechaInicio()).order('creado_en').order('id'));
  const ventas={};
  for(let i=0;i<recibos.length;i+=100){
@@ -848,7 +848,7 @@ async function loadInventario(){
  catch(e){console.error(e);$('#inv-status').textContent='No se pudo cargar Kardex. La migración de inventario debe estar instalada en el entorno de pruebas. '+(e.message||'')}
 }
 async function loadPedidos(){
- $('#ped-status').textContent='Calculando ventas de los últimos 7 días…';
+ $('#ped-status').textContent='Calculando ventas de la semana actual (lunes a domingo)…';
  try{if(!invProductos.length)await invCargarDatos();await invCargarPedidos();$('#ped-status').textContent='Pedido sugerido calculado. Ajusta las cantidades antes de imprimir.'}
  catch(e){console.error(e);$('#ped-status').textContent='No se pudo calcular el pedido: '+(e.message||'')}
 }
