@@ -46,20 +46,24 @@ Este documento describe el comportamiento aprobado para los módulos independien
 - Un recibo anulado y ya revertido no se puede reactivar.
 - Estas reglas se aplican en Supabase, no solo en la interfaz.
 
-## Información económica
+## Información económica y acceso
 - Ambos socios pueden consultar costo de compra, precio de venta e información de ganancia.
 - La vista `productos_app` conserva los campos económicos y agrega `linea`; no se ocultan costos por tratarse de un usuario vendedor.
+- La vista usa `security_invoker=true` para respetar las políticas RLS de `productos` del usuario que consulta. La política de lectura de producción autoriza usuarios activos de Drosalud.
 
 ## Migraciones vigentes
 1. `supabase/migrations/20261109120000_inventario_movimientos.sql`: línea comercial, movimientos, saldos, triggers de venta/anulación y RPC de recepción.
 2. `supabase/migrations/20261109150000_integridad_kardex.sql`: protege presentación, líneas de venta y recibos con movimientos.
+3. `supabase/migrations/20261109160000_productos_app_security_invoker.sql`: hace que `productos_app` respete RLS del usuario que consulta.
 
 ## Archivos obsoletos
 - `sql/inventario-pedidos-propuesta.sql` es obsoleto y NO debe ejecutarse. Usa nombres de columnas y funciones de un diseño anterior.
 
 ## Estado de validación
-- La migración base y la migración de integridad se aplicaron en el proyecto aislado `drosalud-pruebas`.
+- Las tres migraciones se aplicaron en el proyecto aislado `drosalud-pruebas`.
 - Se verificó con pruebas SQL que una venta descuenta unidades, el cambio de equivalencia queda bloqueado, la línea vendida no se puede editar ni borrar, la anulación devuelve el saldo a cero, y el recibo anulado no se puede reactivar ni borrar.
+- También se verificó que `productos_app` conserva las opciones `security_barrier=true` y `security_invoker=true`.
+- El proyecto de pruebas es un esquema aislado y no una copia completa de producción; los advisors muestran avisos por tablas de recibos/productos sin RLS en ese entorno mínimo. No se debe interpretar esa configuración de pruebas como el estado de producción.
 - No se ha ejecutado ninguna migración en producción.
 - Falta validar los flujos reales de frontend en Preview y los casos de permisos con ambos usuarios antes de aprobar el PR.
 
