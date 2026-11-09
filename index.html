@@ -551,6 +551,12 @@ function printTable(title,subtitle,headers,rows){
  const w=window.open('','_blank');if(!w){toast('Permite ventanas emergentes para imprimir');return}
  w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>body{font:12px Arial;padding:24px;color:#111}h1{font-size:20px}p{color:#444}table{width:100%;border-collapse:collapse;margin-top:18px}th,td{padding:7px;border:1px solid #bbb;text-align:left}th{background:#eee}td.num,th.num{text-align:right}@media print{button{display:none}}</style></head><body><h1>'+esc(title)+'</h1><p>'+esc(subtitle)+'</p><table><thead><tr>'+headers.map((h,i)=>'<th class="'+(i?'num':'')+'">'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map((c,i)=>'<td class="'+(i?'num':'')+'">'+esc(c)+'</td>').join('')+'</tr>').join('')+'</tbody></table><script>window.onload=()=>window.print()<\/script></body></html>');w.document.close();
 }
+function printKardex(){
+ const w=window.open('','_blank');if(!w){toast('Permite ventanas emergentes para imprimir');return}
+ const groups=new Map();kardexRows.forEach(x=>{if(!groups.has(x.laboratorio))groups.set(x.laboratorio,[]);groups.get(x.laboratorio).push(x)});
+ const body=[...groups].map(([lab,rows])=>'<h2>'+esc(lab)+'</h2><table><thead><tr><th>Producto</th><th class="num">Cantidad</th><th class="num">Unidades</th></tr></thead><tbody>'+rows.map(x=>'<tr><td>'+esc(x.producto)+'</td><td class="num">'+x.cantidad+'</td><td class="num">'+x.unidades+'</td></tr>').join('')+'</tbody></table>').join('');
+ w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Kardex Drosalud</title><style>body{font:12px Arial;padding:24px;color:#111}h1{font-size:20px}h2{font-size:14px;margin:20px 0 5px}p{color:#444}table{width:100%;border-collapse:collapse;margin:0 0 12px}th,td{padding:7px;border:1px solid #bbb;text-align:left}th{background:#eee}.num{text-align:right}@media print{h2{break-after:avoid}tr{break-inside:avoid}}</style></head><body><h1>Kardex</h1><p>'+esc($('#kdx-date').textContent)+'</p>'+body+'<script>window.onload=()=>window.print()<\/script></body></html>');w.document.close();
+}
 function initPedidos(){
  const input=$('#ped-week');if(!input.value){input.value=isoLocal(lunesSemana(new Date()))}
  go(loadPedidos);
@@ -768,7 +774,7 @@ if(d.v)return show(d.v);
 if(d.hv)return setHV(d.hv);
 if(id==='retry')return loadAllSafe();
 if(id==='kdx-refresh')return go(loadKardex);
-if(id==='kdx-print')return printTable('Kardex','Fecha de consulta: '+($('#kdx-date').textContent.replace('Fecha de consulta: ','')||''),['Producto','Cantidad','Unidades'],kardexRows.map(x=>[x.producto,x.cantidad,x.unidades]));
+if(id==='kdx-print')return printKardex();
 if(id==='ped-load')return go(loadPedidos);
 if(id==='ped-print')return printTable('Pedido semanal','Semana '+fechaCorta(pedidoSemana)+' al '+fechaCorta(isoLocal(new Date(new Date(pedidoSemana+'T12:00:00').getTime()+6*86400000))),['Producto','Vendido','Sugerido','Pedido final'],pedidoRows.map(x=>[x.producto,x.cantidad_sugerida+' + '+x.unidades_sugeridas+' unidades',x.cantidad_sugerida+' + '+x.unidades_sugeridas,x.cantidad_final+' + '+x.unidades_final]));
 if(id==='rec-submit')return go(confirmarRecepcion);
