@@ -12,6 +12,8 @@
 
 ## Kardex
 - Consulta de saldo actual, no historial de movimientos.
+- El saldo se consulta desde `public.inventario_saldos`, una vista agregada con `security_invoker = true`; la lectura respeta RLS de `inventario_movimientos` y evita descargar todo el historial al navegador.
+- Antes de probar la interfaz, confirmar que `public` está expuesto en Data API y que `authenticated` tiene permiso SELECT sobre la vista. El GRANT por sí solo no habilita un esquema que no esté expuesto.
 - Todos los productos, incluidos los que tienen saldo cero.
 - Orden: laboratorio A-Z y producto A-Z.
 - Presentación: factor `productos.unidades_por_caja`; cajas completas y unidades sueltas.
