@@ -727,30 +727,52 @@ function renderCotizaciones(){const q=norm($('#coq').value),L=CO.filter(r=>!q||n
 async function abrirCotizacion(r){const{data,error}=await sb.from('cotizacion_venta_items_app').select('*').eq('cotizacion_id',r.id).order('id');if(error)throw error;showRec({...r,cot:true},(data||[]).map(i=>({nombre:i.nombre,cantidad:i.cantidad,precio_venta:i.precio_venta,presentacion:i.presentacion,unidades_por_presentacion:i.unidades_por_presentacion})));}
 
 // INVENTARIO · UI de preview (requiere aplicar la migración SQL en entorno de pruebas).
-let invTab='kardex',invProductos=[],invSaldos={},invPedidos=[];
-const invMoney=n=>money(Number(n)||0);
-function invSetTab(t){
- invTab=t;
- ['kardex','pedidos','recepcion'].forEach(k=>$('#inv-'+k).hidden=k!==t);
- document.querySelectorAll('[data-inv-tab]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.invTab===t)));
-}
+let invProductos=[],invSaldos={},invPedidos=[],invLaboratorios=[],invLabsSeleccionados=new Set(),invResultados=[];
 function invSaldo(p){return Number(invSaldos[p.id]||0)}
-function invPartes(s,f){
- f=Math.max(1,Number(f)||1);s=Math.trunc(s);
- if(s<0)return{cajas:0,sueltas:s};
- return{cajas:Math.floor(s/f),sueltas:s%f};
+function invPartes(s,f){f=Math.max(1,Number(f)||1);s=Math.trunc(s);if(s<0)return{cajas:0,sueltas:s};return{cajas:Math.floor(s/f),sueltas:s%f}}
+function invRenderLabs(){
+ const q=norm($('#inv-q').value||'');
+ const visibles=invLaboratorios.filter(l=>!q||norm(l).includes(q));
+ $('#inv-labs').innerHTML=visibles.map(l=>'<label class="inv-lab"><input type="checkbox" data-inv-lab="'+esc(l)+'" '+(invLabsSeleccionados.has(l)?'checked':'')+'> '+esc(l)+'</label>').join('')||'<p class="mut sm">No hay laboratorios coincidentes.</p>';
+ $('#inv-lab-count').textContent='Laboratorios · '+invLabsSeleccionados.size+' seleccionados';
 }
 function invFiltrar(){
- const q=norm($('#inv-q')?.value||'');
- const rows=invProductos.filter(p=>!q||norm([p.nombre,p.laboratorio,p.codigo].join(' ')).includes(q));
- const labs=[...new Set(rows.map(p=>(p.laboratorio||'Sin laboratorio').trim()))].sort((a,b)=>a.localeCompare(b,'es',{sensitivity:'base'}));
- $('#inv-kardex-list').innerHTML=rows.length?labs.map(l=>{
-  const items=rows.filter(p=>(p.laboratorio||'Sin laboratorio').trim()===l).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es',{sensitivity:'base'}));
-  return '<div class="item"><h3>'+esc(l)+'</h3><div class="cj-line inv-cols"><b>Producto</b><b>Cantidad</b><b>Unidades</b></div>'+items.map(p=>{
-   const s=invSaldo(p),v=invPartes(s,p.unidades_por_caja);
-   return '<div class="cj-line inv-cols"><span>'+esc(p.nombre)+'</span><b>'+v.cajas+'</b><b>'+v.sueltas+'</b></div>';
-  }).join('')+'</div>';
- }).join(''):'<p class="mut">No hay productos que coincidan.</p>';
+ const q=norm($('#inv-q').value||'');
+ const contenido=document.querySelector('input[name="inv-contenido"]:checked')?.value||'todos';
+ invResultados=invProductos.filter(p=>{
+  const lab=(p.laboratorio||'Sin laboratorio').trim(),saldo=invSaldo(p);
+  if(!invLabsSeleccionados.has(lab))return false;
+  if(q&&!norm([p.nombre,p.laboratorio,p.codigo].join(' ')).includes(q))return false;
+  if(contenido==='negativos'&&saldo>=0)return false;
+  if(contenido==='cero'&&saldo!==0)return false;
+  if(contenido==='todos'&&saldo===0)return false;
+  return true;
+ }).sort((a,b)=>(a.laboratorio||'').localeCompare(b.laboratorio||'','es',{sensitivity:'base'})||a.nombre.localeCompare(b.nombre,'es',{sensitivity:'base'}));
+ return invResultados;
+}
+function invRenderInforme(){
+ const rows=invFiltrar(),labs=[...new Set(rows.map(p=>(p.laboratorio||'Sin laboratorio').trim()))];
+ const html=labs.map(l=>'<div class="item"><h3>'+esc(l)+'</h3><div class="cj-line inv-cols"><b>Producto</b><b>Cantidad</b><b>Unidades</b></div>'+rows.filter(p=>(p.laboratorio||'Sin laboratorio').trim()===l).map(p=>{const v=invPartes(invSaldo(p),p.unidades_por_caja);return '<div class="cj-line inv-cols"><span>'+esc(p.nombre)+'</span><b>'+v.cajas+'</b><b>'+v.sueltas+'</b></div>'}).join('')+'</div>').join('');
+ $('#inv-kardex-list').innerHTML=html||'<p class="mut">No hay productos para los filtros seleccionados.</p>';
+ $('#inv-print-kardex').hidden=!rows.length;
+ $('#inv-status').textContent=rows.length+' productos incluidos en el informe.';
+ return rows;
+}
+function invLabsClick(e){
+ const box=e.target.closest('[data-inv-lab]');if(!box)return;
+ const lab=box.dataset.invLab;if(e.target.checked)invLabsSeleccionados.add(lab);else invLabsSeleccionados.delete(lab);
+ invRenderLabs();
+}
+function invGenerarKardex(){
+ const rows=invRenderInforme();if(!rows.length){toast('Selecciona laboratorios y verifica los filtros');return}
+ const formato=document.querySelector('input[name="inv-formato"]:checked')?.value||'pantalla';
+ if(formato==='pantalla')return;
+ if(formato==='excel'){
+  const data=[['Laboratorio','Producto','Cantidad','Unidades'],...rows.map(p=>{const v=invPartes(invSaldo(p),p.unidades_por_caja);return[p.laboratorio||'Sin laboratorio',p.nombre,v.cajas,v.sueltas]})];
+  const csv='\\ufeff'+data.map(r=>r.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(';')).join('\\r\\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='kardex-drosalud.csv';a.click();URL.revokeObjectURL(url);return;
+ }
+ invImprimirKardex(formato==='pos');
 }
 async function invLeerTodo(construir){
  const salida=[];let desde=0,lote=[];
