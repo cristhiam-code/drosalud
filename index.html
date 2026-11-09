@@ -828,7 +828,7 @@ function invFechaInicio(){
  inicio.setUTCDate(inicio.getUTCDate()-((inicio.getUTCDay()+6)%7));
  return inicio.toISOString();
 }
-async async function invCargarPedidos(){
+async function invCargarPedidos(){
  const recibos=await invLeerTodo(()=>sb.from('recibos_app').select('id').eq('anulado',false).gte('creado_en',invFechaInicio()).order('creado_en').order('id'));
  const ventas={};
  for(let i=0;i<recibos.length;i+=100){
