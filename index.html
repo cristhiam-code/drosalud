@@ -323,6 +323,14 @@ nav button{font-size:.78rem}
  #sheet .acts,#sheet .tkt{display:none!important}
  #sheet .print-img{display:block!important;width:72mm!important;max-width:72mm!important;height:auto!important;margin:0 auto!important}
 }
+@media print{
+ @page{size:A4 portrait;margin:12mm}
+ body.print-inventario{width:auto!important;min-height:auto!important;margin:0!important;padding:0!important;background:#fff!important;overflow:visible!important}
+ body.print-inventario #modal{width:auto!important;height:auto!important;position:static!important;inset:auto!important;overflow:visible!important;background:#fff!important}
+ body.print-inventario #sheet{width:auto!important;max-width:none!important;max-height:none!important;height:auto!important;margin:0!important;padding:0!important;overflow:visible!important;border:0!important;box-shadow:none!important;background:#fff!important}
+ body.print-inventario #sheet .cj-line{display:grid!important;grid-template-columns:minmax(0,1fr) 100px 100px!important;gap:12px!important;break-inside:avoid}
+ body.print-inventario #sheet .acts{display:none!important}
+}
 
 /* Indicador discreto de operaciones de guardado */
 #v-aju [data-aju-save].is-saving{opacity:.88;cursor:wait;display:flex;align-items:center;justify-content:center;gap:9px}
@@ -730,7 +738,7 @@ function invImprimirKardex(){
  let h='<h2>Kardex de inventario</h2><p>Consulta: '+new Date().toLocaleString('es-CO')+'</p>';
  labs.forEach(l=>{h+='<h3>'+esc(l)+'</h3><div class="cj-line"><b>Producto</b><b>Cantidad</b><b>Unidades</b></div>';
  invProductos.filter(p=>(p.laboratorio||'Sin laboratorio').trim()===l).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es',{sensitivity:'base'})).forEach(p=>{const v=invPartes(invSaldo(p),p.unidades_por_caja);h+='<div class="cj-line"><span>'+esc(p.nombre)+'</span><b>'+v.cajas+'</b><b>'+v.sueltas+'</b></div>'})});
- openM(h+'<div class="acts"><button class="btn alt full" onclick="closeM()">Cerrar</button></div>');window.print();
+ openM(h+'<div class="acts"><button class="btn alt full" onclick="closeM()">Cerrar</button></div>');document.body.classList.add('print-inventario');window.addEventListener('afterprint',()=>document.body.classList.remove('print-inventario'),{once:true});window.print();
 }
 function invImprimirPedido(){
  let h='<h2>Pedido sugerido</h2><p>Ventas de los últimos 7 días · '+new Date().toLocaleDateString('es-CO')+'</p>';
