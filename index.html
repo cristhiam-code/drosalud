@@ -790,16 +790,21 @@ async function invCargarDatos(){
  ]);
  invProductos=productos;invSaldos={};
  movimientos.forEach(m=>{invSaldos[m.producto_id]=(invSaldos[m.producto_id]||0)+Number(m.unidades_delta||0)});
+ invLaboratorios=[...new Set(invProductos.map(p=>(p.laboratorio||'Sin laboratorio').trim()))].sort((a,b)=>a.localeCompare(b,'es',{sensitivity:'base'}));
  const opts=invProductos.slice().sort((a,b)=>a.nombre.localeCompare(b.nombre,'es',{sensitivity:'base'}));
  $('#inv-prod').innerHTML='<option value="">Seleccionar producto</option>'+opts.map(p=>'<option value="'+p.id+'">'+esc(p.nombre)+' · '+esc(p.laboratorio||'Sin laboratorio')+'</option>').join('');
- invFiltrar();
+ invRenderLabs();
 }
-function invImprimirKardex(){
- const labs=[...new Set(invProductos.map(p=>(p.laboratorio||'Sin laboratorio').trim()))].sort((a,b)=>a.localeCompare(b,'es',{sensitivity:'base'}));
- let h='<h2>Kardex de inventario</h2><p>Consulta: '+new Date().toLocaleString('es-CO')+'</p>';
- labs.forEach(l=>{h+='<h3>'+esc(l)+'</h3><div class="cj-line inv-cols"><b>Producto</b><b>Cantidad</b><b>Unidades</b></div>';
- invProductos.filter(p=>(p.laboratorio||'Sin laboratorio').trim()===l).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es',{sensitivity:'base'})).forEach(p=>{const v=invPartes(invSaldo(p),p.unidades_por_caja);h+='<div class="cj-line inv-cols"><span>'+esc(p.nombre)+'</span><b>'+v.cajas+'</b><b>'+v.sueltas+'</b></div>'})});
- openM(h+'<div class="acts"><button class="btn alt full" onclick="closeM()">Cerrar</button></div>');document.body.classList.add('print-inventario');window.addEventListener('afterprint',()=>document.body.classList.remove('print-inventario'),{once:true});window.print();
+function invImprimirKardex(pos=false){
+ const rows=invResultados.length?invResultados:invFiltrar();
+ if(!rows.length){toast('No hay productos para imprimir');return}
+ const title='Kardex de inventario',stamp=new Date().toLocaleString('es-CO');
+ let h='<h2>'+title+'</h2><p>Consulta: '+stamp+'</p>';
+ const labs=[...new Set(rows.map(p=>(p.laboratorio||'Sin laboratorio').trim()))];
+ labs.forEach(l=>{h+='<h3>'+esc(l)+'</h3><div class="cj-line inv-cols"><b>Producto</b><b>Cantidad</b><b>Unidades</b></div>';rows.filter(p=>(p.laboratorio||'Sin laboratorio').trim()===l).forEach(p=>{const v=invPartes(invSaldo(p),p.unidades_por_caja);h+='<div class="cj-line inv-cols"><span>'+esc(p.nombre)+'</span><b>'+v.cajas+'</b><b>'+v.sueltas+'</b></div>'})});
+ openM(h+'<div class="acts"><button class="btn alt full" onclick="closeM()">Cerrar</button></div>');
+ document.body.classList.add('print-inventario');if(pos)document.body.classList.add('print-pos');
+ window.addEventListener('afterprint',()=>document.body.classList.remove('print-inventario','print-pos'),{once:true});window.print();
 }
 function invImprimirPedido(){
  let h='<h2>Pedido sugerido</h2><p>Ventas de los últimos 7 días · '+new Date().toLocaleDateString('es-CO')+'</p>';
