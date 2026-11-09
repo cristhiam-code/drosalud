@@ -795,10 +795,10 @@ async function invLeerTodo(construir){
 async function invCargarDatos(){
  const [productos,movimientos]=await Promise.all([
   invLeerTodo(()=>sb.from('productos_app').select('id,codigo,nombre,laboratorio,unidades_por_caja').order('nombre').order('id')),
-  invLeerTodo(()=>sb.from('inventario_movimientos').select('producto_id,unidades_delta').order('creado_en').order('id'))
+  invLeerTodo(()=>sb.from('inventario_saldos').select('producto_id,saldo_unidades').order('producto_id'))
  ]);
  invProductos=productos;invSaldos={};
- movimientos.forEach(m=>{invSaldos[m.producto_id]=(invSaldos[m.producto_id]||0)+Number(m.unidades_delta||0)});
+ movimientos.forEach(m=>{invSaldos[m.producto_id]=Number(m.saldo_unidades||0)});
  invLaboratorios=[...new Set(invProductos.map(p=>(p.laboratorio||'Sin laboratorio').trim()))].sort((a,b)=>a.localeCompare(b,'es',{sensitivity:'base'}));
  const opts=invProductos.slice().sort((a,b)=>a.nombre.localeCompare(b.nombre,'es',{sensitivity:'base'}));
  $('#inv-prod').innerHTML='<option value="">Seleccionar producto</option>'+opts.map(p=>'<option value="'+p.id+'">'+esc(p.nombre)+' · '+esc(p.laboratorio||'Sin laboratorio')+'</option>').join('');
