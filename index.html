@@ -499,7 +499,7 @@ nav button{font-size:.78rem}
   <p class="mut sm">Marca los laboratorios que quieres incluir. Usa el buscador para encontrarlos rápido.</p>
   <div id="inv-labs" class="inv-labs"></div>
   <label for="inv-linea">Línea (opcional)</label><select id="inv-linea"><option value="">Todas las líneas</option></select>
-  <p class="mut sm">La ficha actual de productos no tiene un campo de línea. No aplicaremos un filtro ficticio; primero debemos incorporar esa clasificación al catálogo.</p>
+  <p class="mut sm">La línea se asigna en la ficha de cada producto. El filtro muestra únicamente las líneas que ya están clasificadas.</p>
  </div>
  <div class="item">
   <h3>2. Contenido del informe</h3>
@@ -880,12 +880,18 @@ async function invRegistrarRecepcion(){
 $('#inv-q').addEventListener('input',invRenderLabs);
 $('#inv-labs').addEventListener('change',invLabsClick);
 document.querySelectorAll('input[name="inv-contenido"]').forEach(x=>x.addEventListener('change',()=>{}));
-document.querySelector('#v-inventario').addEventListener('click',e=>{
+const vistaInventario=document.querySelector('#v-inventario');
+vistaInventario.addEventListener('click',e=>{
  if(e.target.closest('#inv-generar'))invGenerarKardex();
  if(e.target.closest('#inv-print-kardex'))invImprimirKardex(document.querySelector('input[name="inv-formato"]:checked')?.value==='pos');
- if(e.target.closest('#inv-labs-all')){invLabsSeleccionados=new Set(invLaboratorios);invRenderLabs()}
- if(e.target.closest('#inv-labs-none')){invLabsSeleccionados.clear();invRenderLabs()}
+ if(e.target.closest('#inv-labs-all')){invLabsSeleccionados=new Set(invLaboratorios);invRenderLabs();invRenderInforme()}
+ if(e.target.closest('#inv-labs-none')){invLabsSeleccionados.clear();invRenderLabs();invRenderInforme()}
 });
+vistaInventario.addEventListener('change',e=>{
+ if(e.target.matches('[data-inv-lab]')){invLabsClick(e);invRenderInforme()}
+ if(e.target.matches('#inv-linea')||e.target.matches('input[name="inv-contenido"]'))invRenderInforme();
+});
+$('#inv-q').addEventListener('input',()=>{invRenderLabs();invRenderInforme()});
 document.querySelector('#v-pedidos').addEventListener('click',e=>{if(e.target.closest('#inv-print'))invImprimirPedido()});
 document.querySelector('#v-recepcion').addEventListener('click',e=>{if(e.target.closest('#inv-recibir'))invRegistrarRecepcion()});
 
