@@ -16,6 +16,8 @@ create table if not exists public.inventario_movimientos (
 
 create index if not exists inventario_movimientos_producto_fecha_idx
   on public.inventario_movimientos(producto_id, creado_en desc);
+create index if not exists inventario_movimientos_saldo_idx
+  on public.inventario_movimientos(producto_id) include (unidades_delta);
 create unique index if not exists inventario_movimientos_origen_unico_idx
   on public.inventario_movimientos(tipo, referencia_id)
   where referencia_id is not null and tipo in ('venta','anulacion');
@@ -31,6 +33,17 @@ drop policy if exists inventario_movimientos_lectura_autorizada on public.invent
 create policy inventario_movimientos_lectura_autorizada
   on public.inventario_movimientos for select to authenticated
   using (public.es_usuario_drosalud());
+
+-- Saldo consolidado por producto; la vista respeta RLS del usuario que consulta.
+create or replace view public.inventario_saldos
+with (security_invoker = true)
+as
+select producto_id, sum(unidades_delta)::bigint as saldo_unidades
+from public.inventario_movimientos
+group by producto_id;
+
+revoke all on public.inventario_saldos from anon, authenticated;
+grant select on public.inventario_saldos to authenticated;
 
 create or replace function public.fn_inventario_descuenta_venta()
 returns trigger
