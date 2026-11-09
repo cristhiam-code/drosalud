@@ -41,3 +41,12 @@ having count(*) > 1;
 select id, producto_id, unidades_delta, creado_en
 from public.inventario_movimientos
 where tipo='recepcion' and operacion_id is null;
+
+-- 6. No debe existir una reversión sin su descuento original.
+select anulacion.id as movimiento_anulacion_id, anulacion.referencia_id
+from public.inventario_movimientos anulacion
+left join public.inventario_movimientos venta
+  on venta.tipo='venta'
+ and venta.referencia_id=anulacion.referencia_id
+where anulacion.tipo='anulacion'
+  and (venta.id is null or anulacion.unidades_delta <> -venta.unidades_delta);
