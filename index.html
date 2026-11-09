@@ -736,7 +736,7 @@ function renderCotizaciones(){const q=norm($('#coq').value),L=CO.filter(r=>!q||n
 async function abrirCotizacion(r){const{data,error}=await sb.from('cotizacion_venta_items_app').select('*').eq('cotizacion_id',r.id).order('id');if(error)throw error;showRec({...r,cot:true},(data||[]).map(i=>({nombre:i.nombre,cantidad:i.cantidad,precio_venta:i.precio_venta,presentacion:i.presentacion,unidades_por_presentacion:i.unidades_por_presentacion})));}
 
 // INVENTARIO · UI de preview (requiere aplicar la migración SQL en entorno de pruebas).
-let invProductos=[],invSaldos={},invPedidos=[],invLaboratorios=[],invLabsSeleccionados=new Set(),invResultados=[],invRecepcionIntento=null;
+let invProductos=[],invSaldos={},invPedidos=[],invLaboratorios=[],invLabsSeleccionados=new Set(),invResultados=[],invRecepcionIntento=null,invSaldoDisponible=false;
 function invSaldo(p){return Number(invSaldos[p.id]||0)}
 function invPartes(s,f){f=Math.max(1,Number(f)||1);s=Math.trunc(s);if(s<0)return{cajas:0,sueltas:s};return{cajas:Math.floor(s/f),sueltas:s%f}}
 function invRenderLabs(){
@@ -762,6 +762,7 @@ function invFiltrar(){
  return invResultados;
 }
 function invRenderInforme(){
+ if(!invSaldoDisponible){$('#inv-kardex-list').innerHTML='<p class="mut">El catálogo está disponible, pero el Kardex requiere instalar las migraciones de inventario en este entorno.</p>';$('#inv-print-kardex').hidden=true;$('#inv-status').textContent='Falta instalar el esquema de inventario en este entorno.';return []}
  const rows=invFiltrar(),labs=[...new Set(rows.map(p=>(p.laboratorio||'Sin laboratorio').trim()))];
  const html=labs.map(l=>'<div class="item"><h3>'+esc(l)+'</h3><div class="cj-line inv-cols"><b>Producto</b><b>Cantidad</b><b>Unidades</b></div>'+rows.filter(p=>(p.laboratorio||'Sin laboratorio').trim()===l).map(p=>{const v=invPartes(invSaldo(p),p.unidades_por_caja);return '<div class="cj-line inv-cols"><span>'+esc(p.nombre)+'</span><b>'+v.cajas+'</b><b>'+v.sueltas+'</b></div>'}).join('')+'</div>').join('');
  $('#inv-kardex-list').innerHTML=html||'<p class="mut">No hay productos para los filtros seleccionados.</p>';
@@ -795,18 +796,20 @@ async function invLeerTodo(construir){
  return salida;
 }
 async function invCargarDatos(){
- const [productos,movimientos]=await Promise.all([
-  invLeerTodo(()=>sb.from('productos_app').select('id,codigo,nombre,laboratorio,linea,unidades_por_caja').order('nombre').order('id')),
-  invLeerTodo(()=>sb.from('inventario_saldos').select('producto_id,saldo_unidades').order('producto_id'))
- ]);
- invProductos=productos;invSaldos={};
- movimientos.forEach(m=>{invSaldos[m.producto_id]=Number(m.saldo_unidades||0)});
+ // El catálogo se carga aparte: el Preview puede apuntar a una BD sin migraciones de inventario.
+ const productos=await invLeerTodo(()=>sb.from('productos_app').select('id,codigo,nombre,laboratorio,unidades_por_caja').order('nombre').order('id'));
+ invProductos=productos;invSaldos={};invSaldoDisponible=false;
+ try{
+  const movimientos=await invLeerTodo(()=>sb.from('inventario_saldos').select('producto_id,saldo_unidades').order('producto_id'));
+  movimientos.forEach(m=>{invSaldos[m.producto_id]=Number(m.saldo_unidades||0)});
+  invSaldoDisponible=true;
+ }catch(e){console.warn('Kardex aún no instalado en este entorno:',e)}
  invLaboratorios=[...new Set(invProductos.map(p=>(p.laboratorio||'Sin laboratorio').trim()))].sort((a,b)=>a.localeCompare(b,'es',{sensitivity:'base'}));
  const opts=invProductos.slice().sort((a,b)=>a.nombre.localeCompare(b.nombre,'es',{sensitivity:'base'}));
  $('#inv-prod').innerHTML='<option value="">Seleccionar producto</option>'+opts.map(p=>'<option value="'+p.id+'">'+esc(p.nombre)+' · '+esc(p.laboratorio||'Sin laboratorio')+'</option>').join('');
  const lineas=[...new Set(invProductos.map(p=>(p.linea||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es',{sensitivity:'base'}));
- $('#inv-linea').innerHTML='<option value="">Todas las líneas</option>'+lineas.map(l=>'<option value="'+esc(l)+'">'+esc(l)+'</option>').join('');
- $('#inv-linea').disabled=false;
+ $('#inv-linea').innerHTML='<option value="">'+(lineas.length?'Todas las líneas':'Líneas disponibles al instalar migración')+'</option>'+lineas.map(l=>'<option value="'+esc(l)+'">'+esc(l)+'</option>').join('');
+ $('#inv-linea').disabled=!lineas.length;
  invRenderLabs();
 }
 function invImprimirKardex(pos=false){
@@ -850,7 +853,7 @@ async function invCargarPedidos(){
 }
 async function loadInventario(){
  $('#inv-status').textContent='Cargando productos y existencias…';
- try{await invCargarDatos();$('#inv-status').textContent='Datos cargados. Selecciona laboratorios y genera el informe.'}
+ try{await invCargarDatos();$('#inv-status').textContent=invSaldoDisponible?'Datos cargados. Selecciona laboratorios y genera el informe.':'Catálogo cargado. Para generar el Kardex falta instalar las migraciones en este entorno.'}
  catch(e){console.error(e);$('#inv-status').textContent='No se pudo cargar Kardex. La migración de inventario debe estar instalada en el entorno de pruebas. '+(e.message||'')}
 }
 async function loadPedidos(){
