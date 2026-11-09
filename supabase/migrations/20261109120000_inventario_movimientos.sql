@@ -69,6 +69,7 @@ drop trigger if exists trg_inventario_venta_recibo_item on public.recibo_items;
 create trigger trg_inventario_venta_recibo_item
   after insert on public.recibo_items
   for each row execute function public.fn_inventario_descuenta_venta();
+revoke all on function public.fn_inventario_descuenta_venta() from public, anon, authenticated;
 
 create or replace function public.fn_inventario_revierte_anulacion()
 returns trigger
@@ -97,6 +98,7 @@ drop trigger if exists trg_inventario_anulacion_recibo on public.recibos;
 create trigger trg_inventario_anulacion_recibo
   after update of anulado on public.recibos
   for each row execute function public.fn_inventario_revierte_anulacion();
+revoke all on function public.fn_inventario_revierte_anulacion() from public, anon, authenticated;
 
 create or replace function public.registrar_recepcion_inventario(
   p_producto_id uuid,
