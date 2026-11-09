@@ -413,6 +413,7 @@ nav button{font-size:.78rem}
   </section>
   <div class="home-grid">
    <button class="home-tile" data-home="venta"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 3h8l4 4v14H7z"/><path d="M15 3v5h4M10 13h6M10 17h6"/></svg></span><strong>Facturación POS</strong><small>Crear recibo y registrar venta</small></button>
+   <button class="home-tile" data-home="inventario"><span class="home-icon" aria-hidden="true">▦</span><strong>Inventario</strong><small>Kardex, pedidos y recepción</small></button>
    <button class="home-tile" data-home="cat"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16v13H4zM8 7V4h8v3M9 12h6M9 16h6"/></svg></span><strong>Productos</strong><small>Consultar y administrar catálogo</small></button>
    <button class="home-tile" data-home="cli"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="9" cy="8" r="3"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0M16 5.5a3 3 0 0 1 0 5.8M17 14a5 5 0 0 1 3.5 4.8"/></svg></span><strong>Clientes</strong><small>Consultar y retomar clientes</small></button>
    <button class="home-tile" data-home="his"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 4h14v17H5zM8 8h8M8 12h8M8 16h5"/></svg></span><strong>Historial</strong><small>Ventas y reportes</small></button>
@@ -466,6 +467,14 @@ nav button{font-size:.78rem}
  <div id="lowb" hidden style="margin-top:8px"></div>
  <p class="mut sm" id="cnt"></p>
  <div id="cl"></div>
+</section>
+<section id="v-inventario" hidden>
+ <div class="seg" aria-label="Secciones de inventario"><button data-inv-tab="kardex" aria-pressed="true">Kardex</button><button data-inv-tab="pedidos" aria-pressed="false">Pedidos</button><button data-inv-tab="recepcion" aria-pressed="false">Recepción</button></div>
+ <p class="mut sm">Saldo expresado en unidades individuales. El inventario inicia en cero; las ventas y recepciones físicas actualizan el saldo.</p>
+ <div id="inv-kardex"><label for="inv-q">Buscar producto o laboratorio</label><input id="inv-q" type="search" placeholder="Nombre, laboratorio o código"><div id="inv-kardex-list"></div></div>
+ <div id="inv-pedidos" hidden><p class="mut sm">Sugerido según unidades vendidas en los últimos 7 días. No descuenta existencias.</p><div id="inv-pedidos-list"></div><button class="btn alt full" id="inv-print" type="button">Imprimir pedido sugerido</button></div>
+ <div id="inv-recepcion" hidden><label for="inv-prod">Producto recibido</label><select id="inv-prod"><option value="">Seleccionar producto</option></select><label for="inv-unidades">Unidades individuales recibidas</label><input id="inv-unidades" type="number" min="1" step="1" inputmode="numeric" placeholder="Ej. 30"><label for="inv-notas">Nota (opcional)</label><input id="inv-notas" maxlength="500" placeholder="Proveedor, factura o referencia"><button class="btn full" id="inv-recibir" type="button">Registrar recepción física</button><p class="mut sm">Solo registra aquí mercancía que ya llegó físicamente. Marcar una compra como “comprada” no modifica existencias.</p></div>
+ <p class="mut sm" id="inv-status" aria-live="polite"></p>
 </section>
 <section id="v-cli" hidden>
  <div class="seg"><button data-cv="todos" aria-pressed="true">Todos</button><button data-cv="ret" aria-pressed="false">Para retomar</button></div>
@@ -643,7 +652,7 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;',
 const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 const money=n=>'$'+Math.round(n).toLocaleString('es-CO');
 const DEF={m:25,r:100,biz:'DROGUERIA DROSALUD.SAS',nit:'900.109.443-0',ciu:'Cúcuta',tel:'3112581564',dir:'',msg:'Gracias por su compra',nota:'Resolución de facturación electrónica N° 1845101586525 de 2025-11-12. Vigencia 24 meses.',sHora:true,sCed:true,sTel:true,sPago:true,big:false,sLogo:true,mMin:10,colorPri:'#0E6B55',colorBg:'#F2F6F3',colorCard:'#FFFFFF',colorInk:'#12261F',cotDias:3,cotNota:'Precios sujetos a cambio y disponibilidad.',respDias:30,breb:'3112581564',pagoTitular:'',pagoCot:true,pagoRec:'siempre',qrTexto:'',qrImg:'',vendedorDef:'',msgRetomar:'Hola {nombre}, ¿cómo estás? Te escribimos de Drosalud. Hace un tiempo no sabemos de ti, ¿te ayudamos con algo? Tu salud, nuestra prioridad.'};
-const VERSION='2026-11-07.1-navegacion-respaldo';
+const VERSION='2026-11-09.1-inventario-preview';
 let P=[],C=[],H=[],CO=[],cart=[],savingVenta=false,savingCotizacion=false,savingAjustes=false,cfg={...DEF},draft=null,usuarioDrosalud=null,rolDrosalud=null;
 // Control de interfaz por rol. La autorización definitiva debe aplicarse también en RLS.
 async function cargarRolDrosalud(){const{data,error}=await sb.auth.getUser();if(error)throw error;if(!data.user)throw new Error('Inicia sesión nuevamente.');const{data:perfil,error:ep}=await sb.from('usuarios_drosalud').select('rol,activo').eq('user_id',data.user.id).maybeSingle();if(ep)throw ep;if(!perfil||perfil.activo!==true||!['admin','vendedor'].includes(perfil.rol))throw new Error('Tu usuario no tiene un rol activo en Drosalud. Solicita al administrador que lo habilite.');usuarioDrosalud=data.user;rolDrosalud=perfil.rol;return perfil.rol}
@@ -669,6 +678,85 @@ async function cotizar(){if(savingCotizacion)return;if(!cart.length){toast('Agre
 async function loadCotizaciones(){const{data,error}=await sb.from('cotizaciones_venta_app').select('*').order('creado_en',{ascending:false}).order('numero',{ascending:false}).limit(500);if(error)throw error;CO=data||[];renderCotizaciones()}
 function renderCotizaciones(){const q=norm($('#coq').value),L=CO.filter(r=>!q||norm((r.cliente_nombre||'')+' '+r.numero).includes(q));$('#colist').innerHTML=L.length?L.map(r=>'<button class="row" data-cotid="'+r.id+'"><span class="nm">Cotización '+pad(r.numero)+(r.cliente_nombre?' · '+esc(tcase(r.cliente_nombre)):'')+'<small>'+esc(fmt(r.creado_en))+' · '+esc(r.estado)+(r.valida_hasta?' · válida hasta '+esc(fd(r.valida_hasta)):'')+'</small></span><span class="pr">'+money(r.total)+'</span></button>').join(''):'<p class="mut">No hay cotizaciones guardadas.</p>'}
 async function abrirCotizacion(r){const{data,error}=await sb.from('cotizacion_venta_items_app').select('*').eq('cotizacion_id',r.id).order('id');if(error)throw error;showRec({...r,cot:true},(data||[]).map(i=>({nombre:i.nombre,cantidad:i.cantidad,precio_venta:i.precio_venta,presentacion:i.presentacion,unidades_por_presentacion:i.unidades_por_presentacion})));}
+
+// INVENTARIO · UI de preview (requiere aplicar la migración SQL en entorno de pruebas).
+let invTab='kardex',invProductos=[],invSaldos={},invPedidos=[];
+const invMoney=n=>money(Number(n)||0);
+function invSetTab(t){
+ invTab=t;
+ ['kardex','pedidos','recepcion'].forEach(k=>$('#inv-'+k).hidden=k!==t);
+ document.querySelectorAll('[data-inv-tab]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.invTab===t)));
+}
+function invSaldo(p){return Number(invSaldos[p.id]||0)}
+function invPartes(s,f){
+ f=Math.max(1,Number(f)||1);s=Math.trunc(s);
+ if(s<0)return{cajas:0,sueltas:s};
+ return{cajas:Math.floor(s/f),sueltas:s%f};
+}
+function invFiltrar(){
+ const q=norm($('#inv-q')?.value||'');
+ const rows=invProductos.filter(p=>!q||norm([p.nombre,p.laboratorio,p.codigo].join(' ')).includes(q));
+ const labs=[...new Set(rows.map(p=>(p.laboratorio||'Sin laboratorio').trim()))].sort((a,b)=>a.localeCompare(b,'es',{sensitivity:'base'}));
+ $('#inv-kardex-list').innerHTML=rows.length?labs.map(l=>{
+  const items=rows.filter(p=>(p.laboratorio||'Sin laboratorio').trim()===l).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es',{sensitivity:'base'}));
+  return '<div class="item"><h3>'+esc(l)+'</h3>'+items.map(p=>{
+   const s=invSaldo(p),v=invPartes(s,p.unidades_por_caja);
+   return '<div class="cj-line"><span>'+esc(p.nombre)+'</span><b>'+v.cajas+' cajas · '+v.sueltas+' unidades</b></div>';
+  }).join('')+'</div>';
+ }).join(''):'<p class="mut">No hay productos que coincidan.</p>';
+}
+async function invCargarDatos(){
+ const [pr,mv]=await Promise.all([
+  sb.from('productos_app').select('id,codigo,nombre,laboratorio,unidades_por_caja').order('nombre').limit(5000),
+  sb.from('inventario_movimientos').select('producto_id,unidades_delta').limit(20000)
+ ]);
+ if(pr.error)throw pr.error;if(mv.error)throw mv.error;
+ invProductos=pr.data||[];invSaldos={};
+ (mv.data||[]).forEach(m=>{invSaldos[m.producto_id]=(invSaldos[m.producto_id]||0)+Number(m.unidades_delta||0)});
+ const opts=invProductos.slice().sort((a,b)=>a.nombre.localeCompare(b.nombre,'es',{sensitivity:'base'}));
+ $('#inv-prod').innerHTML='<option value="">Seleccionar producto</option>'+opts.map(p=>'<option value="'+p.id+'">'+esc(p.nombre)+' · '+esc(p.laboratorio||'Sin laboratorio')+'</option>').join('');
+ invFiltrar();
+}
+function invFechaInicio(){
+ const d=new Date();d.setDate(d.getDate()-7);return d.toISOString();
+}
+async function invCargarPedidos(){
+ const {data:rs,error:er}=await sb.from('recibos').select('id').eq('anulado',false).gte('creado_en',invFechaInicio()).limit(5000);
+ if(er)throw er;
+ const ids=(rs||[]).map(x=>x.id);let items=[];
+ if(ids.length){const{data,error}=await sb.from('recibo_items_app').select('producto_id,cantidad').in('recibo_id',ids).limit(20000);if(error)throw error;items=data||[]}
+ const ventas={};items.forEach(i=>{if(i.producto_id)ventas[i.producto_id]=(ventas[i.producto_id]||0)+Number(i.cantidad||0)});
+ invPedidos=invProductos.filter(p=>(ventas[p.id]||0)>0).map(p=>{
+  const u=ventas[p.id],f=Math.max(1,Number(p.unidades_por_caja)||1);
+  return{p,unidades:u,cajas:Math.floor(u/f),sueltas:u%f};
+ }).sort((a,b)=>(a.p.laboratorio||'').localeCompare(b.p.laboratorio||'','es',{sensitivity:'base'})||a.p.nombre.localeCompare(b.p.nombre,'es',{sensitivity:'base'}));
+ $('#inv-pedidos-list').innerHTML=invPedidos.length?invPedidos.map((x,i)=>'<div class="item"><div class="top"><b>'+esc(x.p.nombre)+'</b><span class="mut">'+esc(x.p.laboratorio||'Sin laboratorio')+'</span></div><p class="sm">Vendido: '+x.cajas+' cajas · '+x.sueltas+' unidades ('+x.unidades+' unidades en total)</p><div class="two"><div><label for="inv-c-'+i+'">Cajas a pedir</label><input id="inv-c-'+i+'" type="number" min="0" step="1" value="'+x.cajas+'"></div><div><label for="inv-s-'+i+'">Unidades sueltas</label><input id="inv-s-'+i+'" type="number" min="0" max="'+(Math.max(1,Number(x.p.unidades_por_caja)||1)-1)+'" step="1" value="'+x.sueltas+'"></div></div></div>').join(''):'<p class="mut">No hay ventas de productos en los últimos 7 días.</p>';
+}
+async function loadInventario(){
+ $('#inv-status').textContent='Cargando inventario…';
+ try{await invCargarDatos();await invCargarPedidos();$('#inv-status').textContent='Actualizado. Los saldos incluyen ventas, anulaciones y recepciones registradas.'}
+ catch(e){console.error(e);$('#inv-status').textContent='No se pudo cargar el inventario. Verifica que la migración esté instalada en esta base de datos. Detalle: '+(e.message||'Error desconocido')}
+}
+async function invRegistrarRecepcion(){
+ const id=$('#inv-prod').value,u=Number($('#inv-unidades').value),nota=$('#inv-notas').value.trim();
+ if(!id){toast('Selecciona el producto recibido');return}
+ if(!Number.isInteger(u)||u<=0){toast('Escribe una cantidad válida de unidades individuales');return}
+ const b=$('#inv-recibir');b.disabled=true;
+ try{
+  const{error}=await sb.rpc('registrar_recepcion_inventario',{p_producto_id:id,p_unidades:u,p_notas:nota||null});
+  if(error)throw error;
+  $('#inv-unidades').value='';$('#inv-notas').value='';
+  toast('Recepción registrada');await loadInventario();
+ }catch(e){console.error(e);toast(e.message||'No se pudo registrar la recepción')}
+ finally{b.disabled=false}
+}
+$('#inv-q').addEventListener('input',invFiltrar);
+document.querySelector('#v-inventario').addEventListener('click',e=>{
+ const t=e.target.closest('[data-inv-tab]');if(t){invSetTab(t.dataset.invTab);return}
+ if(e.target.closest('#inv-recibir'))invRegistrarRecepcion();
+ if(e.target.closest('#inv-print'))window.print();
+});
+
 let syncChannel=null,syncTimer=null,realtimeRequested=false;
 function syncStatus(message){const el=$('#sync-state');if(el)el.textContent=message}
 function iniciarRealtime(){
@@ -717,7 +805,7 @@ $('#mfa-no').onclick=async()=>{try{await sb.auth.mfa.unenroll({factorId:data.id}
 $('#mfa-ok').onclick=()=>go(async()=>{const code=$('#mfa-code').value.replace(/\s/g,''),m=$('#mfa-msg');m.textContent='';if(!/^\d{6}$/.test(code)){m.textContent='Escribe los 6 dígitos del código.';return}const{error:ev}=await sb.auth.mfa.challengeAndVerify({factorId:data.id,code});if(ev){m.textContent='Código incorrecto o vencido. Revisa tu app e intenta de nuevo.';return}closeM();toast('Verificación en dos pasos activada');mfaEstado()})}
 async function mfaDesactivar(){const{data:l,error:e0}=await sb.auth.mfa.listFactors();if(e0)throw e0;const f=(l.totp||[])[0];if(!f){mfaEstado();return}if(!confirm('¿Desactivar la verificación en dos pasos? Tu cuenta quedará protegida solo con la contraseña.'))return;const{error}=await sb.auth.mfa.unenroll({factorId:f.id});if(error){toast(/aal2|assurance|verif/i.test(String(error.message))?'Para desactivarla debes haber entrado con tu código.':'No se pudo desactivar. Intenta de nuevo.');return}toast('Verificación en dos pasos desactivada');mfaEstado()}
 function showLogin(){$('#spl').hidden=true;$('#app').hidden=true;$('#rsx').hidden=true;$('#mfa').hidden=true;$('#lg').hidden=false;try{const e=localStorage.getItem('lastEmail');if(e&&!$('#em').value){$('#em').value=e;$('#pw').focus()}}catch(x){}}
-const TT={venta:'Recibo',cat:'Catálogo',cli:'Clientes',his:'Historial',cot:'Cotizaciones',aju:'Ajustes',caja:'Caja',cajahistorial:'Historial de cierres',ayuda:'Ayuda y sistema'}
+const TT={venta:'Recibo',cat:'Catálogo',cli:'Clientes',his:'Historial',cot:'Cotizaciones',aju:'Ajustes',caja:'Caja',cajahistorial:'Historial de cierres',ayuda:'Ayuda y sistema',inventario:'Inventario'}
 /*CAJA-INICIO*/
 let CJ={fecha:null,res:null,gastos:[]},savingCaja=false;
 const hoyCO=()=>new Date().toLocaleDateString('en-CA',{timeZone:'America/Bogota'});
@@ -778,8 +866,8 @@ function cajaClics(e){const t=e.target.closest('button');if(!t)return;if(t.datas
 function renderVentaDateTime(){const f=$('#venta-fecha'),h=$('#venta-hora');if(!f||!h)return;const now=new Date(),tz='America/Bogota';f.textContent=new Intl.DateTimeFormat('es-CO',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:tz}).format(now);h.textContent=new Intl.DateTimeFormat('es-CO',{hour:'2-digit',minute:'2-digit',hour12:true,timeZone:tz}).format(now)}
 setInterval(renderVentaDateTime,60000);
 function renderHomeDate(){const el=$('#home-date');if(!el)return;const mobile=window.matchMedia('(max-width: 620px)').matches;const opts=mobile?{weekday:'short',day:'numeric',month:'short',timeZone:'America/Bogota'}:{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'America/Bogota'};const s=new Intl.DateTimeFormat('es-CO',opts).format(new Date());el.textContent=s.charAt(0).toLocaleUpperCase('es-CO')+s.slice(1)}
-function showHome(){cajaBadge();renderHomeDate();$('#back-home').hidden=true;$('#home').hidden=false;['venta','cat','cli','his','cot','aju','neg','caja','cajahistorial','ayuda'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=true});$('#more-menu').hidden=true;$('#ttl').textContent='Drosalud';window.scrollTo(0,0)}
- function show(v){$('#back-home').hidden=false;$('#home').hidden=true;['venta','cat','cli','his','cot','aju','neg','caja','cajahistorial','ayuda'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=k!==v});$('#more-menu').hidden=true;$('#nav [data-v="mas"]').setAttribute('aria-expanded','false');document.querySelectorAll('#nav button').forEach(b=>{if(b.dataset.v!=='mas')b.setAttribute('aria-current',String(b.dataset.v===v));else b.setAttribute('aria-current',String(!['venta','cat','cli'].includes(v)))});$('#ttl').textContent=TT[v]||'Negocio';if(v==='venta')renderVentaDateTime();if(v==='aju')fillAju();if(v==='caja')go(loadCaja);if(v==='cajahistorial')go(loadHistorialCierres);if(v==='ayuda'){go(loadAyudaEstado);$('#ayuda-version').textContent='v'+VERSION}if(v==='his')go(loadHis);if(v==='cli')loadCST().catch(()=>{});if(v==='cot')go(loadCotizaciones);window.scrollTo(0,0)}
+function showHome(){cajaBadge();renderHomeDate();$('#back-home').hidden=true;$('#home').hidden=false;['venta','cat','cli','his','cot','aju','neg','caja','cajahistorial','ayuda','inventario'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=true});$('#more-menu').hidden=true;$('#ttl').textContent='Drosalud';window.scrollTo(0,0)}
+ function show(v){$('#back-home').hidden=false;$('#home').hidden=true;['venta','cat','cli','his','cot','aju','neg','caja','cajahistorial','ayuda','inventario'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=k!==v});$('#more-menu').hidden=true;$('#nav [data-v="mas"]').setAttribute('aria-expanded','false');document.querySelectorAll('#nav button').forEach(b=>{if(b.dataset.v!=='mas')b.setAttribute('aria-current',String(b.dataset.v===v));else b.setAttribute('aria-current',String(!['venta','cat','cli'].includes(v)))});$('#ttl').textContent=TT[v]||'Negocio';if(v==='venta')renderVentaDateTime();if(v==='aju')fillAju();if(v==='caja')go(loadCaja);if(v==='cajahistorial')go(loadHistorialCierres);if(v==='ayuda'){go(loadAyudaEstado);$('#ayuda-version').textContent='v'+VERSION}if(v==='his')go(loadHis);if(v==='cli')loadCST().catch(()=>{});if(v==='cot')go(loadCotizaciones);if(v==='inventario')go(loadInventario);window.scrollTo(0,0)}
 function rRes(){const q=$('#q').value.trim(),b=$('#res');if(!q){b.innerHTML='';return}const a=find(q,20);b.innerHTML=a.length?a.map(p=>`<button class="row" data-add="${p.id}"><span class="nm">${esc(p.nombre)}<small>${esc(p.laboratorio||'')}</small></span><span class="pr">${pv(p)==null?'Precio pendiente':money(pv(p))}<small>compra ${money(p.precio_compra)}</small></span></button>`).join(''):'<p class="mut">No hay resultados. Agrégalo en Catálogo.</p>'}
 function calc(){const st=cart.reduce((s,i)=>s+i.p*i.q,0),g=esAdminDrosalud()?cart.reduce((s,i)=>s+(i.p-(i.c||0))*i.q,0):null,ds=Math.max(0,+$('#dsc').value||0),dm=Math.max(0,+$('#dom').value||0),mens=Math.max(0,+$('#mens').value||0);return{st,ds,dm,mens,total:Math.max(0,st-ds+dm),gan:g==null?null:g-ds+dm-mens}}
 function rCart(){const b=$('#cart');b.innerHTML=cart.length?cart.map((i,k)=>`<div class="item"><div class="top"><span>${esc(i.n)}</span><button class="rm" data-rm="${k}" aria-label="Quitar">✕</button></div><div class="ctl"><div class="step"><button data-dec="${k}" aria-label="Menos">−</button><span>${i.q} ${i.q===1?'unidad':'unidades'}</span><button data-inc="${k}" aria-label="Más">+</button></div><label class="pp">$<input type="number" inputmode="numeric" data-pr="${k}" value="${i.p}" aria-label="Precio de venta por unidad"></label><span class="lt">${money(i.p*i.q)}</span></div><small class="mut">${esc(etiquetaCarrito(i))}· Compra ${money(i.c)} c/u${esAdminDrosalud()?` · ganas ${money((i.p-i.c)*i.q)}${warnM(i.p,i.c)}`:''}</small></div>`).join(''):'<p class="mut">Busca un producto y tócalo para agregarlo.</p>';const k=calc(),n=cart.reduce((s,i)=>s+i.q,0);$('#tot').textContent=money(k.total);$('#gn').textContent=esAdminDrosalud()&&cart.length?'Ganancia estimada (productos + domicilio − mensajero − descuento): '+money(k.gan):'';const e=$('#bg');e.hidden=!n;e.textContent=n;rVue(k)}
