@@ -743,7 +743,7 @@ function invImprimirKardex(){
 function invImprimirPedido(){
  let h='<h2>Pedido sugerido</h2><p>Ventas de los últimos 7 días · '+new Date().toLocaleDateString('es-CO')+'</p>';
  invPedidos.forEach((x,i)=>{const cajas=Math.max(0,Math.trunc(Number($('#inv-c-'+i).value)||0)),sueltas=Math.max(0,Math.trunc(Number($('#inv-s-'+i).value)||0));h+='<div class="cj-line"><span>'+esc(x.p.nombre)+'<small> · '+esc(x.p.laboratorio||'Sin laboratorio')+'</small></span><b>'+cajas+' cajas</b><b>'+sueltas+' unidades</b></div>'});
- openM(h+'<div class="acts"><button class="btn alt full" onclick="closeM()">Cerrar</button></div>');window.print();
+ openM(h+'<div class="acts"><button class="btn alt full" onclick="closeM()">Cerrar</button></div>');document.body.classList.add('print-inventario');window.addEventListener('afterprint',()=>document.body.classList.remove('print-inventario'),{once:true});window.print();
 }
 function invFechaInicio(){
  const d=new Date();d.setDate(d.getDate()-7);return d.toISOString();
