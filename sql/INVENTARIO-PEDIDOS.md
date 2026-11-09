@@ -63,6 +63,7 @@ Este documento describe el comportamiento aprobado para los módulos independien
 - Las tres migraciones se aplicaron en el proyecto aislado `drosalud-pruebas`.
 - Se verificó con pruebas SQL que una venta descuenta unidades, el cambio de equivalencia queda bloqueado, la línea vendida no se puede editar ni borrar, la anulación devuelve el saldo a cero, y el recibo anulado no se puede reactivar ni borrar.
 - También se verificó que `productos_app` conserva las opciones `security_barrier=true` y `security_invoker=true`.
+- El script de auditoría filtra ventas y anulaciones anteriores al inicio del Kardex; antes de ejecutarlo en otro entorno se debe ajustar `inicio_control` a la fecha/hora de instalación de la migración.
 - El proyecto de pruebas es un esquema aislado y no una copia completa de producción; los advisors muestran avisos por tablas de recibos/productos sin RLS en ese entorno mínimo. No se debe interpretar esa configuración de pruebas como el estado de producción.
 - No se ha ejecutado ninguna migración en producción.
 - Falta validar los flujos reales de frontend en Preview y los casos de permisos con ambos usuarios antes de aprobar el PR.
