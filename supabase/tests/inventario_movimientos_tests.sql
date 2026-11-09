@@ -7,10 +7,6 @@
 -- El inventario comienza en cero; ventas y anulaciones anteriores a esa fecha
 -- no tienen movimientos y NO deben reportarse como errores.
 
-with control as (
-  select timestamptz '2026-11-09 14:00:00-05' as inicio_control
-)
-
 -- 1. Saldo por producto (los productos sin movimientos deben dar cero).
 select p.id, p.nombre, p.laboratorio,
        coalesce(sum(m.unidades_delta),0)::integer as saldo_unidades
