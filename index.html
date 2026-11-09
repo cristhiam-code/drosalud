@@ -877,9 +877,6 @@ async function invRegistrarRecepcion(){
  }catch(e){console.error(e);$('#recep-status').textContent='No se pudo registrar la recepción: '+(e.message||'Error desconocido');toast(e.message||'No se pudo registrar la recepción')}
  finally{b.disabled=false}
 }
-$('#inv-q').addEventListener('input',invRenderLabs);
-$('#inv-labs').addEventListener('change',invLabsClick);
-document.querySelectorAll('input[name="inv-contenido"]').forEach(x=>x.addEventListener('change',()=>{}));
 const vistaInventario=document.querySelector('#v-inventario');
 vistaInventario.addEventListener('click',e=>{
  if(e.target.closest('#inv-generar'))invGenerarKardex();
