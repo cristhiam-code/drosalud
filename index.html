@@ -778,7 +778,7 @@ function invGenerarKardex(){
  if(formato==='pantalla')return;
  if(formato==='excel'){
   const data=[['Laboratorio','Producto','Cantidad','Unidades'],...rows.map(p=>{const v=invPartes(invSaldo(p),p.unidades_por_caja);return[p.laboratorio||'Sin laboratorio',p.nombre,v.cajas,v.sueltas]})];
-  const csv='\uFEFF'+data.map(r=>r.map(x=>{let v=x??'';if(typeof v==='string'&&/^[=+@\\-\\t\\r]/.test(v))v="'"+v;return '"'+String(v).replace(/"/g,'""')+'"'}).join(';')).join('\r\n');
+  const csv='\uFEFF'+data.map(r=>r.map(x=>{let v=x??'';if(typeof v==='string'&&(['=','+','@','-'].includes(v[0])||v.charCodeAt(0)===9||v.charCodeAt(0)===13))v="'"+v;return '"'+String(v).replace(/"/g,'""')+'"'}).join(';')).join('\r\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='kardex-drosalud.csv';a.click();URL.revokeObjectURL(url);return;
  }
  invImprimirKardex(formato==='pos');
@@ -821,8 +821,12 @@ function invImprimirPedido(){
  openM(h+'<div class="acts"><button class="btn alt full" onclick="closeM()">Cerrar</button></div>');document.body.classList.add('print-inventario');window.addEventListener('afterprint',()=>document.body.classList.remove('print-inventario'),{once:true});window.print();
 }
 function invFechaInicio(){
- // Semana calendario: lunes 00:00 en la zona horaria local de la droguería.
- const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return d.toISOString();
+ // Semana calendario desde el lunes 00:00, zona horaria fija de Colombia.
+ const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Bogota',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+ const v={};parts.forEach(p=>{v[p.type]=p.value});
+ const inicio=new Date(Date.UTC(Number(v.year),Number(v.month)-1,Number(v.day),5));
+ inicio.setUTCDate(inicio.getUTCDate()-((inicio.getUTCDay()+6)%7));
+ return inicio.toISOString();
 }
 async function invCargarPedidos(){
  const recibos=await invLeerTodo(()=>sb.from('recibos_app').select('id').eq('anulado',false).gte('creado_en',invFechaInicio()).order('creado_en').order('id'));
