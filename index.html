@@ -778,7 +778,7 @@ function invGenerarKardex(){
  if(formato==='pantalla')return;
  if(formato==='excel'){
   const data=[['Laboratorio','Producto','Cantidad','Unidades'],...rows.map(p=>{const v=invPartes(invSaldo(p),p.unidades_por_caja);return[p.laboratorio||'Sin laboratorio',p.nombre,v.cajas,v.sueltas]})];
-  const csv='\\ufeff'+data.map(r=>r.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(';')).join('\\r\\n');
+  const csv='\uFEFF'+data.map(r=>r.map(x=>{let v=x??'';if(typeof v==='string'&&/^[=+@\\-\\t\\r]/.test(v))v="'"+v;return '"'+String(v).replace(/"/g,'""')+'"'}).join(';')).join('\r\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='kardex-drosalud.csv';a.click();URL.revokeObjectURL(url);return;
  }
  invImprimirKardex(formato==='pos');
@@ -816,12 +816,13 @@ function invImprimirKardex(pos=false){
  window.addEventListener('afterprint',()=>document.body.classList.remove('print-inventario','print-pos'),{once:true});window.print();
 }
 function invImprimirPedido(){
- let h='<h2>Pedido sugerido</h2><p>Ventas de los últimos 7 días · '+new Date().toLocaleDateString('es-CO')+'</p>';
+ let h='<h2>Pedido sugerido</h2><p>Ventas de la semana actual (desde el lunes) · '+new Date().toLocaleDateString('es-CO')+'</p>';
  invPedidos.forEach((x,i)=>{const cajas=Math.max(0,Math.trunc(Number($('#inv-c-'+i).value)||0)),sueltas=Math.max(0,Math.trunc(Number($('#inv-s-'+i).value)||0));h+='<div class="cj-line"><span>'+esc(x.p.nombre)+'<small> · '+esc(x.p.laboratorio||'Sin laboratorio')+'</small></span><b>'+cajas+' cajas</b><b>'+sueltas+' unidades</b></div>'});
  openM(h+'<div class="acts"><button class="btn alt full" onclick="closeM()">Cerrar</button></div>');document.body.classList.add('print-inventario');window.addEventListener('afterprint',()=>document.body.classList.remove('print-inventario'),{once:true});window.print();
 }
 function invFechaInicio(){
- const d=new Date();d.setDate(d.getDate()-7);return d.toISOString();
+ // Semana calendario: lunes 00:00 en la zona horaria local de la droguería.
+ const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return d.toISOString();
 }
 async function invCargarPedidos(){
  const recibos=await invLeerTodo(()=>sb.from('recibos_app').select('id').eq('anulado',false).gte('creado_en',invFechaInicio()).order('creado_en').order('id'));
@@ -835,7 +836,7 @@ async function invCargarPedidos(){
   const u=ventas[p.id],f=Math.max(1,Number(p.unidades_por_caja)||1);
   return{p,unidades:u,cajas:Math.floor(u/f),sueltas:u%f};
  }).sort((a,b)=>(a.p.laboratorio||'').localeCompare(b.p.laboratorio||'','es',{sensitivity:'base'})||a.p.nombre.localeCompare(b.p.nombre,'es',{sensitivity:'base'}));
- $('#inv-pedidos-list').innerHTML=invPedidos.length?invPedidos.map((x,i)=>'<div class="item"><div class="top"><b>'+esc(x.p.nombre)+'</b><span class="mut">'+esc(x.p.laboratorio||'Sin laboratorio')+'</span></div><p class="sm">Vendido: '+x.cajas+' cajas · '+x.sueltas+' unidades ('+x.unidades+' unidades en total)</p><div class="two"><div><label for="inv-c-'+i+'">Cajas a pedir</label><input id="inv-c-'+i+'" type="number" min="0" step="1" value="'+x.cajas+'"></div><div><label for="inv-s-'+i+'">Unidades sueltas</label><input id="inv-s-'+i+'" type="number" min="0" max="'+(Math.max(1,Number(x.p.unidades_por_caja)||1)-1)+'" step="1" value="'+x.sueltas+'"></div></div></div>').join(''):'<p class="mut">No hay ventas de productos en los últimos 7 días.</p>';
+ $('#inv-pedidos-list').innerHTML=invPedidos.length?invPedidos.map((x,i)=>'<div class="item"><div class="top"><b>'+esc(x.p.nombre)+'</b><span class="mut">'+esc(x.p.laboratorio||'Sin laboratorio')+'</span></div><p class="sm">Vendido: '+x.cajas+' cajas · '+x.sueltas+' unidades ('+x.unidades+' unidades en total)</p><div class="two"><div><label for="inv-c-'+i+'">Cajas a pedir</label><input id="inv-c-'+i+'" type="number" min="0" step="1" value="'+x.cajas+'"></div><div><label for="inv-s-'+i+'">Unidades sueltas</label><input id="inv-s-'+i+'" type="number" min="0" max="'+(Math.max(1,Number(x.p.unidades_por_caja)||1)-1)+'" step="1" value="'+x.sueltas+'"></div></div></div>').join(''):'<p class="mut">No hay ventas de productos en la semana actual.</p>';
 }
 async function loadInventario(){
  $('#inv-status').textContent='Cargando productos y existencias…';
