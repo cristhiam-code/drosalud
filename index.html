@@ -736,7 +736,7 @@ function renderCotizaciones(){const q=norm($('#coq').value),L=CO.filter(r=>!q||n
 async function abrirCotizacion(r){const{data,error}=await sb.from('cotizacion_venta_items_app').select('*').eq('cotizacion_id',r.id).order('id');if(error)throw error;showRec({...r,cot:true},(data||[]).map(i=>({nombre:i.nombre,cantidad:i.cantidad,precio_venta:i.precio_venta,presentacion:i.presentacion,unidades_por_presentacion:i.unidades_por_presentacion})));}
 
 // INVENTARIO · UI de preview (requiere aplicar la migración SQL en entorno de pruebas).
-let invProductos=[],invSaldos={},invPedidos=[],invLaboratorios=[],invLabsSeleccionados=new Set(),invResultados=[];
+let invProductos=[],invSaldos={},invPedidos=[],invLaboratorios=[],invLabsSeleccionados=new Set(),invResultados=[],invRecepcionIntento=null;
 function invSaldo(p){return Number(invSaldos[p.id]||0)}
 function invPartes(s,f){f=Math.max(1,Number(f)||1);s=Math.trunc(s);if(s<0)return{cajas:0,sueltas:s};return{cajas:Math.floor(s/f),sueltas:s%f}}
 function invRenderLabs(){
@@ -863,9 +863,10 @@ async function invRegistrarRecepcion(){
  if(!Number.isInteger(u)||u<=0){toast('Escribe una cantidad válida de unidades individuales');return}
  const b=$('#inv-recibir');b.disabled=true;
  try{
-  const{error}=await sb.rpc('registrar_recepcion_inventario',{p_producto_id:id,p_unidades:u,p_notas:nota||null});
+  const datos=JSON.stringify([id,u,nota]);if(!invRecepcionIntento||invRecepcionIntento.datos!==datos)invRecepcionIntento={datos,id:crypto.randomUUID()};
+  const{error}=await sb.rpc('registrar_recepcion_inventario',{p_producto_id:id,p_unidades:u,p_notas:nota||null,p_operacion_id:invRecepcionIntento.id});
   if(error)throw error;
-  $('#inv-unidades').value='';$('#inv-notas').value='';
+  $('#inv-unidades').value='';$('#inv-notas').value='';invRecepcionIntento=null;
   toast('Recepción registrada');$('#recep-status').textContent='Recepción guardada. El saldo fue actualizado.';await invCargarDatos();
  }catch(e){console.error(e);$('#recep-status').textContent='No se pudo registrar la recepción: '+(e.message||'Error desconocido');toast(e.message||'No se pudo registrar la recepción')}
  finally{b.disabled=false}
