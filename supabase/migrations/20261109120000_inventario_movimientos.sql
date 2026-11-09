@@ -2,6 +2,19 @@
 -- Preparado para revisión. No ejecutar en producción hasta probar en entorno aislado.
 begin;
 
+-- Clasificación comercial editable por producto, utilizada por el filtro del Kardex.
+alter table public.productos add column if not exists linea text;
+
+-- Mantiene la vista de aplicación y expone la nueva clasificación al frontend.
+create or replace view public.productos_app
+with (security_barrier = true)
+as
+select id, codigo, nombre, laboratorio, precio_compra, actualizado_en,
+       precio_venta, fraccionable, unidades_por_caja, unidades_por_venta,
+       linea
+from public.productos p
+where es_usuario_drosalud();
+
 create table if not exists public.inventario_movimientos (
   id uuid primary key default gen_random_uuid(),
   producto_id uuid not null references public.productos(id) on delete restrict,
