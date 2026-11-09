@@ -10,6 +10,11 @@
 - No se bloquean ventas por saldo negativo.
 - Las líneas sin `producto_id` no afectan inventario.
 
+## Clasificación comercial por línea
+- `productos.linea` es una clasificación editable desde la ficha del producto; no se asigna automáticamente por laboratorio ni por nombre.
+- La vista `productos_app` expone `linea` al frontend.
+- El Kardex construye el filtro con las líneas realmente asignadas. Los productos sin línea siguen apareciendo al elegir “Todas las líneas”.
+
 ## Kardex
 - Consulta de saldo actual, no historial de movimientos.
 - El saldo se consulta desde `public.inventario_saldos`, una vista agregada con `security_invoker = true`; la lectura respeta RLS de `inventario_movimientos` y evita descargar todo el historial al navegador.
