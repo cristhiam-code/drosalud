@@ -785,7 +785,8 @@ $('#inv-q').addEventListener('input',invFiltrar);
 document.querySelector('#v-inventario').addEventListener('click',e=>{
  const t=e.target.closest('[data-inv-tab]');if(t){invSetTab(t.dataset.invTab);return}
  if(e.target.closest('#inv-recibir'))invRegistrarRecepcion();
- if(e.target.closest('#inv-print'))invImprimirPedido();\n if(e.target.closest('#inv-print-kardex'))invImprimirKardex();
+ if(e.target.closest('#inv-print'))invImprimirPedido();
+ if(e.target.closest('#inv-print-kardex'))invImprimirKardex();
 });
 
 let syncChannel=null,syncTimer=null,realtimeRequested=false;
