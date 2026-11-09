@@ -81,10 +81,15 @@ begin
   if coalesce(old.anulado, false) = false and new.anulado is true then
     insert into public.inventario_movimientos
       (producto_id, tipo, unidades_delta, referencia_id, notas, creado_por)
-    select ri.producto_id, 'anulacion', ri.cantidad, ri.id,
+    select ri.producto_id, 'anulacion', -venta.unidades_delta, ri.id,
            'Reversión automática por anulación del recibo ' || new.numero::text,
            auth.uid()
     from public.recibo_items ri
+    join public.inventario_movimientos venta
+      on venta.tipo = 'venta'
+     and venta.referencia_id = ri.id
+     and venta.producto_id = ri.producto_id
+     and venta.unidades_delta < 0
     where ri.recibo_id = new.id
       and ri.producto_id is not null
     on conflict (tipo, referencia_id) where referencia_id is not null and tipo in ('venta','anulacion')
