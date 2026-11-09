@@ -741,7 +741,7 @@ function invSaldo(p){return Number(invSaldos[p.id]||0)}
 function invPartes(s,f){f=Math.max(1,Number(f)||1);s=Math.trunc(s);if(s<0)return{cajas:0,sueltas:s};return{cajas:Math.floor(s/f),sueltas:s%f}}
 function invRenderLabs(){
  const q=norm($('#inv-q').value||'');
- const visibles=invLaboratorios.filter(l=>!q||norm(l).includes(q));
+ const visibles=invLaboratorios.filter(l=>!q||norm(l).includes(q)||invProductos.some(p=>(p.laboratorio||'Sin laboratorio').trim()===l&&norm([p.nombre,p.codigo].join(' ')).includes(q)));
  $('#inv-labs').innerHTML=visibles.map(l=>'<label class="inv-lab"><input type="checkbox" data-inv-lab="'+esc(l)+'" '+(invLabsSeleccionados.has(l)?'checked':'')+'> '+esc(l)+'</label>').join('')||'<p class="mut sm">No hay laboratorios coincidentes.</p>';
  $('#inv-lab-count').textContent='Laboratorios · '+invLabsSeleccionados.size+' seleccionados';
 }
@@ -805,7 +805,7 @@ async function invCargarDatos(){
  invRenderLabs();
 }
 function invImprimirKardex(pos=false){
- const rows=invResultados.length?invResultados:invFiltrar();
+ const rows=invFiltrar();
  if(!rows.length){toast('No hay productos para imprimir');return}
  const title='Kardex de inventario',stamp=new Date().toLocaleString('es-CO');
  let h='<h2>'+title+'</h2><p>Consulta: '+stamp+'</p>';
