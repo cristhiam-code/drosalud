@@ -246,6 +246,7 @@ nav button[aria-current="true"]{color:var(--pri);font-weight:800;box-shadow:inse
 .g.gl .gn{grid-column:1/-1;text-align:left}
 .seg{display:flex;gap:6px;background:var(--soft);padding:4px;border-radius:12px;margin-bottom:12px}
 .cj-line{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
+.inv-cols{display:grid;grid-template-columns:minmax(0,1fr) 82px 82px;gap:8px;align-items:center}.inv-cols>*:nth-child(n+2){text-align:right}
 .cj-line:last-child{border-bottom:0}
 .cj-dif{border-radius:12px;padding:12px;font-weight:800;margin:10px 0;background:var(--soft);color:var(--pri)}
 .cj-dif.falta{background:#FBE9E9;color:var(--bad)}
@@ -707,9 +708,9 @@ function invFiltrar(){
  const labs=[...new Set(rows.map(p=>(p.laboratorio||'Sin laboratorio').trim()))].sort((a,b)=>a.localeCompare(b,'es',{sensitivity:'base'}));
  $('#inv-kardex-list').innerHTML=rows.length?labs.map(l=>{
   const items=rows.filter(p=>(p.laboratorio||'Sin laboratorio').trim()===l).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es',{sensitivity:'base'}));
-  return '<div class="item"><h3>'+esc(l)+'</h3>'+items.map(p=>{
+  return '<div class="item"><h3>'+esc(l)+'</h3><div class="cj-line inv-cols"><b>Producto</b><b>Cantidad</b><b>Unidades</b></div>'+items.map(p=>{
    const s=invSaldo(p),v=invPartes(s,p.unidades_por_caja);
-   return '<div class="cj-line"><span>'+esc(p.nombre)+'</span><b>'+v.cajas+' cajas · '+v.sueltas+' unidades</b></div>';
+   return '<div class="cj-line inv-cols"><span>'+esc(p.nombre)+'</span><b>'+v.cajas+'</b><b>'+v.sueltas+'</b></div>';
   }).join('')+'</div>';
  }).join(''):'<p class="mut">No hay productos que coincidan.</p>';
 }
