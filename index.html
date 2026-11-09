@@ -705,14 +705,22 @@ function invFiltrar(){
   }).join('')+'</div>';
  }).join(''):'<p class="mut">No hay productos que coincidan.</p>';
 }
+async function invLeerTodo(construir){
+ const salida=[];let desde=0,lote=[];
+ do{
+  const{data,error}=await construir().range(desde,desde+999);
+  if(error)throw error;
+  lote=data||[];salida.push(...lote);desde+=lote.length;
+ }while(lote.length===1000);
+ return salida;
+}
 async function invCargarDatos(){
- const [pr,mv]=await Promise.all([
-  sb.from('productos_app').select('id,codigo,nombre,laboratorio,unidades_por_caja').order('nombre').limit(5000),
-  sb.from('inventario_movimientos').select('producto_id,unidades_delta').limit(20000)
+ const [productos,movimientos]=await Promise.all([
+  invLeerTodo(()=>sb.from('productos_app').select('id,codigo,nombre,laboratorio,unidades_por_caja').order('nombre').order('id')),
+  invLeerTodo(()=>sb.from('inventario_movimientos').select('producto_id,unidades_delta').order('creado_en').order('id'))
  ]);
- if(pr.error)throw pr.error;if(mv.error)throw mv.error;
- invProductos=pr.data||[];invSaldos={};
- (mv.data||[]).forEach(m=>{invSaldos[m.producto_id]=(invSaldos[m.producto_id]||0)+Number(m.unidades_delta||0)});
+ invProductos=productos;invSaldos={};
+ movimientos.forEach(m=>{invSaldos[m.producto_id]=(invSaldos[m.producto_id]||0)+Number(m.unidades_delta||0)});
  const opts=invProductos.slice().sort((a,b)=>a.nombre.localeCompare(b.nombre,'es',{sensitivity:'base'}));
  $('#inv-prod').innerHTML='<option value="">Seleccionar producto</option>'+opts.map(p=>'<option value="'+p.id+'">'+esc(p.nombre)+' · '+esc(p.laboratorio||'Sin laboratorio')+'</option>').join('');
  invFiltrar();
@@ -721,11 +729,13 @@ function invFechaInicio(){
  const d=new Date();d.setDate(d.getDate()-7);return d.toISOString();
 }
 async function invCargarPedidos(){
- const {data:rs,error:er}=await sb.from('recibos').select('id').eq('anulado',false).gte('creado_en',invFechaInicio()).limit(5000);
- if(er)throw er;
- const ids=(rs||[]).map(x=>x.id);let items=[];
- if(ids.length){const{data,error}=await sb.from('recibo_items_app').select('producto_id,cantidad').in('recibo_id',ids).limit(20000);if(error)throw error;items=data||[]}
- const ventas={};items.forEach(i=>{if(i.producto_id)ventas[i.producto_id]=(ventas[i.producto_id]||0)+Number(i.cantidad||0)});
+ const recibos=await invLeerTodo(()=>sb.from('recibos').select('id').eq('anulado',false).gte('creado_en',invFechaInicio()).order('creado_en').order('id'));
+ const ventas={};
+ for(let i=0;i<recibos.length;i+=100){
+  const ids=recibos.slice(i,i+100).map(r=>r.id);
+  const items=await invLeerTodo(()=>sb.from('recibo_items_app').select('producto_id,cantidad').in('recibo_id',ids).order('id'));
+  items.forEach(x=>{if(x.producto_id)ventas[x.producto_id]=(ventas[x.producto_id]||0)+Number(x.cantidad||0)});
+ }
  invPedidos=invProductos.filter(p=>(ventas[p.id]||0)>0).map(p=>{
   const u=ventas[p.id],f=Math.max(1,Number(p.unidades_por_caja)||1);
   return{p,unidades:u,cajas:Math.floor(u/f),sueltas:u%f};
