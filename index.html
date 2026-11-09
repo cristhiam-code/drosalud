@@ -586,8 +586,15 @@ async function confirmarRecepcion(){
  const p=P.find(x=>x.id===$('#rec-product').value),q=Number($('#rec-qty').value);
  if(!p){toast('Selecciona un producto');return}if(!Number.isInteger(q)||q<=0){toast('Escribe una cantidad válida');return}
  if(!confirm('¿Confirmas la recepción física de '+q+' '+(q===1?'presentación':'presentaciones')+' de '+p.nombre+'?'))return;
- const{data,error}=await sb.rpc('registrar_entrada_inventario_drosalud',{p_producto_id:p.id,p_cantidad_presentaciones:q,p_referencia:crypto.randomUUID()});
- if(error)throw error;toast('Recepción registrada. Nuevo saldo: '+data);$('#rec-qty').value='';actualizarFactorRecepcion();
+ // Conserva la misma referencia si la respuesta se pierde y hay que reintentar.
+ // Así una recepción confirmada en servidor no se duplica por un segundo clic.
+ const key='drosalud:recepcion-pendiente';let ref=null;
+ try{const saved=JSON.parse(localStorage.getItem(key)||'null');if(saved&&saved.producto_id===p.id&&saved.cantidad===q&&saved.referencia)ref=saved.referencia}catch(e){}
+ if(!ref){ref=crypto.randomUUID();try{localStorage.setItem(key,JSON.stringify({producto_id:p.id,cantidad:q,referencia:ref}))}catch(e){}}
+ const{data,error}=await sb.rpc('registrar_entrada_inventario_drosalud',{p_producto_id:p.id,p_cantidad_presentaciones:q,p_referencia:ref});
+ if(error)throw error;
+ try{const saved=JSON.parse(localStorage.getItem(key)||'null');if(saved&&saved.referencia===ref)localStorage.removeItem(key)}catch(e){}
+ toast('Recepción registrada. Nuevo saldo: '+data);$('#rec-qty').value='';actualizarFactorRecepcion();
 }
 function rRes(){rTop();const q=$('#q').value.trim(),b=$('#res');if(!q){b.innerHTML='';return}const a=find(q,20);b.innerHTML=a.length?a.map(p=>`<button class="row" data-add="${p.id}"><span class="nm">${esc(p.nombre)}<small>${esc(p.laboratorio||'')}</small></span><span class="pr">${pv(p)==null?'Precio pendiente':money(pv(p))}<small>compra ${money(p.precio_compra)}</small></span></button>`).join(''):'<p class="mut">No hay resultados. Agrégalo en Catálogo.</p>'}
 function calc(){const st=cart.reduce((s,i)=>s+i.p*i.q,0),g=esAdminDrosalud()?cart.reduce((s,i)=>s+(i.p-(i.c||0))*i.q,0):null,ds=Math.max(0,+$('#dsc').value||0),dm=Math.max(0,+$('#dom').value||0),mens=Math.max(0,+$('#mens').value||0);return{st,ds,dm,mens,total:Math.max(0,st-ds+dm),gan:g==null?null:g-ds+dm-mens}}
