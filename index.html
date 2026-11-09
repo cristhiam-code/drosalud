@@ -828,8 +828,9 @@ function invFechaInicio(){
  inicio.setUTCDate(inicio.getUTCDate()-((inicio.getUTCDay()+6)%7));
  return inicio.toISOString();
 }
+function invFechaFin(){const fin=new Date(invFechaInicio());fin.setUTCDate(fin.getUTCDate()+7);return fin.toISOString();}
 async function invCargarPedidos(){
- const recibos=await invLeerTodo(()=>sb.from('recibos_app').select('id').eq('anulado',false).gte('creado_en',invFechaInicio()).order('creado_en').order('id'));
+ const recibos=await invLeerTodo(()=>sb.from('recibos_app').select('id').eq('anulado',false).gte('creado_en',invFechaInicio()).lt('creado_en',invFechaFin()).order('creado_en').order('id'));
  const ventas={};
  for(let i=0;i<recibos.length;i+=100){
   const ids=recibos.slice(i,i+100).map(r=>r.id);
