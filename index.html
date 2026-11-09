@@ -16,7 +16,26 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#F2F6F3;--card:#FFFFFF;--ink:#12261F;--mut:#65766D;--line:#DCE7E1;--pri:#0E6B55;--pri-ink:#FFFFFF;--soft:#E7F0EB;--gain:#16845D;--bad:#C62828;color-scheme:light;
+:root{--bg:#F4F8FF;--card:#FFFFFF;--ink:#17365C;--mut:#718096;--line:#DCE7F1;--pri:#0756B5;--pri-ink:#FFFFFF;--soft:#E7F2FC;--gain:#22B573;--bad:#C62828;--secondary:#08A9D6;--accent:#22B573;--nav-bg:#FFFFFF;--nav-ink:#17365C;--hover:#E7F2FC;--selected:#D8EAFE;--focus:#08A9D6;--warning:#D97706;--success:#22B573;color-scheme:light;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+/* Tokens de apariencia configurables desde Ajustes. */
+:root{--pri-hover:#064895;--pri-soft:#E7F2FC}
+button:hover,.btn:hover{filter:brightness(.97)}
+button:focus-visible,a:focus-visible,input:focus,select:focus,textarea:focus{outline-color:var(--focus)}
+.btn.alt{background:var(--soft);color:var(--ink)}
+#nav{background:var(--nav-bg);color:var(--nav-ink)}
+#nav button[aria-current="true"]{background:var(--selected);color:var(--pri)}
+#more-menu button:hover,.aju-tile:hover{background:var(--hover)}
+input[type="color"]{height:46px;padding:4px;cursor:pointer}
+.palette-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 14px}
+.palette-field{min-width:0}
+.palette-field label{display:block;margin-top:7px}
+.palette-preview{border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--card);color:var(--ink);margin:12px 0}
+.palette-preview .sample-primary{display:inline-block;padding:9px 13px;border-radius:9px;background:var(--pri);color:var(--pri-ink);font-weight:800}
+.palette-preview .sample-secondary{display:inline-block;padding:9px 13px;border-radius:9px;background:var(--secondary);color:#fff;font-weight:700}
+.palette-preview .sample-chip{display:inline-block;padding:5px 9px;border-radius:20px;background:var(--selected);color:var(--pri);margin:4px}
+@media(max-width:480px){.palette-grid{grid-template-columns:1fr}}
+
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 /* Paleta clara inicial; los ajustes guardados pueden personalizarla. */
 *,*::before,*::after{box-sizing:inherit}
@@ -592,8 +611,34 @@ nav button{font-size:.78rem}
    <label for="mm">Alerta de ganancia baja (menos de … %)</label><input id="mm" type="number" inputmode="decimal" min="0" step="1" data-k="mMin">
   </div>
   <div class="aju-page" data-aju-page="apariencia" hidden>
-   <h2>Paleta de colores</h2><p class="mut sm">Personaliza la apariencia de la aplicación. No cambia el diseño ni la impresión de la factura.</p>
-   <label for="cp1">Color principal</label><input id="cp1" type="color" data-k="colorPri"><label for="cp2">Fondo</label><input id="cp2" type="color" data-k="colorBg"><label for="cp3">Tarjetas</label><input id="cp3" type="color" data-k="colorCard"><label for="cp4">Texto</label><input id="cp4" type="color" data-k="colorInk">
+   <h2>Paleta de colores</h2><p class="mut sm">Personaliza toda la apariencia de Drosalud. Los cambios se previsualizan al instante y no modifican la impresión del recibo.</p>
+   <h3>Identidad</h3><div class="palette-grid">
+    <div class="palette-field"><label for="cp1">Azul principal</label><input id="cp1" type="color" data-k="colorPri"></div>
+    <div class="palette-field"><label for="cp5">Turquesa secundario</label><input id="cp5" type="color" data-k="colorSecondary"></div>
+    <div class="palette-field"><label for="cp6">Verde de acento</label><input id="cp6" type="color" data-k="colorAccent"></div>
+    <div class="palette-field"><label for="cp7">Navegación (fondo)</label><input id="cp7" type="color" data-k="colorNavBg"></div>
+    <div class="palette-field"><label for="cp8">Navegación (texto)</label><input id="cp8" type="color" data-k="colorNavInk"></div>
+   </div>
+   <h3>Superficies y texto</h3><div class="palette-grid">
+    <div class="palette-field"><label for="cp2">Fondo general</label><input id="cp2" type="color" data-k="colorBg"></div>
+    <div class="palette-field"><label for="cp3">Tarjetas</label><input id="cp3" type="color" data-k="colorCard"></div>
+    <div class="palette-field"><label for="cp4">Texto principal</label><input id="cp4" type="color" data-k="colorInk"></div>
+    <div class="palette-field"><label for="cp9">Texto secundario</label><input id="cp9" type="color" data-k="colorMuted"></div>
+    <div class="palette-field"><label for="cp10">Bordes</label><input id="cp10" type="color" data-k="colorBorder"></div>
+    <div class="palette-field"><label for="cp11">Fondo secundario</label><input id="cp11" type="color" data-k="colorSoft"></div>
+   </div>
+   <h3>Interacciones</h3><div class="palette-grid">
+    <div class="palette-field"><label for="cp12">Hover</label><input id="cp12" type="color" data-k="colorHover"></div>
+    <div class="palette-field"><label for="cp13">Elemento seleccionado</label><input id="cp13" type="color" data-k="colorSelected"></div>
+    <div class="palette-field"><label for="cp14">Enfoque (focus)</label><input id="cp14" type="color" data-k="colorFocus"></div>
+   </div>
+   <h3>Estados</h3><div class="palette-grid">
+    <div class="palette-field"><label for="cp15">Éxito</label><input id="cp15" type="color" data-k="colorSuccess"></div>
+    <div class="palette-field"><label for="cp16">Advertencia</label><input id="cp16" type="color" data-k="colorWarning"></div>
+    <div class="palette-field"><label for="cp17">Error</label><input id="cp17" type="color" data-k="colorError"></div>
+   </div>
+   <div class="palette-preview"><strong>Vista previa</strong><p>Así se verán los colores de tu aplicación.</p><span class="sample-primary">Botón principal</span> <span class="sample-secondary">Secundario</span><p><span class="sample-chip">Seleccionado</span><span class="sample-chip">Elemento activo</span></p></div>
+   <button class="btn alt full" id="palette-reset" type="button">Restaurar paleta predeterminada</button>
   </div>
   <div class="aju-page" data-aju-page="negocio" hidden>
    <h2>Datos del negocio</h2>
@@ -642,7 +687,7 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 const money=n=>'$'+Math.round(n).toLocaleString('es-CO');
-const DEF={m:25,r:100,biz:'DROGUERIA DROSALUD.SAS',nit:'900.109.443-0',ciu:'Cúcuta',tel:'3112581564',dir:'',msg:'Gracias por su compra',nota:'Resolución de facturación electrónica N° 1845101586525 de 2025-11-12. Vigencia 24 meses.',sHora:true,sCed:true,sTel:true,sPago:true,big:false,sLogo:true,mMin:10,colorPri:'#0E6B55',colorBg:'#F2F6F3',colorCard:'#FFFFFF',colorInk:'#12261F',cotDias:3,cotNota:'Precios sujetos a cambio y disponibilidad.',respDias:30,breb:'3112581564',pagoTitular:'',pagoCot:true,pagoRec:'siempre',qrTexto:'',qrImg:'',vendedorDef:'',msgRetomar:'Hola {nombre}, ¿cómo estás? Te escribimos de Drosalud. Hace un tiempo no sabemos de ti, ¿te ayudamos con algo? Tu salud, nuestra prioridad.'};
+const DEF={m:25,r:100,biz:'DROGUERIA DROSALUD.SAS',nit:'900.109.443-0',ciu:'Cúcuta',tel:'3112581564',dir:'',msg:'Gracias por su compra',nota:'Resolución de facturación electrónica N° 1845101586525 de 2025-11-12. Vigencia 24 meses.',sHora:true,sCed:true,sTel:true,sPago:true,big:false,sLogo:true,mMin:10,colorPri:'#0756B5',colorBg:'#F4F8FF',colorCard:'#FFFFFF',colorInk:'#17365C',colorSecondary:'#08A9D6',colorAccent:'#22B573',colorMuted:'#718096',colorBorder:'#DCE7F1',colorSoft:'#E7F2FC',colorNavBg:'#FFFFFF',colorNavInk:'#17365C',colorHover:'#E7F2FC',colorSelected:'#D8EAFE',colorFocus:'#08A9D6',colorSuccess:'#22B573',colorWarning:'#D97706',colorError:'#C62828',cotDias:3,cotNota:'Precios sujetos a cambio y disponibilidad.',respDias:30,breb:'3112581564',pagoTitular:'',pagoCot:true,pagoRec:'siempre',qrTexto:'',qrImg:'',vendedorDef:'',msgRetomar:'Hola {nombre}, ¿cómo estás? Te escribimos de Drosalud. Hace un tiempo no sabemos de ti, ¿te ayudamos con algo? Tu salud, nuestra prioridad.'};
 const VERSION='2026-11-07.1-navegacion-respaldo';
 let P=[],C=[],H=[],CO=[],cart=[],savingVenta=false,savingCotizacion=false,savingAjustes=false,cfg={...DEF},draft=null,usuarioDrosalud=null,rolDrosalud=null;
 // Control de interfaz por rol. La autorización definitiva debe aplicarse también en RLS.
@@ -652,7 +697,7 @@ function aplicarInterfazRol(){const admin=esAdminDrosalud();document.querySelect
 const LOGO={c:new Image(),b:new Image()};LOGO.c.src='logo.png';LOGO.b.src='logo-bw.png';
 async function loadCfg(){try{const{data,error}=await sb.from('ajustes').select('datos').eq('id',1).maybeSingle();if(error)throw error;if(!data)throw new Error('No existe el registro principal de ajustes (id=1). No se aplicaron valores predeterminados para evitar sobrescribir la configuración del negocio.');const saved=data.datos&&typeof data.datos==='object'?data.datos:{};cfg={...DEF,...saved};const oldPalette={colorPri:'#3DBE9A',colorBg:'#0D1613',colorCard:'#16231E',colorInk:'#E7F1EC'};const isOldDefault=Object.keys(oldPalette).every(k=>String(saved[k]||'').toUpperCase()===oldPalette[k]);if(isOldDefault&&esAdminDrosalud()){const migrated={...cfg};['colorPri','colorBg','colorCard','colorInk'].forEach(k=>migrated[k]=DEF[k]);await saveCfgDb(migrated)}draft=null;applyPalette()}catch(e){console.error(e);throw e}}
 async function saveCfgDb(d){const canon=v=>v&&typeof v==='object'?(Array.isArray(v)?v.map(canon):Object.fromEntries(Object.keys(v).sort().map(k=>[k,canon(v[k])] ))):v;const{data,error}=await sb.from('ajustes').upsert({id:1,datos:d,actualizado_en:new Date().toISOString()}).select('id,datos').single();if(error)throw error;if(!data||Number(data.id)!==1)throw new Error('Supabase no confirmó el guardado de los ajustes.');if(JSON.stringify(canon(data.datos))!==JSON.stringify(canon(d)))throw new Error('Supabase devolvió valores distintos a los enviados. No se confirmó el guardado.');cfg={...DEF,...data.datos}}
-function applyPalette(){const root=document.documentElement;[['--pri','colorPri'],['--bg','colorBg'],['--card','colorCard'],['--ink','colorInk']].forEach(([css,k])=>{const v=draft?.[k]||cfg[k];if(v&&/^#[0-9a-f]{6}$/i.test(v))root.style.setProperty(css,v)});const hex=draft?.colorPri||cfg.colorPri||'#0E6B55',n=parseInt(hex.slice(1),16),lum=.299*(n>>16&255)+.587*(n>>8&255)+.114*(n&255);root.style.setProperty('--pri-ink',lum>160?'#12261F':'#FFFFFF')}
+function applyPalette(){const root=document.documentElement;const keys=[['--pri','colorPri'],['--bg','colorBg'],['--card','colorCard'],['--ink','colorInk'],['--secondary','colorSecondary'],['--accent','colorAccent'],['--mut','colorMuted'],['--line','colorBorder'],['--soft','colorSoft'],['--nav-bg','colorNavBg'],['--nav-ink','colorNavInk'],['--hover','colorHover'],['--selected','colorSelected'],['--focus','colorFocus'],['--gain','colorSuccess'],['--success','colorSuccess'],['--warning','colorWarning'],['--bad','colorError']];keys.forEach(([css,k])=>{const v=draft?.[k]||cfg[k]||DEF[k];if(v&&/^#[0-9a-f]{6}$/i.test(v))root.style.setProperty(css,v)});const hex=draft?.colorPri||cfg.colorPri||DEF.colorPri,n=parseInt(hex.slice(1),16),lum=.299*(n>>16&255)+.587*(n>>8&255)+.114*(n&255);root.style.setProperty('--pri-ink',lum>160?'#17365C':'#FFFFFF')}
 function fillAju(){$('#aju-menu').hidden=false;$('#aju-pages').hidden=true;document.querySelectorAll('[data-aju-page]').forEach(x=>x.hidden=true);$('#ver').textContent='Versión de la app: '+VERSION;$('#bkt').textContent=cfg.ultimoRespaldo?'Último respaldo: '+fd(cfg.ultimoRespaldo):'Todavía no has descargado un respaldo.';draft={...cfg};applyPalette();document.querySelectorAll('#v-aju [data-k]').forEach(e=>{const v=draft[e.dataset.k];if(e.type==='checkbox')e.checked=!!v;else e.value=v==null?'':v});qrStatus();renderPrev();if(esAdminDrosalud())mfaEstado()}
 function renderPrev(){const it=[{nombre:'ACETAMINOFEN 500 MG * 100 TAB',cantidad:2,precio_venta:12500},{nombre:'SUERO ORAL SABOR UVA',cantidad:1,precio_venta:5600}];const r={numero:1,creado_en:new Date().toISOString(),cliente_nombre:'Cliente de ejemplo',vendedor:'Cristhiam',forcePago:true,cliente_cedula:'123456789',cliente_telefono:'3001234567',cliente_direccion:'Calle 10 # 12-34',descuento:1000,domicilio:3000,forma_pago:'Efectivo',recibido:50000,total:sub(it)+2000};const sv=cfg;cfg=draft;try{$('#prev').innerHTML=tkt(r,it)}finally{cfg=sv}}
 const price=c=>{const v=c*(1+cfg.m/100);return cfg.r?Math.ceil(v/cfg.r-1e-9)*cfg.r:Math.round(v)};
@@ -998,6 +1043,7 @@ if(id==='retry')return loadAllSafe(realtimeRequested);
 if(d.ajuOpen){$('#aju-menu').hidden=true;$('#aju-pages').hidden=false;document.querySelectorAll('[data-aju-page]').forEach(x=>x.hidden=x.dataset.ajuPage!==d.ajuOpen);$('#aju-back').hidden=false;return}
 if(id==='aju-back'){$('#aju-pages').hidden=true;$('#aju-menu').hidden=false;return}
 if(t.hasAttribute('data-aju-save')){if(t.disabled||savingAjustes)return;savingAjustes=true;const backup=!!t.closest('.aju-admin'),backupField=$('#rd3'),saveLabel=t.textContent;t.disabled=true;t.classList.add('is-saving');t.setAttribute('aria-busy','true');t.textContent='Guardando…';return go(async()=>{let payload;if(backup){const days=Number(backupField?.value);if(!Number.isInteger(days)||days<7){if(backupField)backupField.focus();throw new Error('La frecuencia debe ser un número entero de 7 días o más.')}payload={...cfg,respDias:days}}else{if(!draft||!String(draft.biz||'').trim())throw new Error('Escribe el nombre del negocio.');draft.m=Math.max(0,+draft.m||0);draft.mMin=Math.max(0,+draft.mMin||0);payload={...draft}}if(!backup)applyPalette();await saveCfgDb(payload);if(backup){if(draft)draft.respDias=cfg.respDias;if(backupField)backupField.value=String(cfg.respDias);toast('Frecuencia guardada: cada '+cfg.respDias+' días')}else{draft={...cfg};iniVend();rRes();rCat();rCart();toast('Ajustes guardados correctamente')}}).finally(()=>{savingAjustes=false;t.disabled=false;t.classList.remove('is-saving');t.removeAttribute('aria-busy');t.textContent=saveLabel})}
+if(id==='palette-reset'){if(!draft)return;['colorPri','colorBg','colorCard','colorInk','colorSecondary','colorAccent','colorMuted','colorBorder','colorSoft','colorNavBg','colorNavInk','colorHover','colorSelected','colorFocus','colorSuccess','colorWarning','colorError'].forEach(k=>draft[k]=DEF[k]);document.querySelectorAll('#v-aju input[type=color][data-k]').forEach(el=>el.value=draft[el.dataset.k]);applyPalette();return}
 if(id==='qrx'){if(draft){draft.qrTexto='';draft.qrImg='';qrStatus();renderPrev()}return}
 if(id==='scan')return abrirScan('venta');
 if(id==='scan2')return abrirScan('cat');
