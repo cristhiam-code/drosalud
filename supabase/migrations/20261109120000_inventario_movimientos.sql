@@ -60,7 +60,7 @@ security definer
 set search_path = ''
 as $$
 begin
-  if old.anulado is false and new.anulado is true then
+  if coalesce(old.anulado, false) = false and new.anulado is true then
     insert into public.inventario_movimientos
       (producto_id, tipo, unidades_delta, referencia_id, notas, creado_por)
     select ri.producto_id, 'anulacion', ri.cantidad, ri.id,
