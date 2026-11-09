@@ -41,7 +41,7 @@ begin
     values
       (new.producto_id, 'venta', -new.cantidad, new.id,
        'Descuento automático por recibo', auth.uid())
-    on conflict (tipo, referencia_id) where referencia_id is not null
+    on conflict (tipo, referencia_id) where referencia_id is not null and tipo in ('venta','anulacion')
     do nothing;
   end if;
   return new;
@@ -69,7 +69,7 @@ begin
     from public.recibo_items ri
     where ri.recibo_id = new.id
       and ri.producto_id is not null
-    on conflict (tipo, referencia_id) where referencia_id is not null
+    on conflict (tipo, referencia_id) where referencia_id is not null and tipo in ('venta','anulacion')
     do nothing;
   end if;
   return new;
