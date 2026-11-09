@@ -498,7 +498,7 @@ nav button{font-size:.78rem}
   <div class="row" style="justify-content:space-between"><b id="inv-lab-count">Laboratorios · Ninguno seleccionado</b><span><button class="btn alt" id="inv-labs-all" type="button">Seleccionar todos</button> <button class="btn alt" id="inv-labs-none" type="button">Limpiar</button></span></div>
   <p class="mut sm">Marca los laboratorios que quieres incluir. Usa el buscador para encontrarlos rápido.</p>
   <div id="inv-labs" class="inv-labs"></div>
-  <label for="inv-linea">Línea (opcional)</label><select id="inv-linea" disabled><option>Sin configurar en catálogo</option></select>
+  <label for="inv-linea">Línea (opcional)</label><select id="inv-linea" disabled><option value="">Todas las líneas · pendiente de clasificar catálogo</option><option>VARIOS HOSPITALARIOS</option><option>FARMA</option><option>NUTRICIONAL</option><option>ONCOLOGICOS</option><option>DIAGNOSTICA</option><option>GENERAL</option><option>AULEN</option><option>ESKOPHARM</option><option>OTC</option><option>BIOCHEM</option><option>BIOTOSCANA</option><option>IHNALADORES</option><option>PANALES</option><option>SANITARIA</option><option>GENERICO</option><option>MISCELANEA</option><option>SETFARMA</option><option>DERMOCOSMETICOS</option><option>NATURALES</option><option>SUPLEMENTOS DIETARIOS</option><option>GENERICO PREMIUM</option><option>PHARMA ROSS</option><option>DELLEN</option><option>CONSUMO</option><option>BIOGEN</option><option>GRUNENTHAL</option><option>JGB</option><option>COSMETICOS</option><option>BUSSIE</option><option>INCOBRA</option><option>COSQUIN</option><option>EURODRUG</option><option>ENDULZANTES</option><option>LEON</option><option>AMERICAN GENERIC</option><option>INSTITUCIONAL</option><option>FARMA MEDICA</option><option>SYNTHESIS</option><option>FARMA RELACIONAL</option><option>DERMATOLOGICO</option><option>MARCAPROPIA</option><option>MERCK</option><option>GALLETAS Y DULCES</option><option>NESTLE</option><option>FORMULAS INFANTIL</option><option>SANDOZ</option><option>COLMED</option><option>PROCAPS</option><option>OFTALMOLOGICO</option><option>FARMIONI</option><option>PROCTER</option><option>GILLETE</option><option>PRODUCTOS ROCHE</option><option>ALIMENTOS</option><option>QUIDECA</option><option>ROCHE</option><option>AVENTIS</option><option>ROEMERS</option><option>POEN</option><option>MEDIHEALT</option><option>SUCROAL</option><option>MKCONSUMO</option><option>MK OFTALMOLOGICA</option><option>ASEO</option><option>WASSER</option><option>DROGA BLANCA</option><option>TRIDEX</option><option>POPULARES</option><option>FARMA MEDLEY</option><option>OM LINE</option><option>K2</option></select>
   <p class="mut sm">La ficha actual de productos no tiene un campo de línea. No aplicaremos un filtro ficticio; primero debemos incorporar esa clasificación al catálogo.</p>
  </div>
  <div class="item">
@@ -513,9 +513,9 @@ nav button{font-size:.78rem}
   <label class="inv-choice"><input type="radio" name="inv-formato" value="pos"> Impresora POS · Tira para la caja</label>
   <label class="inv-choice"><input type="radio" name="inv-formato" value="pdf"> Formato PDF</label>
   <label class="inv-choice"><input type="radio" name="inv-formato" value="excel"> Excel</label>
-  <label class="inv-choice"><input type="radio" name="inv-formato" value="xls"> Formato XLS</label>
+  
   <button class="btn full" id="inv-generar" type="button">Generar informe de Kardex</button>
-  <p class="mut sm">La tira POS se enviará a impresión desde esta ventana. PDF y Excel se generarán a partir de los mismos resultados.</p>
+  <p class="mut sm">La tira POS se enviará a impresión desde esta ventana. PDF se abre en el diálogo de impresión para guardar como PDF. Excel descarga un archivo CSV compatible con Excel.</p>
  </div>
  <div class="item"><h3>Informe de Kardex</h3><div id="inv-kardex-list"><p class="mut">No se está generando ningún Kardex y no hay impresiones pendientes.</p></div><button class="btn alt full" id="inv-print-kardex" type="button" hidden>Imprimir Kardex</button></div>
  <p class="mut sm" id="inv-status" aria-live="polite"></p>
@@ -862,7 +862,7 @@ async function invRegistrarRecepcion(){
   if(error)throw error;
   $('#inv-unidades').value='';$('#inv-notas').value='';
   toast('Recepción registrada');$('#recep-status').textContent='Recepción guardada. El saldo fue actualizado.';await invCargarDatos();
- }catch(e){console.error(e);toast(e.message||'No se pudo registrar la recepción')}
+ }catch(e){console.error(e);$('#recep-status').textContent='No se pudo registrar la recepción: '+(e.message||'Error desconocido');toast(e.message||'No se pudo registrar la recepción')}
  finally{b.disabled=false}
 }
 $('#inv-q').addEventListener('input',invRenderLabs);
