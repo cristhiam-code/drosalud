@@ -372,6 +372,18 @@ nav button{font-size:.78rem}
   background:transparent!important;
   color:#52677d!important;
 }
+/* Ajuste móvil de acceso: evita desbordes y campos más anchos que la tarjeta. */
+html,body{width:100%;max-width:100%;overflow-x:hidden}
+#lg,#rsx{width:100%;max-width:440px;min-width:0;padding:28px 16px 24px;margin-inline:auto;align-items:stretch}
+#lg .brand,#rsx .brand{align-self:center}
+#lg h1,#rsx h1,#lg .sub{width:100%;min-width:0}
+#lg .card,#rsx .card{width:100%;max-width:100%;min-width:0;padding:clamp(16px,5vw,22px)}
+#lf{min-width:0}
+#lf input#em{display:block;width:100%;max-width:100%;min-width:0;margin-inline:0}
+#lf .pwrow{display:flex;width:100%;max-width:100%;min-width:0;gap:8px}
+#lf .pwrow input{width:0;min-width:0;flex:1 1 0}
+#lf .pwrow button{flex:0 0 auto}
+@media(max-width:380px){#lg,#rsx{padding-inline:12px}#lg .card,#rsx .card{padding:16px}}
 </style>
 </head>
 <body>
