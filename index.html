@@ -1565,6 +1565,7 @@ showLogin();
  }
  async function aprobar(id){const {error}=await sb.rpc('aprobar_orden_compra',{p_orden_id:id});if(error)throw error;await cargarOrdenes()}
  async function recibir(id){
+  const operationId=crypto.randomUUID();
   const {data:items,error}=await sb.from('ordenes_compra_items').select('id,producto_id,unidades_solicitadas,unidades_recibidas,costo_unitario_base,productos(nombre)').eq('orden_id',id);
   if(error)throw error;
   const pendiente=(items||[]).filter(x=>x.unidades_solicitadas>x.unidades_recibidas);
@@ -1574,8 +1575,10 @@ showLogin();
   $('#oc-save-receipt').onclick=async()=>{
    const lines=pendiente.map(x=>({orden_item_id:x.id,unidades:Number($('[data-oc-qty="'+x.id+'"]').value),costo_unitario_base:Number($('[data-oc-unitcost="'+x.id+'"]').value)})).filter(x=>x.unidades>0);
    if(!lines.length||lines.some(x=>!Number.isInteger(x.unidades)||x.unidades<0||!Number.isFinite(x.costo_unitario_base)||x.costo_unitario_base<0))throw new Error('Ingresa al menos una línea con cantidades y costos válidos.');
-   const {error}=await sb.rpc('registrar_recepcion_compra',{p_orden_id:id,p_documento_proveedor:$('#oc-receipt-doc').value,p_items:lines,p_operacion_id:crypto.randomUUID(),p_notas:null});
-   if(error)throw error;cerrar();await cargarOrdenes();await invCargarDatos();alert('Recepción registrada. Kardex y costos actualizados.');
+   const save=$('#oc-save-receipt');if(save.disabled)return;save.disabled=true;save.textContent='Registrando…';
+   try{const {error}=await sb.rpc('registrar_recepcion_compra',{p_orden_id:id,p_documento_proveedor:$('#oc-receipt-doc').value,p_items:lines,p_operacion_id:operationId,p_notas:null});
+    if(error)throw error;cerrar();await cargarOrdenes();await invCargarDatos();alert('Recepción registrada. Kardex y costos actualizados.');
+   }catch(err){save.disabled=false;save.textContent='Reintentar recepción';throw err;}
   };
  }
  document.addEventListener('click',async e=>{
