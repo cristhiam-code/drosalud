@@ -1550,18 +1550,18 @@ showLogin();
  async function cargarProveedores(){const {data,error}=await sb.from('proveedores').select('id,nombre,activo').eq('activo',true).order('nombre');if(error)throw error;window.__ocProviders=data||[];return data||[]}
  function modal(html){$('#modal').hidden=false;$('#sheet').innerHTML=html}
  function cerrar(){ $('#modal').hidden=true}
- async function nuevaOrden(){
-  const providers=await cargarProveedores();
-  if(!providers.length)throw new Error('Primero registra un proveedor activo.');
-  if(!P.length)throw new Error('No se pudo cargar el catálogo.');
-  modal('<h2>Crear orden de compra</h2><label>Proveedor</label><select id="oc-provider">'+providers.map(p=>'<option value="'+p.id+'">'+esc(p.nombre)+'</option>').join('')+'</select><label>Factura / documento proveedor (opcional)</label><input id="oc-doc" maxlength="100"><h3>Productos de la orden</h3><div id="oc-order-lines"></div><button type="button" class="btn alt full" id="oc-add-line">＋ Agregar producto</button><div class="acts"><button class="btn full" id="oc-save">Guardar borrador</button><button class="btn alt full" id="oc-cancel">Cancelar</button></div>');
-  const lines=$('#oc-order-lines');
   function normalizarBusqueda(v){return String(v||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().trim()}
   function coincideProducto(p,q){
    const n=normalizarBusqueda(q),codigo=String(p.codigo||'').toLowerCase().replace(/\\D/g,'');
    const dig=n.replace(/\\D/g,'');
    return !n||normalizarBusqueda([p.nombre,p.laboratorio,p.codigo].join(' ')).includes(n)||(dig.length>=4&&codigo.includes(dig));
   }
+ async function nuevaOrden(){
+  const providers=await cargarProveedores();
+  if(!providers.length)throw new Error('Primero registra un proveedor activo.');
+  if(!P.length)throw new Error('No se pudo cargar el catálogo.');
+  modal('<h2>Crear orden de compra</h2><label>Proveedor</label><select id="oc-provider">'+providers.map(p=>'<option value="'+p.id+'">'+esc(p.nombre)+'</option>').join('')+'</select><label>Factura / documento proveedor (opcional)</label><input id="oc-doc" maxlength="100"><h3>Productos de la orden</h3><div id="oc-order-lines"></div><button type="button" class="btn alt full" id="oc-add-line">＋ Agregar producto</button><div class="acts"><button class="btn full" id="oc-save">Guardar borrador</button><button class="btn alt full" id="oc-cancel">Cancelar</button></div>');
+  const lines=$('#oc-order-lines');
   function addLine(){
    const row=document.createElement('div');row.className='item oc-line';
    row.innerHTML='<label>Buscar producto por nombre o código</label><input type="search" data-oc-search placeholder="Escribe nombre o código…" autocomplete="off"><div data-oc-results class="oc-search-results" role="listbox"></div><input type="hidden" data-oc-product value=""><p class="mut sm" data-oc-selected>Selecciona un producto del catálogo.</p><label>Unidades individuales solicitadas</label><input data-oc-units type="number" min="1" step="1" value="1"><label>Costo por unidad individual</label><input data-oc-cost type="number" min="0" step="0.01" value="0"><button type="button" class="btn bad full" data-oc-remove>Quitar producto</button>';
