@@ -391,6 +391,32 @@ nav button{font-size:.78rem}
 }
 
 </style>
+
+<style>
+/* Verificación en dos pasos: límites definitivos para móvil. */
+#mfa{
+  box-sizing:border-box;
+  width:100%;
+  max-width:24rem;
+  min-width:0;
+  margin-inline:auto;
+  padding-inline:16px;
+}
+#mfa #mf{
+  box-sizing:border-box;
+  display:block;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+}
+#mfa #mfc{
+  box-sizing:border-box;
+  display:block;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+}
+</style>
 </head>
 <body>
 <div id="spl"><img src="assets/logo-drosalud.png" alt="Drosalud" style="width:min(240px,60%)"><div class="spin" role="status" aria-label="Cargando"></div></div>
