@@ -14,7 +14,7 @@ begin
     where n.nspname = 'public'
       and p.prosecdef
   loop
-    execute format('revoke execute on function %s from public, anon', f.signature);
+    execute format('revoke execute on function %s from public, anon, authenticated', f.signature);
   end loop;
 end;
 $$;
