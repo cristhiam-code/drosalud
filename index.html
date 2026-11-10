@@ -1578,7 +1578,7 @@ showLogin();
    const save=$('#oc-save-receipt');if(save.disabled)return;save.disabled=true;save.textContent='Registrando…';
    try{const {error}=await sb.rpc('registrar_recepcion_compra',{p_orden_id:id,p_documento_proveedor:$('#oc-receipt-doc').value,p_items:lines,p_operacion_id:operationId,p_notas:null});
     if(error)throw error;cerrar();await cargarOrdenes();await invCargarDatos();alert('Recepción registrada. Kardex y costos actualizados.');
-   }catch(err){save.disabled=false;save.textContent='Reintentar recepción';throw err;}
+   }catch(err){save.disabled=false;save.textContent='Reintentar recepción';alert(err.message||'No se pudo confirmar la recepción. Puedes reintentar sin duplicar el movimiento.');}
   };
  }
  document.addEventListener('click',async e=>{
