@@ -349,24 +349,26 @@ nav button[aria-current="true"]{color:var(--pri);font-weight:800;box-shadow:inse
 nav button{font-size:.78rem}
 .print-img{display:none}
 @media print{
- @page{size:80mm 297mm;margin:0}
- @page pos{size:80mm 297mm;margin:0}
+ /* Formato predeterminado: rollo térmico de 80 mm. La altura queda al controlador del rollo. */
+ @page{size:80mm auto;margin:0}
+ @page pos{size:80mm auto;margin:0}
  @page inventory{size:A4 portrait;margin:12mm}
- html,body{width:80mm!important;min-height:0!important;margin:0!important;padding:0!important;background:#fff!important;overflow:visible!important}
+ html,body{min-height:0!important;margin:0!important;padding:0!important;background:#fff!important;overflow:visible!important}
+ body:not(.print-inventario){width:80mm!important}
  body>:not(#modal){display:none!important}
- #modal{position:static!important;display:block!important;inset:auto!important;overflow:visible!important;width:80mm!important;height:auto!important;background:transparent!important}
- #sheet{width:80mm!important;max-width:none!important;max-height:none!important;height:auto!important;margin:0!important;padding:0!important;overflow:visible!important;border-radius:0!important;background:#fff!important}
+ body:not(.print-inventario) #modal{position:static!important;display:block!important;inset:auto!important;overflow:visible!important;width:80mm!important;height:auto!important;background:transparent!important}
+ body:not(.print-inventario) #sheet{width:80mm!important;max-width:80mm!important;max-height:none!important;height:auto!important;margin:0!important;padding:0!important;overflow:visible!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:#fff!important}
  #sheet .acts,#sheet .tkt{display:none!important}
- #sheet .print-img{display:block!important;width:72mm!important;max-width:72mm!important;height:auto!important;margin:0 auto!important}
+ #sheet .print-img{display:block!important;width:72mm!important;max-width:72mm!important;height:auto!important;object-fit:contain!important;margin:0 auto!important;break-inside:auto!important}
  body.print-pos{page:pos!important;width:80mm!important}
  body.print-pos #modal{width:80mm!important}
  body.print-pos #sheet{width:72mm!important;max-width:72mm!important;margin:0 auto!important;padding:4mm!important;font-size:10pt!important}
  body.print-pos #sheet .inv-cols{grid-template-columns:minmax(0,1fr) 13mm 13mm!important;gap:2mm!important;font-size:9pt!important}
- body.print-pos #sheet .cj-line{display:grid!important;break-inside:avoid;overflow-wrap:anywhere}
- body.print-inventario:not(.print-pos){page:inventory!important;width:auto!important;min-height:auto!important;margin:0!important;padding:0!important;background:#fff!important;overflow:visible!important}
+ body.print-pos #sheet .cj-line{display:grid!important;break-inside:avoid;page-break-inside:avoid;overflow-wrap:anywhere}
+ body.print-inventario:not(.print-pos){page:inventory!important;width:auto!important;min-height:0!important;margin:0!important;padding:0!important;background:#fff!important;overflow:visible!important}
  body.print-inventario:not(.print-pos) #modal{width:auto!important;height:auto!important;position:static!important;inset:auto!important;overflow:visible!important;background:#fff!important}
  body.print-inventario:not(.print-pos) #sheet{width:auto!important;max-width:none!important;max-height:none!important;height:auto!important;margin:0!important;padding:0!important;overflow:visible!important;border:0!important;box-shadow:none!important;background:#fff!important}
- body.print-inventario:not(.print-pos) #sheet .cj-line{display:grid!important;grid-template-columns:minmax(0,1fr) 100px 100px!important;gap:12px!important;break-inside:avoid}
+ body.print-inventario:not(.print-pos) #sheet .cj-line{display:grid!important;grid-template-columns:minmax(0,1fr) 100px 100px!important;gap:12px!important;break-inside:avoid;page-break-inside:avoid}
  body.print-inventario:not(.print-pos) #sheet .acts{display:none!important}
 }
 
