@@ -246,6 +246,12 @@ nav button[aria-current="true"]{color:var(--pri);font-weight:800;box-shadow:inse
 #v-venta .pos-header-icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;color:var(--pri)}
 #v-venta .pos-header-icon svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 #v-venta .pos-client-action svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+
+/* Verificación en dos pasos: limitar el formulario y el campo al ancho real del contenedor. */
+#mfa{box-sizing:border-box;width:100%;max-width:24rem;min-width:0;margin-inline:auto}
+#mfa .card,#mf{box-sizing:border-box;width:100%;max-width:100%;min-width:0}
+#mf input,#mf #mfc{display:block;box-sizing:border-box;width:100%;max-width:100%;min-width:0}
+
 </style>
 <style>
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:24px}
