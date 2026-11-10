@@ -69,7 +69,7 @@ begin
     insert into public.inventario_movimientos
       (producto_id, tipo, unidades_delta, referencia_id, notas, creado_por)
     values
-      (new.producto_id, 'venta', -new.cantidad, new.id,
+      (new.producto_id, 'venta', -(new.cantidad * coalesce(new.unidades_por_presentacion, 1)), new.id,
        'Descuento automático por recibo', auth.uid())
     on conflict (tipo, referencia_id) where referencia_id is not null and tipo in ('venta','anulacion')
     do nothing;
