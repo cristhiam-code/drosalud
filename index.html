@@ -524,7 +524,8 @@ nav button{font-size:.78rem}
  </div>
  <div class="item">
   <h3>2. Contenido del informe</h3>
-  <label class="inv-choice"><input type="radio" name="inv-contenido" value="todos" checked> Existencia diferente de cero <small>Productos con unidades, positivas o negativas</small></label>
+  <label class="inv-choice"><input type="radio" name="inv-contenido" value="todos" checked> Todos los productos <small>Incluye existencias positivas, negativas y en cero</small></label>
+  <label class="inv-choice"><input type="radio" name="inv-contenido" value="con_existencia"> Existencia diferente de cero <small>Productos con unidades, positivas o negativas</small></label>
   <label class="inv-choice"><input type="radio" name="inv-contenido" value="negativos"> Solo existencia negativa <small>Productos con saldo por debajo de cero</small></label>
   <label class="inv-choice"><input type="radio" name="inv-contenido" value="cero"> Solo existencia en cero <small>Productos agotados en la bodega</small></label>
  </div>
@@ -804,7 +805,7 @@ function invFiltrar(){
   if(q&&!norm([p.nombre,p.laboratorio,p.codigo].join(' ')).includes(q))return false;
   if(contenido==='negativos'&&saldo>=0)return false;
   if(contenido==='cero'&&saldo!==0)return false;
-  if(contenido==='todos'&&saldo===0)return false;
+  if(contenido==='con_existencia'&&saldo===0)return false;
   return true;
  }).sort((a,b)=>(a.laboratorio||'').localeCompare(b.laboratorio||'','es',{sensitivity:'base'})||a.nombre.localeCompare(b.nombre,'es',{sensitivity:'base'}));
  return invResultados;
@@ -824,7 +825,7 @@ function invLabsClick(e){
  invRenderLabs();
 }
 function invGenerarKardex(){
- const rows=invRenderInforme();if(!rows.length){toast('Selecciona laboratorios y verifica los filtros');return}
+ const rows=invRenderInforme();if(!rows.length){toast('No hay productos que coincidan con los filtros. Revisa la línea o la búsqueda.');return}
  const formato=document.querySelector('input[name="inv-formato"]:checked')?.value||'pantalla';
  if(formato==='pantalla')return;
  if(formato==='excel'){
