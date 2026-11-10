@@ -898,8 +898,8 @@ async function invCargarPedidos(){
  const ventas={};
  for(let i=0;i<recibos.length;i+=100){
   const ids=recibos.slice(i,i+100).map(r=>r.id);
-  const items=await invLeerTodo(()=>sb.from('recibo_items_app').select('producto_id,cantidad').in('recibo_id',ids).order('id'));
-  items.forEach(x=>{if(x.producto_id)ventas[x.producto_id]=(ventas[x.producto_id]||0)+Number(x.cantidad||0)});
+  const items=await invLeerTodo(()=>sb.from('recibo_items_app').select('producto_id,cantidad,unidades_por_presentacion').in('recibo_id',ids).order('id'));
+  items.forEach(x=>{if(x.producto_id)ventas[x.producto_id]=(ventas[x.producto_id]||0)+(Number(x.cantidad||0)*Math.max(1,Number(x.unidades_por_presentacion)||1))});
  }
  invPedidos=invProductos.filter(p=>(ventas[p.id]||0)>0).map(p=>{
   const u=ventas[p.id],f=Math.max(1,Number(p.unidades_por_caja)||1);
