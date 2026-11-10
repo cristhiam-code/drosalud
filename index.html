@@ -1541,16 +1541,26 @@ showLogin();
  function modal(html){$('#modal').hidden=false;$('#sheet').innerHTML=html}
  function cerrar(){ $('#modal').hidden=true}
  async function nuevaOrden(){
-  const [providers]=await Promise.all([cargarProveedores()]);
+  const providers=await cargarProveedores();
   if(!providers.length)throw new Error('Primero registra un proveedor activo.');
   if(!P.length)throw new Error('No se pudo cargar el catálogo.');
-  modal('<h2>Crear orden de compra</h2><label>Proveedor</label><select id="oc-provider">'+providers.map(p=>'<option value="'+p.id+'">'+esc(p.nombre)+'</option>').join('')+'</select><label>Producto</label><select id="oc-product">'+P.map(p=>'<option value="'+p.id+'">'+esc(p.nombre)+' · '+esc(p.laboratorio||'')+'</option>').join('')+'</select><label>Unidades individuales solicitadas</label><input id="oc-units" type="number" min="1" step="1" value="1"><label>Costo por unidad individual</label><input id="oc-cost" type="number" min="0" step="0.01" value="0"><label>Factura / documento proveedor (opcional)</label><input id="oc-doc" maxlength="100"><div class="acts"><button class="btn full" id="oc-save">Guardar borrador</button><button class="btn alt full" id="oc-cancel">Cancelar</button></div>');
-  $('#oc-cancel').onclick=cerrar;
+  modal('<h2>Crear orden de compra</h2><label>Proveedor</label><select id="oc-provider">'+providers.map(p=>'<option value="'+p.id+'">'+esc(p.nombre)+'</option>').join('')+'</select><label>Factura / documento proveedor (opcional)</label><input id="oc-doc" maxlength="100"><h3>Productos de la orden</h3><div id="oc-order-lines"></div><button type="button" class="btn alt full" id="oc-add-line">＋ Agregar producto</button><div class="acts"><button class="btn full" id="oc-save">Guardar borrador</button><button class="btn alt full" id="oc-cancel">Cancelar</button></div>');
+  const lines=$('#oc-order-lines');
+  function addLine(){
+   const row=document.createElement('div');row.className='item oc-line';
+   row.innerHTML='<label>Producto</label><select data-oc-product>'+P.map(p=>'<option value="'+p.id+'">'+esc(p.nombre)+' · '+esc(p.laboratorio||'')+'</option>').join('')+'</select><label>Unidades individuales solicitadas</label><input data-oc-units type="number" min="1" step="1" value="1"><label>Costo por unidad individual</label><input data-oc-cost type="number" min="0" step="0.01" value="0"><button type="button" class="btn bad full" data-oc-remove>Quitar producto</button>';
+   row.querySelector('[data-oc-remove]').onclick=()=>{row.remove();};
+   lines.appendChild(row);
+  }
+  addLine();$('#oc-add-line').onclick=addLine;$('#oc-cancel').onclick=cerrar;
   $('#oc-save').onclick=async()=>{
-   const product=$('#oc-product').value,units=Number($('#oc-units').value),cost=Number($('#oc-cost').value);
-   if(!Number.isInteger(units)||units<=0||!Number.isFinite(cost)||cost<0)throw new Error('Revisa unidades y costo.');
-   const {data,error}=await sb.rpc('crear_orden_compra',{p_proveedor_id:$('#oc-provider').value,p_items:[{producto_id:product,unidades_solicitadas:units,costo_unitario_base:cost}],p_documento:$('#oc-doc').value,p_notas:null});
-   if(error)throw error;cerrar();await cargarOrdenes();alert('Orden creada como borrador.');
+   const rows=[...lines.querySelectorAll('.oc-line')];
+   const items=rows.map(row=>({producto_id:row.querySelector('[data-oc-product]').value,unidades_solicitadas:Number(row.querySelector('[data-oc-units]').value),costo_unitario_base:Number(row.querySelector('[data-oc-cost]').value)}));
+   if(!items.length||items.some(x=>!Number.isInteger(x.unidades_solicitadas)||x.unidades_solicitadas<=0||!Number.isFinite(x.costo_unitario_base)||x.costo_unitario_base<0))throw new Error('Revisa productos, unidades y costos de todas las líneas.');
+   const ids=items.map(x=>x.producto_id);if(new Set(ids).size!==ids.length)throw new Error('No repitas el mismo producto en la orden; combina sus unidades en una sola línea.');
+   const {data,error}=await sb.rpc('crear_orden_compra',{p_proveedor_id:$('#oc-provider').value,p_items:items,p_documento:$('#oc-doc').value,p_notas:null});
+   if(error)throw error;if(!data)throw new Error('Supabase no confirmó la creación de la orden.');
+   cerrar();await cargarOrdenes();alert('Orden creada como borrador.');
   };
  }
  async function aprobar(id){const {error}=await sb.rpc('aprobar_orden_compra',{p_orden_id:id});if(error)throw error;await cargarOrdenes()}
