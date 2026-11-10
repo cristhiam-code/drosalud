@@ -35,8 +35,6 @@ input[type="color"]{height:46px;padding:4px;cursor:pointer}
 .palette-preview .sample-secondary{display:inline-block;padding:9px 13px;border-radius:9px;background:var(--secondary);color:#fff;font-weight:700}
 .palette-preview .sample-chip{display:inline-block;padding:5px 9px;border-radius:20px;background:var(--selected);color:var(--pri);margin:4px}
 @media(max-width:480px){.palette-grid{grid-template-columns:1fr}}
-
-box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 /* Paleta clara inicial; los ajustes guardados pueden personalizarla. */
 *,*::before,*::after{box-sizing:inherit}
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
@@ -246,12 +244,6 @@ nav button[aria-current="true"]{color:var(--pri);font-weight:800;box-shadow:inse
 #v-venta .pos-header-icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;color:var(--pri)}
 #v-venta .pos-header-icon svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 #v-venta .pos-client-action svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-
-/* Verificación en dos pasos: limitar el formulario y el campo al ancho real del contenedor. */
-#mfa{box-sizing:border-box;width:100%;max-width:24rem;min-width:0;margin-inline:auto}
-#mfa .card,#mf{box-sizing:border-box;width:100%;max-width:100%;min-width:0}
-#mf input,#mf #mfc{display:block;box-sizing:border-box;width:100%;max-width:100%;min-width:0}
-
 </style>
 <style>
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:24px}
@@ -271,6 +263,16 @@ nav button[aria-current="true"]{color:var(--pri);font-weight:800;box-shadow:inse
 .g.gl .gn{grid-column:1/-1;text-align:left}
 .seg{display:flex;gap:6px;background:var(--soft);padding:4px;border-radius:12px;margin-bottom:12px}
 .cj-line{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
+.inv-cols{display:grid;grid-template-columns:minmax(0,1fr) 82px 82px;gap:8px;align-items:center}.inv-cols>*:nth-child(n+2){text-align:right}
+.inv-labs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;max-height:260px;overflow:auto;padding:8px;border:1px solid var(--line);border-radius:10px}
+.inv-lab{display:flex;align-items:center;gap:8px;padding:5px;font-size:.88rem}.inv-lab input{width:auto;margin:0}
+.inv-choice{display:flex;align-items:flex-start;gap:9px;padding:10px 0;border-bottom:1px solid var(--line)}
+.inv-choice input{width:auto;margin:3px 0 0}.inv-choice small{display:block;color:var(--mut);font-size:.8rem}
+@media print{
+ body.print-pos #sheet{width:72mm!important;max-width:72mm!important;padding:4mm!important;font-size:10pt!important}
+ body.print-pos #sheet .inv-cols{grid-template-columns:minmax(0,1fr) 48px 48px!important;gap:4px!important;font-size:9pt!important}
+ body.print-pos #sheet .item{border:0!important;padding:3px 0!important;margin:0!important}
+}
 .cj-line:last-child{border-bottom:0}
 .cj-dif{border-radius:12px;padding:12px;font-weight:800;margin:10px 0;background:var(--soft);color:var(--pri)}
 .cj-dif.falta{background:#FBE9E9;color:var(--bad)}
@@ -331,17 +333,6 @@ nav button[aria-current="true"]{color:var(--pri);font-weight:800;box-shadow:inse
 .aju-mfa{border-top:1px solid var(--line);padding-top:8px;margin-top:18px}
 .aju-mfa h2{margin-top:8px}
 .pwrow{display:flex;gap:8px;align-items:flex-start}.pwrow input{flex:1;min-width:0}.pwrow button{flex:none;margin-top:4px;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);font-weight:600;color:var(--pri);font-size:.85rem}
-
-/* Corrección aislada del acceso móvil: correo y fila de contraseña comparten el mismo ancho. */
-#lg,#rsx{box-sizing:border-box;width:100%;min-width:0}
-#lg .card,#rsx .card{box-sizing:border-box;width:100%;min-width:0}
-#lf{box-sizing:border-box;width:100%;min-width:0}
-#lf>input#em{display:block;box-sizing:border-box;width:100%;max-width:100%;min-width:0}
-#lf .pwrow{display:flex;box-sizing:border-box;width:100%;max-width:100%;min-width:0;gap:8px}
-#lf .pwrow input{box-sizing:border-box;display:block;width:0;max-width:100%;min-width:0;flex:1 1 0}
-#lf .pwrow button{flex:0 0 auto;white-space:nowrap}
-@media(max-width:380px){#lg,#rsx{padding-left:16px;padding-right:16px}#lg .card,#rsx .card{padding:18px}}
-
 .msg{min-height:1.3em;font-size:.88rem;margin:12px 0 0;text-align:center}.msg.bad{color:var(--bad)}.msg.ok{color:var(--ink)}
 .lk{background:none;color:var(--pri);font-weight:600;width:100%;padding:12px;margin-top:4px}
 .foot{color:var(--mut);font-size:.8rem;margin-top:22px;text-align:center}
@@ -352,12 +343,24 @@ nav button{font-size:.78rem}
 .print-img{display:none}
 @media print{
  @page{size:80mm 297mm;margin:0}
+ @page pos{size:80mm 297mm;margin:0}
+ @page inventory{size:A4 portrait;margin:12mm}
  html,body{width:80mm!important;min-height:0!important;margin:0!important;padding:0!important;background:#fff!important;overflow:visible!important}
  body>:not(#modal){display:none!important}
  #modal{position:static!important;display:block!important;inset:auto!important;overflow:visible!important;width:80mm!important;height:auto!important;background:transparent!important}
  #sheet{width:80mm!important;max-width:none!important;max-height:none!important;height:auto!important;margin:0!important;padding:0!important;overflow:visible!important;border-radius:0!important;background:#fff!important}
  #sheet .acts,#sheet .tkt{display:none!important}
  #sheet .print-img{display:block!important;width:72mm!important;max-width:72mm!important;height:auto!important;margin:0 auto!important}
+ body.print-pos{page:pos!important;width:80mm!important}
+ body.print-pos #modal{width:80mm!important}
+ body.print-pos #sheet{width:72mm!important;max-width:72mm!important;margin:0 auto!important;padding:4mm!important;font-size:10pt!important}
+ body.print-pos #sheet .inv-cols{grid-template-columns:minmax(0,1fr) 13mm 13mm!important;gap:2mm!important;font-size:9pt!important}
+ body.print-pos #sheet .cj-line{display:grid!important;break-inside:avoid;overflow-wrap:anywhere}
+ body.print-inventario:not(.print-pos){page:inventory!important;width:auto!important;min-height:auto!important;margin:0!important;padding:0!important;background:#fff!important;overflow:visible!important}
+ body.print-inventario:not(.print-pos) #modal{width:auto!important;height:auto!important;position:static!important;inset:auto!important;overflow:visible!important;background:#fff!important}
+ body.print-inventario:not(.print-pos) #sheet{width:auto!important;max-width:none!important;max-height:none!important;height:auto!important;margin:0!important;padding:0!important;overflow:visible!important;border:0!important;box-shadow:none!important;background:#fff!important}
+ body.print-inventario:not(.print-pos) #sheet .cj-line{display:grid!important;grid-template-columns:minmax(0,1fr) 100px 100px!important;gap:12px!important;break-inside:avoid}
+ body.print-inventario:not(.print-pos) #sheet .acts{display:none!important}
 }
 
 /* Indicador discreto de operaciones de guardado */
@@ -388,33 +391,6 @@ nav button{font-size:.78rem}
 #v-neg .seg button:not([aria-pressed="true"]){
   background:transparent!important;
   color:#52677d!important;
-}
-
-</style>
-
-<style>
-/* Verificación en dos pasos: límites definitivos para móvil. */
-#mfa{
-  box-sizing:border-box;
-  width:100%;
-  max-width:24rem;
-  min-width:0;
-  margin-inline:auto;
-  padding-inline:16px;
-}
-#mfa #mf{
-  box-sizing:border-box;
-  display:block;
-  width:100%;
-  max-width:100%;
-  min-width:0;
-}
-#mfa #mfc{
-  box-sizing:border-box;
-  display:block;
-  width:100%;
-  max-width:100%;
-  min-width:0;
 }
 </style>
 </head>
@@ -476,6 +452,9 @@ nav button{font-size:.78rem}
   </section>
   <div class="home-grid">
    <button class="home-tile" data-home="venta"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 3h8l4 4v14H7z"/><path d="M15 3v5h4M10 13h6M10 17h6"/></svg></span><strong>Facturación POS</strong><small>Crear recibo y registrar venta</small></button>
+   <button class="home-tile" data-home="inventario"><span class="home-icon" aria-hidden="true">▤</span><strong>Generar Kardex</strong><small>Consultar e imprimir existencias</small></button>
+   <button class="home-tile" data-home="pedidos"><span class="home-icon" aria-hidden="true">▣</span><strong>Pedidos</strong><small>Preparar pedido según rotación</small></button>
+   <button class="home-tile" data-home="recepcion"><span class="home-icon" aria-hidden="true">⇩</span><strong>Recepción</strong><small>Registrar mercancía recibida</small></button>
    <button class="home-tile" data-home="cat"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16v13H4zM8 7V4h8v3M9 12h6M9 16h6"/></svg></span><strong>Productos</strong><small>Consultar y administrar catálogo</small></button>
    <button class="home-tile" data-home="cli"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="9" cy="8" r="3"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0M16 5.5a3 3 0 0 1 0 5.8M17 14a5 5 0 0 1 3.5 4.8"/></svg></span><strong>Clientes</strong><small>Consultar y retomar clientes</small></button>
    <button class="home-tile" data-home="his"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 4h14v17H5zM8 8h8M8 12h8M8 16h5"/></svg></span><strong>Historial</strong><small>Ventas y reportes</small></button>
@@ -529,6 +508,50 @@ nav button{font-size:.78rem}
  <div id="lowb" hidden style="margin-top:8px"></div>
  <p class="mut sm" id="cnt"></p>
  <div id="cl"></div>
+</section>
+<section id="v-inventario" hidden>
+ <h2>Generar Kardex</h2>
+ <p class="mut sm">Consulta de existencias actuales en Bodega. El informe incluye productos en cero, positivos o negativos según el filtro elegido.</p>
+ <div class="item">
+  <h3>1. ¿Qué productos quieres contar?</h3>
+  <p><b>Bodega</b></p>
+  <label for="inv-q">Buscar producto o laboratorio</label><input id="inv-q" type="search" placeholder="Buscar laboratorio o producto">
+  <div class="row" style="justify-content:space-between"><b id="inv-lab-count">Laboratorios · Ninguno seleccionado</b><span><button class="btn alt" id="inv-labs-all" type="button">Seleccionar todos</button> <button class="btn alt" id="inv-labs-none" type="button">Limpiar</button></span></div>
+  <p class="mut sm">Marca los laboratorios que quieres incluir. Usa el buscador para encontrarlos rápido.</p>
+  <div id="inv-labs" class="inv-labs"></div>
+  <label for="inv-linea">Línea (opcional)</label><select id="inv-linea"><option value="">Todas las líneas</option></select>
+  <p class="mut sm">La línea se asigna en la ficha de cada producto. El filtro muestra únicamente las líneas que ya están clasificadas.</p>
+ </div>
+ <div class="item">
+  <h3>2. Contenido del informe</h3>
+  <label class="inv-choice"><input type="radio" name="inv-contenido" value="todos" checked> Existencia diferente de cero <small>Productos con unidades, positivas o negativas</small></label>
+  <label class="inv-choice"><input type="radio" name="inv-contenido" value="negativos"> Solo existencia negativa <small>Productos con saldo por debajo de cero</small></label>
+  <label class="inv-choice"><input type="radio" name="inv-contenido" value="cero"> Solo existencia en cero <small>Productos agotados en la bodega</small></label>
+ </div>
+ <div class="item">
+  <h3>3. Presentación</h3>
+  <label class="inv-choice"><input type="radio" name="inv-formato" value="pantalla" checked> En pantalla</label>
+  <label class="inv-choice"><input type="radio" name="inv-formato" value="pos"> Impresora POS · Tira para la caja</label>
+  <label class="inv-choice"><input type="radio" name="inv-formato" value="pdf"> Formato PDF</label>
+  <label class="inv-choice"><input type="radio" name="inv-formato" value="excel"> Excel</label>
+  
+  <button class="btn full" id="inv-generar" type="button">Generar informe de Kardex</button>
+  <p class="mut sm">La tira POS se enviará a impresión desde esta ventana. PDF se abre en el diálogo de impresión para guardar como PDF. Excel descarga un archivo CSV compatible con Excel.</p>
+ </div>
+ <div class="item"><h3>Informe de Kardex</h3><div id="inv-kardex-list"><p class="mut">No se está generando ningún Kardex y no hay impresiones pendientes.</p></div><button class="btn alt full" id="inv-print-kardex" type="button" hidden>Imprimir Kardex</button></div>
+ <p class="mut sm" id="inv-status" aria-live="polite"></p>
+</section>
+<section id="v-pedidos" hidden>
+ <h2>Pedidos</h2><p class="mut sm">Pedido sugerido por rotación de los últimos siete días. No descuenta existencias actuales. Puedes ajustar cantidades antes de imprimir.</p>
+ <div id="inv-pedidos-list"></div><button class="btn alt full" id="inv-print" type="button">Imprimir pedido sugerido</button><p class="mut sm" id="ped-status" aria-live="polite"></p>
+</section>
+<section id="v-recepcion" hidden>
+ <h2>Recepción de mercancía</h2><p class="mut sm">Registra únicamente productos que ya llegaron físicamente a Bodega.</p>
+ <label for="inv-prod">Producto recibido</label><select id="inv-prod"><option value="">Seleccionar producto</option></select>
+ <label for="inv-unidades">Unidades individuales recibidas</label><input id="inv-unidades" type="number" min="1" step="1" inputmode="numeric" placeholder="Ej. 30">
+ <label for="inv-notas">Nota (opcional)</label><input id="inv-notas" maxlength="500" placeholder="Proveedor, factura o referencia">
+ <button class="btn full" id="inv-recibir" type="button">Registrar recepción física</button>
+ <p class="mut sm" id="recep-status" aria-live="polite">Marcar una compra como comprada no modifica las existencias.</p>
 </section>
 <section id="v-cli" hidden>
  <div class="seg"><button data-cv="todos" aria-pressed="true">Todos</button><button data-cv="ret" aria-pressed="false">Para retomar</button></div>
@@ -726,13 +749,14 @@ nav button{font-size:.78rem}
 <script src="html5-qrcode.min.js"></script>
 <script src="qrcode.js"></script>
 <script>
-const sb=supabase.createClient('https://fwkaqxzdhqpvvjhixeod.supabase.co','sb_publishable_ZJ24N_m8fFJDa2NZvERl5g_gvd4xbFz');
+const esPreviewKardex=location.hostname==='drosalud-git-feature-inventario-pedidos-drosalud.vercel.app';
+const sb=supabase.createClient(esPreviewKardex?'https://uorhpljsofnfgzblxcga.supabase.co':'https://fwkaqxzdhqpvvjhixeod.supabase.co',esPreviewKardex?'sb_publishable_wraiN0CZckSyFOp97eIIbQ_-_8NPKZb':'sb_publishable_ZJ24N_m8fFJDa2NZvERl5g_gvd4xbFz');
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 const money=n=>'$'+Math.round(n).toLocaleString('es-CO');
 const DEF={m:25,r:100,biz:'DROGUERIA DROSALUD.SAS',nit:'900.109.443-0',ciu:'Cúcuta',tel:'3112581564',dir:'',msg:'Gracias por su compra',nota:'Resolución de facturación electrónica N° 1845101586525 de 2025-11-12. Vigencia 24 meses.',sHora:true,sCed:true,sTel:true,sPago:true,big:false,sLogo:true,mMin:10,colorPri:'#0756B5',colorBg:'#F4F8FF',colorCard:'#FFFFFF',colorInk:'#17365C',colorSecondary:'#08A9D6',colorAccent:'#22B573',colorMuted:'#718096',colorBorder:'#DCE7F1',colorSoft:'#E7F2FC',colorNavBg:'#FFFFFF',colorNavInk:'#17365C',colorHover:'#E7F2FC',colorSelected:'#D8EAFE',colorFocus:'#08A9D6',colorSuccess:'#22B573',colorWarning:'#D97706',colorError:'#C62828',cotDias:3,cotNota:'Precios sujetos a cambio y disponibilidad.',respDias:30,breb:'3112581564',pagoTitular:'',pagoCot:true,pagoRec:'siempre',qrTexto:'',qrImg:'',vendedorDef:'',msgRetomar:'Hola {nombre}, ¿cómo estás? Te escribimos de Drosalud. Hace un tiempo no sabemos de ti, ¿te ayudamos con algo? Tu salud, nuestra prioridad.'};
-const VERSION='2026-11-07.1-navegacion-respaldo';
+const VERSION='2026-11-09.1-inventario-preview';
 let P=[],C=[],H=[],CO=[],cart=[],savingVenta=false,savingCotizacion=false,savingAjustes=false,cfg={...DEF},draft=null,usuarioDrosalud=null,rolDrosalud=null;
 // Control de interfaz por rol. La autorización definitiva debe aplicarse también en RLS.
 async function cargarRolDrosalud(){const{data,error}=await sb.auth.getUser();if(error)throw error;if(!data.user)throw new Error('Inicia sesión nuevamente.');const{data:perfil,error:ep}=await sb.from('usuarios_drosalud').select('rol,activo').eq('user_id',data.user.id).maybeSingle();if(ep)throw ep;if(!perfil||perfil.activo!==true||!['admin','vendedor'].includes(perfil.rol))throw new Error('Tu usuario no tiene un rol activo en Drosalud. Solicita al administrador que lo habilite.');usuarioDrosalud=data.user;rolDrosalud=perfil.rol;return perfil.rol}
@@ -758,6 +782,175 @@ async function cotizar(){if(savingCotizacion)return;if(!cart.length){toast('Agre
 async function loadCotizaciones(){const{data,error}=await sb.from('cotizaciones_venta_app').select('*').order('creado_en',{ascending:false}).order('numero',{ascending:false}).limit(500);if(error)throw error;CO=data||[];renderCotizaciones()}
 function renderCotizaciones(){const q=norm($('#coq').value),L=CO.filter(r=>!q||norm((r.cliente_nombre||'')+' '+r.numero).includes(q));$('#colist').innerHTML=L.length?L.map(r=>'<button class="row" data-cotid="'+r.id+'"><span class="nm">Cotización '+pad(r.numero)+(r.cliente_nombre?' · '+esc(tcase(r.cliente_nombre)):'')+'<small>'+esc(fmt(r.creado_en))+' · '+esc(r.estado)+(r.valida_hasta?' · válida hasta '+esc(fd(r.valida_hasta)):'')+'</small></span><span class="pr">'+money(r.total)+'</span></button>').join(''):'<p class="mut">No hay cotizaciones guardadas.</p>'}
 async function abrirCotizacion(r){const{data,error}=await sb.from('cotizacion_venta_items_app').select('*').eq('cotizacion_id',r.id).order('id');if(error)throw error;showRec({...r,cot:true},(data||[]).map(i=>({nombre:i.nombre,cantidad:i.cantidad,precio_venta:i.precio_venta,presentacion:i.presentacion,unidades_por_presentacion:i.unidades_por_presentacion})));}
+
+// INVENTARIO · UI de preview (requiere aplicar la migración SQL en entorno de pruebas).
+let invProductos=[],invSaldos={},invPedidos=[],invLaboratorios=[],invLabsSeleccionados=new Set(),invResultados=[],invRecepcionIntento=null,invSaldoDisponible=false;
+function invSaldo(p){return Number(invSaldos[p.id]||0)}
+function invPartes(s,f){f=Math.max(1,Number(f)||1);s=Math.trunc(s);if(s<0)return{cajas:0,sueltas:s};return{cajas:Math.floor(s/f),sueltas:s%f}}
+function invRenderLabs(){
+ const q=norm($('#inv-q').value||'');
+ const visibles=invLaboratorios.filter(l=>!q||norm(l).includes(q)||invProductos.some(p=>(p.laboratorio||'Sin laboratorio').trim()===l&&norm([p.nombre,p.codigo].join(' ')).includes(q)));
+ $('#inv-labs').innerHTML=visibles.map(l=>'<label class="inv-lab"><input type="checkbox" data-inv-lab="'+esc(l)+'" '+(invLabsSeleccionados.has(l)?'checked':'')+'> '+esc(l)+'</label>').join('')||'<p class="mut sm">No hay laboratorios coincidentes.</p>';
+ $('#inv-lab-count').textContent='Laboratorios · '+invLabsSeleccionados.size+' seleccionados';
+}
+function invFiltrar(){
+ const q=norm($('#inv-q').value||'');
+ const contenido=document.querySelector('input[name="inv-contenido"]:checked')?.value||'todos';
+ invResultados=invProductos.filter(p=>{
+  const lab=(p.laboratorio||'Sin laboratorio').trim(),saldo=invSaldo(p);
+  if(!invLabsSeleccionados.has(lab))return false;
+  const lineaSeleccionada=$('#inv-linea').value;
+  if(lineaSeleccionada&&(p.linea||'')!==lineaSeleccionada)return false;
+  if(q&&!norm([p.nombre,p.laboratorio,p.codigo].join(' ')).includes(q))return false;
+  if(contenido==='negativos'&&saldo>=0)return false;
+  if(contenido==='cero'&&saldo!==0)return false;
+  if(contenido==='todos'&&saldo===0)return false;
+  return true;
+ }).sort((a,b)=>(a.laboratorio||'').localeCompare(b.laboratorio||'','es',{sensitivity:'base'})||a.nombre.localeCompare(b.nombre,'es',{sensitivity:'base'}));
+ return invResultados;
+}
+function invRenderInforme(){
+ if(!invSaldoDisponible){$('#inv-kardex-list').innerHTML='<p class="mut">El catálogo está disponible, pero el Kardex requiere instalar las migraciones de inventario en este entorno.</p>';$('#inv-print-kardex').hidden=true;$('#inv-status').textContent='Falta instalar el esquema de inventario en este entorno.';return []}
+ const rows=invFiltrar(),labs=[...new Set(rows.map(p=>(p.laboratorio||'Sin laboratorio').trim()))];
+ const html=labs.map(l=>'<div class="item"><h3>'+esc(l)+'</h3><div class="cj-line inv-cols"><b>Producto</b><b>Cantidad</b><b>Unidades</b></div>'+rows.filter(p=>(p.laboratorio||'Sin laboratorio').trim()===l).map(p=>{const v=invPartes(invSaldo(p),p.unidades_por_caja);return '<div class="cj-line inv-cols"><span>'+esc(p.nombre)+'</span><b>'+v.cajas+'</b><b>'+v.sueltas+'</b></div>'}).join('')+'</div>').join('');
+ $('#inv-kardex-list').innerHTML=html||'<p class="mut">No hay productos para los filtros seleccionados.</p>';
+ $('#inv-print-kardex').hidden=!rows.length;
+ $('#inv-status').textContent=rows.length+' productos incluidos en el informe.';
+ return rows;
+}
+function invLabsClick(e){
+ const box=e.target.closest('[data-inv-lab]');if(!box)return;
+ const lab=box.dataset.invLab;if(e.target.checked)invLabsSeleccionados.add(lab);else invLabsSeleccionados.delete(lab);
+ invRenderLabs();
+}
+function invGenerarKardex(){
+ const rows=invRenderInforme();if(!rows.length){toast('Selecciona laboratorios y verifica los filtros');return}
+ const formato=document.querySelector('input[name="inv-formato"]:checked')?.value||'pantalla';
+ if(formato==='pantalla')return;
+ if(formato==='excel'){
+  const data=[['Laboratorio','Producto','Cantidad','Unidades'],...rows.map(p=>{const v=invPartes(invSaldo(p),p.unidades_por_caja);return[p.laboratorio||'Sin laboratorio',p.nombre,v.cajas,v.sueltas]})];
+  const csv='\uFEFF'+data.map(r=>r.map(x=>{let v=x??'';if(typeof v==='string'&&(['=','+','@','-'].includes(v[0])||v.charCodeAt(0)===9||v.charCodeAt(0)===13))v="'"+v;return '"'+String(v).replace(/"/g,'""')+'"'}).join(';')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='kardex-drosalud.csv';a.click();URL.revokeObjectURL(url);return;
+ }
+ invImprimirKardex(formato==='pos');
+}
+async function invLeerTodo(construir){
+ const salida=[];let desde=0,lote=[];
+ do{
+  const{data,error}=await construir().range(desde,desde+999);
+  if(error)throw error;
+  lote=data||[];salida.push(...lote);desde+=lote.length;
+ }while(lote.length===1000);
+ return salida;
+}
+async function invCargarDatos(){
+ // El catálogo se carga aparte: el Preview puede apuntar a una BD sin migraciones de inventario.
+ // Si la columna linea aún no existe, cargar el catálogo sin ese filtro y continuar.
+ let productos;
+ try{
+  productos=await invLeerTodo(()=>sb.from('productos_app').select('id,codigo,nombre,laboratorio,linea,unidades_por_caja').order('nombre').order('id'));
+ }catch(e){
+  if(!/linea|column/i.test(String(e.message||e)))throw e;
+  productos=await invLeerTodo(()=>sb.from('productos_app').select('id,codigo,nombre,laboratorio,unidades_por_caja').order('nombre').order('id'));
+  productos=productos.map(p=>({...p,linea:null}));
+ }
+ invProductos=productos;invSaldos={};invSaldoDisponible=false;
+ try{
+  const movimientos=await invLeerTodo(()=>sb.from('inventario_saldos').select('producto_id,saldo_unidades').order('producto_id'));
+  movimientos.forEach(m=>{invSaldos[m.producto_id]=Number(m.saldo_unidades||0)});
+  invSaldoDisponible=true;
+ }catch(e){console.warn('Kardex aún no instalado en este entorno:',e)}
+ invLaboratorios=[...new Set(invProductos.map(p=>(p.laboratorio||'Sin laboratorio').trim()))].sort((a,b)=>a.localeCompare(b,'es',{sensitivity:'base'}));
+ const opts=invProductos.slice().sort((a,b)=>a.nombre.localeCompare(b.nombre,'es',{sensitivity:'base'}));
+ $('#inv-prod').innerHTML='<option value="">Seleccionar producto</option>'+opts.map(p=>'<option value="'+p.id+'">'+esc(p.nombre)+' · '+esc(p.laboratorio||'Sin laboratorio')+'</option>').join('');
+ const lineas=[...new Set(invProductos.map(p=>(p.linea||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es',{sensitivity:'base'}));
+ $('#inv-linea').innerHTML='<option value="">'+(lineas.length?'Todas las líneas':'Líneas disponibles al instalar migración')+'</option>'+lineas.map(l=>'<option value="'+esc(l)+'">'+esc(l)+'</option>').join('');
+ $('#inv-linea').disabled=!lineas.length;
+ invRenderLabs();
+}
+function invImprimirKardex(pos=false){
+ const rows=invFiltrar();
+ if(!rows.length){toast('No hay productos para imprimir');return}
+ const title='Kardex de inventario',stamp=new Date().toLocaleString('es-CO');
+ let h='<h2>'+title+'</h2><p>Consulta: '+stamp+'</p>';
+ const labs=[...new Set(rows.map(p=>(p.laboratorio||'Sin laboratorio').trim()))];
+ labs.forEach(l=>{h+='<h3>'+esc(l)+'</h3><div class="cj-line inv-cols"><b>Producto</b><b>Cantidad</b><b>Unidades</b></div>';rows.filter(p=>(p.laboratorio||'Sin laboratorio').trim()===l).forEach(p=>{const v=invPartes(invSaldo(p),p.unidades_por_caja);h+='<div class="cj-line inv-cols"><span>'+esc(p.nombre)+'</span><b>'+v.cajas+'</b><b>'+v.sueltas+'</b></div>'})});
+ openM(h+'<div class="acts"><button class="btn alt full" onclick="closeM()">Cerrar</button></div>');
+ document.body.classList.add('print-inventario');if(pos)document.body.classList.add('print-pos');
+ window.addEventListener('afterprint',()=>document.body.classList.remove('print-inventario','print-pos'),{once:true});window.print();
+}
+function invImprimirPedido(){
+ let h='<h2>Pedido sugerido</h2><p>Ventas de la semana actual (desde el lunes) · '+new Date().toLocaleDateString('es-CO')+'</p>';
+ invPedidos.forEach((x,i)=>{const cajas=Math.max(0,Math.trunc(Number($('#inv-c-'+i).value)||0)),sueltas=Math.max(0,Math.trunc(Number($('#inv-s-'+i).value)||0));h+='<div class="cj-line"><span>'+esc(x.p.nombre)+'<small> · '+esc(x.p.laboratorio||'Sin laboratorio')+'</small></span><b>'+cajas+' cajas</b><b>'+sueltas+' unidades</b></div>'});
+ openM(h+'<div class="acts"><button class="btn alt full" onclick="closeM()">Cerrar</button></div>');document.body.classList.add('print-inventario','print-pos');window.addEventListener('afterprint',()=>document.body.classList.remove('print-inventario','print-pos'),{once:true});window.print();
+}
+function invFechaInicio(){
+ // Semana calendario desde el lunes 00:00, zona horaria fija de Colombia.
+ const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Bogota',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+ const v={};parts.forEach(p=>{v[p.type]=p.value});
+ const inicio=new Date(Date.UTC(Number(v.year),Number(v.month)-1,Number(v.day),5));
+ inicio.setUTCDate(inicio.getUTCDate()-((inicio.getUTCDay()+6)%7));
+ return inicio.toISOString();
+}
+function invFechaFin(){const fin=new Date(invFechaInicio());fin.setUTCDate(fin.getUTCDate()+7);return fin.toISOString();}
+async function invCargarPedidos(){
+ const recibos=await invLeerTodo(()=>sb.from('recibos_app').select('id').eq('anulado',false).gte('creado_en',invFechaInicio()).lt('creado_en',invFechaFin()).order('creado_en').order('id'));
+ const ventas={};
+ for(let i=0;i<recibos.length;i+=100){
+  const ids=recibos.slice(i,i+100).map(r=>r.id);
+  const items=await invLeerTodo(()=>sb.from('recibo_items_app').select('producto_id,cantidad,unidades_por_presentacion').in('recibo_id',ids).order('id'));
+  items.forEach(x=>{if(x.producto_id)ventas[x.producto_id]=(ventas[x.producto_id]||0)+(Number(x.cantidad||0)*Math.max(1,Number(x.unidades_por_presentacion)||1))});
+ }
+ invPedidos=invProductos.filter(p=>(ventas[p.id]||0)>0).map(p=>{
+  const u=ventas[p.id],f=Math.max(1,Number(p.unidades_por_caja)||1);
+  return{p,unidades:u,cajas:Math.floor(u/f),sueltas:u%f};
+ }).sort((a,b)=>(a.p.laboratorio||'').localeCompare(b.p.laboratorio||'','es',{sensitivity:'base'})||a.p.nombre.localeCompare(b.p.nombre,'es',{sensitivity:'base'}));
+ $('#inv-pedidos-list').innerHTML=invPedidos.length?invPedidos.map((x,i)=>'<div class="item"><div class="top"><b>'+esc(x.p.nombre)+'</b><span class="mut">'+esc(x.p.laboratorio||'Sin laboratorio')+'</span></div><p class="sm">Vendido: '+x.cajas+' cajas · '+x.sueltas+' unidades ('+x.unidades+' unidades en total)</p><div class="two"><div><label for="inv-c-'+i+'">Cajas a pedir</label><input id="inv-c-'+i+'" type="number" min="0" step="1" value="'+x.cajas+'"></div><div><label for="inv-s-'+i+'">Unidades sueltas</label><input id="inv-s-'+i+'" type="number" min="0" max="'+(Math.max(1,Number(x.p.unidades_por_caja)||1)-1)+'" step="1" value="'+x.sueltas+'"></div></div></div>').join(''):'<p class="mut">No hay ventas de productos en la semana actual.</p>';
+}
+async function loadInventario(){
+ $('#inv-status').textContent='Cargando productos y existencias…';
+ try{await invCargarDatos();$('#inv-status').textContent=invSaldoDisponible?'Datos cargados. Selecciona laboratorios y genera el informe.':'Catálogo cargado. Para generar el Kardex falta instalar las migraciones en este entorno.'}
+ catch(e){console.error(e);$('#inv-status').textContent='No se pudo cargar Kardex. La migración de inventario debe estar instalada en el entorno de pruebas. '+(e.message||'')}
+}
+async function loadPedidos(){
+ $('#ped-status').textContent='Calculando ventas de la semana actual (lunes a domingo)…';
+ try{if(!invProductos.length)await invCargarDatos();await invCargarPedidos();$('#ped-status').textContent='Pedido sugerido calculado. Ajusta las cantidades antes de imprimir.'}
+ catch(e){console.error(e);$('#ped-status').textContent='No se pudo calcular el pedido: '+(e.message||'')}
+}
+async function loadRecepcion(){
+ $('#recep-status').textContent='Cargando catálogo…';
+ try{await invCargarDatos();$('#recep-status').textContent='Selecciona el producto y registra solo las unidades que llegaron físicamente.'}
+ catch(e){console.error(e);$('#recep-status').textContent='No se pudo cargar el catálogo: '+(e.message||'')}
+}
+async function invRegistrarRecepcion(){
+ const id=$('#inv-prod').value,u=Number($('#inv-unidades').value),nota=$('#inv-notas').value.trim();
+ if(!id){toast('Selecciona el producto recibido');return}
+ if(!Number.isInteger(u)||u<=0){toast('Escribe una cantidad válida de unidades individuales');return}
+ const b=$('#inv-recibir');b.disabled=true;
+ try{
+  const datos=JSON.stringify([id,u,nota]);if(!invRecepcionIntento||invRecepcionIntento.datos!==datos)invRecepcionIntento={datos,id:crypto.randomUUID()};
+  const{error}=await sb.rpc('registrar_recepcion_inventario',{p_producto_id:id,p_unidades:u,p_notas:nota||null,p_operacion_id:invRecepcionIntento.id});
+  if(error)throw error;
+  $('#inv-unidades').value='';$('#inv-notas').value='';invRecepcionIntento=null;
+  toast('Recepción registrada');$('#recep-status').textContent='Recepción guardada. El saldo fue actualizado.';await invCargarDatos();
+ }catch(e){console.error(e);$('#recep-status').textContent='No se pudo registrar la recepción: '+(e.message||'Error desconocido');toast(e.message||'No se pudo registrar la recepción')}
+ finally{b.disabled=false}
+}
+const vistaInventario=document.querySelector('#v-inventario');
+vistaInventario.addEventListener('click',e=>{
+ if(e.target.closest('#inv-generar'))invGenerarKardex();
+ if(e.target.closest('#inv-print-kardex'))invImprimirKardex(document.querySelector('input[name="inv-formato"]:checked')?.value==='pos');
+ if(e.target.closest('#inv-labs-all')){invLabsSeleccionados=new Set(invLaboratorios);invRenderLabs();invRenderInforme()}
+ if(e.target.closest('#inv-labs-none')){invLabsSeleccionados.clear();invRenderLabs();invRenderInforme()}
+});
+vistaInventario.addEventListener('change',e=>{
+ if(e.target.matches('[data-inv-lab]')){invLabsClick(e);invRenderInforme()}
+ if(e.target.matches('#inv-linea')||e.target.matches('input[name="inv-contenido"]'))invRenderInforme();
+});
+$('#inv-q').addEventListener('input',()=>{invRenderLabs();invRenderInforme()});
+document.querySelector('#v-pedidos').addEventListener('click',e=>{if(e.target.closest('#inv-print'))invImprimirPedido()});
+document.querySelector('#v-recepcion').addEventListener('click',e=>{if(e.target.closest('#inv-recibir'))invRegistrarRecepcion()});
+
 let syncChannel=null,syncTimer=null,realtimeRequested=false;
 function syncStatus(message){const el=$('#sync-state');if(el)el.textContent=message}
 function iniciarRealtime(){
@@ -806,7 +999,7 @@ $('#mfa-no').onclick=async()=>{try{await sb.auth.mfa.unenroll({factorId:data.id}
 $('#mfa-ok').onclick=()=>go(async()=>{const code=$('#mfa-code').value.replace(/\s/g,''),m=$('#mfa-msg');m.textContent='';if(!/^\d{6}$/.test(code)){m.textContent='Escribe los 6 dígitos del código.';return}const{error:ev}=await sb.auth.mfa.challengeAndVerify({factorId:data.id,code});if(ev){m.textContent='Código incorrecto o vencido. Revisa tu app e intenta de nuevo.';return}closeM();toast('Verificación en dos pasos activada');mfaEstado()})}
 async function mfaDesactivar(){const{data:l,error:e0}=await sb.auth.mfa.listFactors();if(e0)throw e0;const f=(l.totp||[])[0];if(!f){mfaEstado();return}if(!confirm('¿Desactivar la verificación en dos pasos? Tu cuenta quedará protegida solo con la contraseña.'))return;const{error}=await sb.auth.mfa.unenroll({factorId:f.id});if(error){toast(/aal2|assurance|verif/i.test(String(error.message))?'Para desactivarla debes haber entrado con tu código.':'No se pudo desactivar. Intenta de nuevo.');return}toast('Verificación en dos pasos desactivada');mfaEstado()}
 function showLogin(){$('#spl').hidden=true;$('#app').hidden=true;$('#rsx').hidden=true;$('#mfa').hidden=true;$('#lg').hidden=false;try{const e=localStorage.getItem('lastEmail');if(e&&!$('#em').value){$('#em').value=e;$('#pw').focus()}}catch(x){}}
-const TT={venta:'Recibo',cat:'Catálogo',cli:'Clientes',his:'Historial',cot:'Cotizaciones',aju:'Ajustes',caja:'Caja',cajahistorial:'Historial de cierres',ayuda:'Ayuda y sistema'}
+const TT={venta:'Recibo',cat:'Catálogo',cli:'Clientes',his:'Historial',cot:'Cotizaciones',aju:'Ajustes',caja:'Caja',cajahistorial:'Historial de cierres',ayuda:'Ayuda y sistema',inventario:'Generar Kardex',pedidos:'Pedidos',recepcion:'Recepción'}
 /*CAJA-INICIO*/
 let CJ={fecha:null,res:null,gastos:[]},savingCaja=false;
 const hoyCO=()=>new Date().toLocaleDateString('en-CA',{timeZone:'America/Bogota'});
@@ -867,8 +1060,8 @@ function cajaClics(e){const t=e.target.closest('button');if(!t)return;if(t.datas
 function renderVentaDateTime(){const f=$('#venta-fecha'),h=$('#venta-hora');if(!f||!h)return;const now=new Date(),tz='America/Bogota';f.textContent=new Intl.DateTimeFormat('es-CO',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:tz}).format(now);h.textContent=new Intl.DateTimeFormat('es-CO',{hour:'2-digit',minute:'2-digit',hour12:true,timeZone:tz}).format(now)}
 setInterval(renderVentaDateTime,60000);
 function renderHomeDate(){const el=$('#home-date');if(!el)return;const mobile=window.matchMedia('(max-width: 620px)').matches;const opts=mobile?{weekday:'short',day:'numeric',month:'short',timeZone:'America/Bogota'}:{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'America/Bogota'};const s=new Intl.DateTimeFormat('es-CO',opts).format(new Date());el.textContent=s.charAt(0).toLocaleUpperCase('es-CO')+s.slice(1)}
-function showHome(){cajaBadge();renderHomeDate();$('#back-home').hidden=true;$('#home').hidden=false;['venta','cat','cli','his','cot','aju','neg','caja','cajahistorial','ayuda'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=true});$('#more-menu').hidden=true;$('#ttl').textContent='Drosalud';window.scrollTo(0,0)}
- function show(v){$('#back-home').hidden=false;$('#home').hidden=true;['venta','cat','cli','his','cot','aju','neg','caja','cajahistorial','ayuda'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=k!==v});$('#more-menu').hidden=true;$('#nav [data-v="mas"]').setAttribute('aria-expanded','false');document.querySelectorAll('#nav button').forEach(b=>{if(b.dataset.v!=='mas')b.setAttribute('aria-current',String(b.dataset.v===v));else b.setAttribute('aria-current',String(!['venta','cat','cli'].includes(v)))});$('#ttl').textContent=TT[v]||'Negocio';if(v==='venta')renderVentaDateTime();if(v==='aju')fillAju();if(v==='caja')go(loadCaja);if(v==='cajahistorial')go(loadHistorialCierres);if(v==='ayuda'){go(loadAyudaEstado);$('#ayuda-version').textContent='v'+VERSION}if(v==='his')go(loadHis);if(v==='cli')loadCST().catch(()=>{});if(v==='cot')go(loadCotizaciones);window.scrollTo(0,0)}
+function showHome(){cajaBadge();renderHomeDate();$('#back-home').hidden=true;$('#home').hidden=false;['venta','cat','cli','his','cot','aju','neg','caja','cajahistorial','ayuda','inventario','pedidos','recepcion'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=true});$('#more-menu').hidden=true;$('#ttl').textContent='Drosalud';window.scrollTo(0,0)}
+ function show(v){$('#back-home').hidden=false;$('#home').hidden=true;['venta','cat','cli','his','cot','aju','neg','caja','cajahistorial','ayuda','inventario','pedidos','recepcion'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=k!==v});$('#more-menu').hidden=true;$('#nav [data-v="mas"]').setAttribute('aria-expanded','false');document.querySelectorAll('#nav button').forEach(b=>{if(b.dataset.v!=='mas')b.setAttribute('aria-current',String(b.dataset.v===v));else b.setAttribute('aria-current',String(!['venta','cat','cli'].includes(v)))});$('#ttl').textContent=TT[v]||'Negocio';if(v==='venta')renderVentaDateTime();if(v==='aju')fillAju();if(v==='caja')go(loadCaja);if(v==='cajahistorial')go(loadHistorialCierres);if(v==='ayuda'){go(loadAyudaEstado);$('#ayuda-version').textContent='v'+VERSION}if(v==='his')go(loadHis);if(v==='cli')loadCST().catch(()=>{});if(v==='cot')go(loadCotizaciones);if(v==='inventario')go(loadInventario);if(v==='pedidos')go(loadPedidos);if(v==='recepcion')go(loadRecepcion);window.scrollTo(0,0)}
 function rRes(){const q=$('#q').value.trim(),b=$('#res');if(!q){b.innerHTML='';return}const a=find(q,20);b.innerHTML=a.length?a.map(p=>`<button class="row" data-add="${p.id}"><span class="nm">${esc(p.nombre)}<small>${esc(p.laboratorio||'')}</small></span><span class="pr">${pv(p)==null?'Precio pendiente':money(pv(p))}<small>compra ${money(p.precio_compra)}</small></span></button>`).join(''):'<p class="mut">No hay resultados. Agrégalo en Catálogo.</p>'}
 function calc(){const st=cart.reduce((s,i)=>s+i.p*i.q,0),g=esAdminDrosalud()?cart.reduce((s,i)=>s+(i.p-(i.c||0))*i.q,0):null,ds=Math.max(0,+$('#dsc').value||0),dm=Math.max(0,+$('#dom').value||0),mens=Math.max(0,+$('#mens').value||0);return{st,ds,dm,mens,total:Math.max(0,st-ds+dm),gan:g==null?null:g-ds+dm-mens}}
 function rCart(){const b=$('#cart');b.innerHTML=cart.length?cart.map((i,k)=>`<div class="item"><div class="top"><span>${esc(i.n)}</span><button class="rm" data-rm="${k}" aria-label="Quitar">✕</button></div><div class="ctl"><div class="step"><button data-dec="${k}" aria-label="Menos">−</button><span>${i.q} ${i.q===1?'unidad':'unidades'}</span><button data-inc="${k}" aria-label="Más">+</button></div><label class="pp">$<input type="number" inputmode="numeric" data-pr="${k}" value="${i.p}" aria-label="Precio de venta por unidad"></label><span class="lt">${money(i.p*i.q)}</span></div><small class="mut">${esc(etiquetaCarrito(i))}· Compra ${money(i.c)} c/u${esAdminDrosalud()?` · ganas ${money((i.p-i.c)*i.q)}${warnM(i.p,i.c)}`:''}</small></div>`).join(''):'<p class="mut">Busca un producto y tócalo para agregarlo.</p>';const k=calc(),n=cart.reduce((s,i)=>s+i.q,0);$('#tot').textContent=money(k.total);$('#gn').textContent=esAdminDrosalud()&&cart.length?'Ganancia estimada (productos + domicilio − mensajero − descuento): '+money(k.gan):'';const e=$('#bg');e.hidden=!n;e.textContent=n;rVue(k)}
@@ -919,11 +1112,11 @@ const bd=s.querySelector('[data-del]');if(bd)bd.onclick=()=>go(async()=>{if(!con
 const ba=s.querySelector('[data-anu]');if(ba)ba.onclick=()=>anular(r)}
 function anular(r){openM(`<h2 style="margin-top:0">Anular recibo ${pad(r.numero)}</h2><p class="mut sm">El recibo queda guardado, pero no cuenta en las ventas ni en la ganancia.</p><label for="mo">Motivo</label><input id="mo" placeholder="Ej: error en el producto, devolución" autocomplete="off"><div class="acts"><button class="btn bad full" id="aok">Anular recibo</button><button class="btn alt full" id="ano">Volver</button></div>`);$('#ano').onclick=closeM;
 $('#aok').onclick=()=>go(async()=>{const mo=$('#mo').value.trim();if(!mo){toast('Escribe el motivo');return}const f={anulado:true,anulado_en:new Date().toISOString(),motivo_anulacion:mo};const{data,error}=await sb.from('recibos').update(f).eq('id',r.id).select('id').maybeSingle();if(error)throw error;if(!data)throw new Error('No se pudo confirmar la anulación: el recibo no fue actualizado.');Object.assign(r,f);const x=H.find(y=>y.id===r.id);if(x)Object.assign(x,f);closeM();rHis();if(hv==='res')go(rResumen);toast('Recibo anulado')})}
-function editP(id,pre){if(!esAdminDrosalud()){if(!id){toast('Solo el administrador puede crear productos.');scanAdd=false;return}const p=P.find(x=>x.id===id);if(!p)return;openM(`<h2 style="margin-top:0">Actualizar precio de venta</h2><p class="mut sm">${esc(p.nombre)}</p><label for="seller-price">Precio de venta del empaque completo</label><input id="seller-price" type="number" min="1" step="1" inputmode="numeric" value="${p.precio_venta==null?'':Number(p.precio_venta)}" placeholder="Escribe el precio de venta"><p class="mut sm">Costo de compra: ${money(p.precio_compra)}. Si no hay precio de venta asignado, se sugiere uno calculado con el margen configurado. El cambio actualiza únicamente el precio de venta.</p><div class="acts"><button class="btn full" id="seller-save">Guardar precio</button><button class="btn alt full" id="seller-cancel">Cancelar</button></div>`);$('#seller-cancel').onclick=closeM;$('#seller-save').onclick=()=>go(async()=>{const v=$('#seller-price').value,nv=v===''?null:Number(v);if(nv===null||!Number.isFinite(nv)||nv<=0){toast('Escribe un precio de venta válido');return}const{error}=await sb.rpc('actualizar_precio_venta_drosalud',{p_producto_id:id,p_precio:nv});if(error)throw error;p.precio_venta=nv;p.actualizado_en=new Date().toISOString();closeM();rCat();rRes();toast('Precio de venta actualizado')});return}const p=id?P.find(x=>x.id===id):{nombre:'',laboratorio:'',codigo:pre||'',precio_compra:0,precio_venta:null,fraccionable:false,unidades_por_caja:1,unidades_por_venta:10};openM(`<h2 style="margin-top:0">${id?'Editar producto':'Producto nuevo'}</h2><label for="en">Nombre</label><input id="en" value="${esc(p.nombre)}"><label for="el">Laboratorio o proveedor</label><input id="el" value="${esc(p.laboratorio)}"><label for="eco">Código de barras (opcional)</label><input id="eco" inputmode="numeric" value="${esc(p.codigo)}"><label for="ec">Costo de compra del empaque completo</label><input id="ec" type="number" inputmode="numeric" value="${p.precio_compra||''}"><label for="ev2">Precio de venta del empaque completo (opcional)</label><input id="ev2" type="number" inputmode="numeric" value="${p.precio_venta==null?'':Number(p.precio_venta)}" placeholder="Vacío = compra + ${cfg.m}%"><label class="ck"><input id="efr" type="checkbox" ${p.fraccionable?'checked':''}> Permite vender por unidades</label><div id="frcfg" ${p.fraccionable?'':'hidden'}><label for="euc">Unidades que trae el empaque completo</label><input id="euc" type="number" min="1" step="1" value="${Number(p.unidades_por_caja)||1}"><label for="euv">Unidades por venta</label><input id="euv" type="number" min="1" step="1" value="${Number(p.unidades_por_venta)||10}"><p class="mut sm">Ejemplo: empaque de 20 unidades; venta mínima de 10. Los precios se calculan proporcionalmente.</p></div><p class="gain" id="ev"></p>${id?'<h2 style="font-size:.95rem">Historial del precio de compra</h2><div id="hph" class="sm mut">Cargando…</div>':''}<div class="acts"><button class="btn full" id="es">Guardar</button>${id?'<button class="btn bad full" id="ed">Eliminar producto</button>':''}<button class="btn alt full" id="ex">Cancelar</button></div>`);
+function editP(id,pre){if(!esAdminDrosalud()){if(!id){toast('Solo el administrador puede crear productos.');scanAdd=false;return}const p=P.find(x=>x.id===id);if(!p)return;openM(`<h2 style="margin-top:0">Actualizar costos y precios</h2><p class="mut sm">${esc(p.nombre)}</p><label for="seller-cost">Costo de compra del empaque completo</label><input id="seller-cost" type="number" min="0" step="1" inputmode="numeric" value="${p.precio_compra==null?'':Number(p.precio_compra)}"><label for="seller-price">Precio de venta del empaque completo</label><input id="seller-price" type="number" min="0" step="1" inputmode="numeric" value="${p.precio_venta==null?'':Number(p.precio_venta)}"><p class="mut sm">Los cambios quedan registrados en el historial de costos y en la auditoría, con el usuario que los realizó.</p><div class="acts"><button class="btn full" id="seller-save">Guardar cambios</button><button class="btn alt full" id="seller-cancel">Cancelar</button></div>`);$('#seller-cancel').onclick=closeM;$('#seller-save').onclick=()=>go(async()=>{const cv=$('#seller-cost').value,pv=$('#seller-price').value,nc=cv===''?null:Number(cv),np=pv===''?null:Number(pv);if(nc===null&&np===null){toast('Escribe al menos un costo o precio');return}if((nc!==null&&(!Number.isFinite(nc)||nc<0))||(np!==null&&(!Number.isFinite(np)||np<0))){toast('Revisa los valores: deben ser números iguales o mayores que cero');return}const{data,error}=await sb.rpc('actualizar_precios_drosalud',{p_producto_id:id,p_precio_compra:nc,p_precio_venta:np});if(error)throw error;p.precio_compra=data.precio_compra;p.precio_venta=data.precio_venta;p.actualizado_en=new Date().toISOString();closeM();rCat();rRes();toast('Costo y precio actualizados')});return}const p=id?P.find(x=>x.id===id):{nombre:'',laboratorio:'',codigo:pre||'',precio_compra:0,precio_venta:null,fraccionable:false,unidades_por_caja:1,unidades_por_venta:10};openM(`<h2 style="margin-top:0">${id?'Editar producto':'Producto nuevo'}</h2><label for="en">Nombre</label><input id="en" value="${esc(p.nombre)}"><label for="el">Laboratorio o proveedor</label><input id="el" value="${esc(p.laboratorio)}"><label for="elinea">Línea comercial</label><input id="elinea" value="${esc(p.linea||"")}" placeholder="Ej: FARMA, OTC, NUTRICIONAL"><label for="eco">Código de barras (opcional)</label><input id="eco" inputmode="numeric" value="${esc(p.codigo)}"><label for="ec">Costo de compra del empaque completo</label><input id="ec" type="number" inputmode="numeric" value="${p.precio_compra||''}"><label for="ev2">Precio de venta del empaque completo (opcional)</label><input id="ev2" type="number" inputmode="numeric" value="${p.precio_venta==null?'':Number(p.precio_venta)}" placeholder="Vacío = compra + ${cfg.m}%"><label class="ck"><input id="efr" type="checkbox" ${p.fraccionable?'checked':''}> Permite vender por unidades</label><div id="frcfg" ${p.fraccionable?'':'hidden'}><label for="euc">Unidades que trae el empaque completo</label><input id="euc" type="number" min="1" step="1" value="${Number(p.unidades_por_caja)||1}"><label for="euv">Unidades por venta</label><input id="euv" type="number" min="1" step="1" value="${Number(p.unidades_por_venta)||10}"><p class="mut sm">Ejemplo: empaque de 20 unidades; venta mínima de 10. Los precios se calculan proporcionalmente.</p></div><p class="gain" id="ev"></p>${id?'<h2 style="font-size:.95rem">Historial del precio de compra</h2><div id="hph" class="sm mut">Cargando…</div>':''}<div class="acts"><button class="btn full" id="es">Guardar</button>${id?'<button class="btn bad full" id="ed">Eliminar producto</button>':''}<button class="btn alt full" id="ex">Cancelar</button></div>`);
 const pvw=()=>{const c=+$('#ec').value||0,v=$('#ev2').value!==''?+$('#ev2').value:price(c),box=$('#efr').checked?Math.max(1,+$('#euc').value||1):1,unit=$('#efr').checked?Math.max(1,+$('#euv').value||1):1;$('#ev').innerHTML='Empaque: '+money(v)+' · '+money(c)+' compra'+($('#efr').checked?' · Por '+unit+' unidades: venta '+money(v/box*unit)+' · compra '+money(c/box*unit):'')+(c>0?' · ganancia '+Math.round(mg(v,c))+'%':'')+(c>0?warnM(v,c):'')};pvw();$('#ec').oninput=pvw;$('#ev2').oninput=pvw;$('#euc').oninput=pvw;$('#euv').oninput=pvw;$('#efr').onchange=()=>{$('#frcfg').hidden=!$('#efr').checked;pvw()};$('#ex').onclick=()=>{scanAdd=false;closeM()};
-$('#es').onclick=()=>go(async()=>{const n=$('#en').value.trim(),c=+$('#ec').value,l=$('#el').value.trim(),cod=($('#eco').value||'').trim(),v=$('#ev2').value===''?null:+$('#ev2').value,fr=$('#efr').checked,box=fr?Number($('#euc').value):1,unit=fr?Number($('#euv').value):1;if(!n||!(c>0)){toast('Escribe el nombre y el precio de compra');return}if(v!==null&&!(v>=0)){toast('Revisa el precio de venta');return}if(fr&&(!Number.isInteger(box)||box<1||!Number.isInteger(unit)||unit<1||unit>box)){toast('Revisa las unidades del empaque y las unidades por venta');return}if(cod&&P.some(x=>x.id!==id&&String(x.codigo||'').trim()===cod)){toast('Ya existe un producto con ese código');return}
-if(id){const f={nombre:n,laboratorio:l,codigo:cod||null,precio_compra:c,precio_venta:v,fraccionable:fr,unidades_por_caja:box,unidades_por_venta:unit,actualizado_en:new Date().toISOString()};const{data,error}=await sb.from('productos').update(f).eq('id',id).select('id').maybeSingle();if(error)throw error;if(!data)throw new Error('El producto no se actualizó. No se encontró el registro o tu usuario no tiene permiso.');Object.assign(p,f)}
-else{const{data,error}=await sb.from('productos').insert({nombre:n,laboratorio:l,codigo:cod||null,precio_compra:c,precio_venta:v,fraccionable:fr,unidades_por_caja:box,unidades_por_venta:unit}).select().single();if(error)throw error;P.unshift(data);if(scanAdd){scanAdd=false;addCart(data)}}
+$('#es').onclick=()=>go(async()=>{const n=$('#en').value.trim(),c=+$('#ec').value,l=$('#el').value.trim(),linea=$('#elinea').value.trim().toLocaleUpperCase('es-CO'),cod=($('#eco').value||'').trim(),v=$('#ev2').value===''?null:+$('#ev2').value,fr=$('#efr').checked,box=fr?Number($('#euc').value):1,unit=fr?Number($('#euv').value):1;if(!n||!(c>0)){toast('Escribe el nombre y el precio de compra');return}if(v!==null&&!(v>=0)){toast('Revisa el precio de venta');return}if(fr&&(!Number.isInteger(box)||box<1||!Number.isInteger(unit)||unit<1||unit>box)){toast('Revisa las unidades del empaque y las unidades por venta');return}if(cod&&P.some(x=>x.id!==id&&String(x.codigo||'').trim()===cod)){toast('Ya existe un producto con ese código');return}
+if(id){const f={nombre:n,laboratorio:l,linea:linea||null,codigo:cod||null,precio_compra:c,precio_venta:v,fraccionable:fr,unidades_por_caja:box,unidades_por_venta:unit,actualizado_en:new Date().toISOString()};const{data,error}=await sb.from('productos').update(f).eq('id',id).select('id').maybeSingle();if(error)throw error;if(!data)throw new Error('El producto no se actualizó. No se encontró el registro o tu usuario no tiene permiso.');Object.assign(p,f)}
+else{const{data,error}=await sb.from('productos').insert({nombre:n,laboratorio:l,linea:linea||null,codigo:cod||null,precio_compra:c,precio_venta:v,fraccionable:fr,unidades_por_caja:box,unidades_por_venta:unit}).select().single();if(error)throw error;P.unshift(data);if(scanAdd){scanAdd=false;addCart(data)}}
 const gg=mg(v!==null?v:price(c),c);idx();closeM();rCat();rRes();toast(gg<cfg.mMin?'⚠ Guardado, pero la ganancia es solo '+Math.round(gg)+'%':'Guardado')});
 if(id){$('#ed').onclick=()=>go(async()=>{if(!confirm('¿Eliminar este producto del catálogo?'))return;const{error}=await sb.from('productos').delete().eq('id',id);if(error){toast('No se puede eliminar: ya está en recibos');return}P=P.filter(x=>x.id!==id);closeM();rCat();rRes();toast('Eliminado')});
 sb.from('historial_precios').select('*').eq('producto_id',id).order('creado_en',{ascending:false}).limit(8).then(({data,error})=>{const b=$('#hph');if(!b)return;b.innerHTML=error?'No disponible todavía.':(data.length?data.map(x=>{const d=(x.precio_nuevo-x.precio_anterior)/x.precio_anterior*100;return `${esc(fd(x.creado_en))}: ${money(x.precio_anterior)} → ${money(x.precio_nuevo)} <b class="${d>0?'warn':''}">(${d>0?'+':''}${d.toFixed(1).replace('.',',')}%)</b>`}).join('<br>'):'Sin cambios registrados.')})}}

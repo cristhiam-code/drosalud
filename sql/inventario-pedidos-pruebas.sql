@@ -1,0 +1,3 @@
+-- Este archivo fue reemplazado porque consultaba tablas/columnas que no existen
+-- en la migración vigente. Usa las verificaciones de solo lectura actualizadas en:
+-- supabase/tests/inventario_movimientos_tests.sql

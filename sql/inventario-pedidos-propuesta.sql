@@ -1,0 +1,18 @@
+-- ARCHIVO OBSOLETO — NO EJECUTAR.
+--
+-- Esta propuesta pertenece a un diseño anterior del inventario y utiliza
+-- columnas y funciones incompatibles con la implementación vigente.
+-- No crear tablas, triggers ni RPC desde este archivo.
+--
+-- Migraciones vigentes:
+--   supabase/migrations/20261109120000_inventario_movimientos.sql
+--   supabase/migrations/20261109150000_integridad_kardex.sql
+--
+-- Fuente de verdad funcional:
+--   sql/INVENTARIO-PEDIDOS.md
+--
+-- Motivo de obsolescencia:
+--   El esquema vigente utiliza unidades_delta, referencia_id y operacion_id.
+--   Esta propuesta anterior utilizaba unidades, origen_id y origen_item_id.
+--   Ejecutarla junto con las migraciones vigentes duplicaría o rompería
+--   la lógica de movimientos del Kardex.
