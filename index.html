@@ -244,6 +244,13 @@ nav button[aria-current="true"]{color:var(--pri);font-weight:800;box-shadow:inse
 #v-venta .pos-header-icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;color:var(--pri)}
 #v-venta .pos-header-icon svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 #v-venta .pos-client-action svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+
+/* Correcciones móviles y carga fiable de ilustraciones en Safari/iOS. */
+#app{padding-top:env(safe-area-inset-top,0px)}
+#home .home-tile .home-icon{display:grid;place-items:center;width:76px;height:76px;padding:5px;overflow:hidden}
+#home .home-tile .home-icon .home-illustration{display:block;width:100%;height:100%;object-fit:contain}
+#home .home-tile[data-home="venta"] .home-icon{width:82px;height:82px}
+@media(max-width:620px){#home .home-tile .home-icon{width:68px;height:68px;padding:3px}#home .home-tile[data-home="venta"] .home-icon{width:72px;height:72px}}
 </style>
 <style>
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:24px}
@@ -451,18 +458,18 @@ nav button{font-size:.78rem}
    <div class="home-section-label"><span>ÁREAS DE TRABAJO</span><span>Accesos principales</span></div>
   </section>
   <div class="home-grid">
-   <button class="home-tile" data-home="venta"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false"><use href="assets/drosalud-icons.svg#ventas"></use></svg></span><strong>Facturación POS</strong><small>Crear recibo y registrar venta</small></button>
-   <button class="home-tile" data-home="inventario"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false"><use href="assets/drosalud-icons.svg#inventario"></use></svg></span><strong>Generar Kardex</strong><small>Consultar e imprimir existencias</small></button>
-   <button class="home-tile" data-home="pedidos"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false"><use href="assets/drosalud-icons.svg#pedidos"></use></svg></span><strong>Pedidos</strong><small>Preparar pedido según rotación</small></button>
-   <button class="home-tile" data-home="recepcion"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false"><use href="assets/drosalud-icons.svg#recepcion"></use></svg></span><strong>Recepción</strong><small>Registrar mercancía recibida</small></button>
-   <button class="home-tile" data-home="cat"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false"><use href="assets/drosalud-icons.svg#productos"></use></svg></span><strong>Productos</strong><small>Consultar y administrar catálogo</small></button>
-   <button class="home-tile" data-home="cli"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false"><use href="assets/drosalud-icons.svg#clientes"></use></svg></span><strong>Clientes</strong><small>Consultar y retomar clientes</small></button>
-   <button class="home-tile" data-home="his"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false"><use href="assets/drosalud-icons.svg#historial"></use></svg></span><strong>Historial</strong><small>Ventas y reportes</small></button>
-   <button class="home-tile" data-home="cot"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false"><use href="assets/drosalud-icons.svg#cotizaciones"></use></svg></span><strong>Cotizaciones</strong><small>Consultar y enviar cotizaciones</small></button>
-   <button class="home-tile" data-home="neg"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false"><use href="assets/drosalud-icons.svg#negocio"></use></svg></span><strong>Gestión del negocio</strong><small>Medicamentos por conseguir y proveedores</small></button>
-   <button class="home-tile" data-home="caja"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false"><use href="assets/drosalud-icons.svg#caja"></use></svg></span><strong>Caja</strong><small id="caja-sub">Cierre de jornada</small></button>
-   <button class="home-tile" data-home="aju"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false"><use href="assets/drosalud-icons.svg#ajustes"></use></svg></span><strong>Ajustes</strong><small>Configurar Drosalud</small></button>
-   <button class="home-tile" data-home="ayuda"><span class="home-icon" aria-hidden="true"><svg viewBox="0 0 96 96" role="img" aria-hidden="true" focusable="false"><use href="assets/drosalud-icons.svg#ayuda"></use></svg></span><strong>Ayuda y sistema</strong><small>Guía, conexión y herramientas</small></button>
+   <button class="home-tile" data-home="venta"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/ventas.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Facturación POS</strong><small>Crear recibo y registrar venta</small></button>
+   <button class="home-tile" data-home="inventario"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/inventario.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Generar Kardex</strong><small>Consultar e imprimir existencias</small></button>
+   <button class="home-tile" data-home="pedidos"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/pedidos.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Pedidos</strong><small>Preparar pedido según rotación</small></button>
+   <button class="home-tile" data-home="recepcion"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/recepcion.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Recepción</strong><small>Registrar mercancía recibida</small></button>
+   <button class="home-tile" data-home="cat"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/productos.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Productos</strong><small>Consultar y administrar catálogo</small></button>
+   <button class="home-tile" data-home="cli"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/clientes.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Clientes</strong><small>Consultar y retomar clientes</small></button>
+   <button class="home-tile" data-home="his"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/historial.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Historial</strong><small>Ventas y reportes</small></button>
+   <button class="home-tile" data-home="cot"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/cotizaciones.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Cotizaciones</strong><small>Consultar y enviar cotizaciones</small></button>
+   <button class="home-tile" data-home="neg"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/negocio.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Gestión del negocio</strong><small>Medicamentos por conseguir y proveedores</small></button>
+   <button class="home-tile" data-home="caja"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/caja.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Caja</strong><small id="caja-sub">Cierre de jornada</small></button>
+   <button class="home-tile" data-home="aju"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/ajustes.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Ajustes</strong><small>Configurar Drosalud</small></button>
+   <button class="home-tile" data-home="ayuda"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/ayuda.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Ayuda y sistema</strong><small>Guía, conexión y herramientas</small></button>
   </div>
  </section>
 <div id="imp" hidden><b>Tu catálogo está vacío.</b><p class="sm">Carga los productos de tu Excel una sola vez.</p><button class="btn full" id="impb">Cargar productos del Excel</button></div>
@@ -1508,15 +1515,3 @@ showLogin();
 </script>
 </body>
 </html>
-
-<style id="drosalud-illustrated-icons">
-/* Ilustraciones propias de Drosalud para el panel principal. */
-#home .home-tile .home-icon{width:76px;height:76px;padding:5px;border-radius:20px;background:linear-gradient(145deg,#f1f7ff,#e8f3fb);color:var(--pri);overflow:visible}
-#home .home-tile .home-icon svg{display:block;width:100%;height:100%;fill:none;stroke:none;overflow:visible}
-#home .home-tile[data-home="venta"] .home-icon{width:82px;height:82px;background:rgba(255,255,255,.14)}
-#home .home-tile[data-home="venta"] .home-icon svg{width:100%;height:100%}
-@media(max-width:620px){
- #home .home-tile .home-icon{width:68px;height:68px;padding:3px;border-radius:17px}
- #home .home-tile[data-home="venta"] .home-icon{width:72px;height:72px}
-}
-</style>
