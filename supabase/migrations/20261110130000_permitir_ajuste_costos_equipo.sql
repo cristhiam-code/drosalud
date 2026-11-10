@@ -72,6 +72,13 @@ $$;
 
 revoke all on function public.actualizar_precios_drosalud(uuid,numeric,numeric) from public, anon, authenticated;
 grant execute on function public.actualizar_precios_drosalud(uuid,numeric,numeric) to authenticated;
+-- El trigger debe existir también al instalar la migración desde cero.
+drop trigger if exists trg_proteger_costo_productos on public.productos;
+create trigger trg_proteger_costo_productos
+before update of precio_compra on public.productos
+for each row
+execute function public.proteger_costo_productos();
+
 revoke all on function public.proteger_costo_productos() from public, anon, authenticated;
 
 commit;
