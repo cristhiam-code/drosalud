@@ -325,6 +325,17 @@ nav button[aria-current="true"]{color:var(--pri);font-weight:800;box-shadow:inse
 .aju-mfa{border-top:1px solid var(--line);padding-top:8px;margin-top:18px}
 .aju-mfa h2{margin-top:8px}
 .pwrow{display:flex;gap:8px;align-items:flex-start}.pwrow input{flex:1;min-width:0}.pwrow button{flex:none;margin-top:4px;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);font-weight:600;color:var(--pri);font-size:.85rem}
+
+/* Corrección aislada del acceso móvil: correo y fila de contraseña comparten el mismo ancho. */
+#lg,#rsx{box-sizing:border-box;width:100%;min-width:0}
+#lg .card,#rsx .card{box-sizing:border-box;width:100%;min-width:0}
+#lf{box-sizing:border-box;width:100%;min-width:0}
+#lf>input#em{display:block;box-sizing:border-box;width:100%;max-width:100%;min-width:0}
+#lf .pwrow{display:flex;box-sizing:border-box;width:100%;max-width:100%;min-width:0;gap:8px}
+#lf .pwrow input{box-sizing:border-box;display:block;width:0;max-width:100%;min-width:0;flex:1 1 0}
+#lf .pwrow button{flex:0 0 auto;white-space:nowrap}
+@media(max-width:380px){#lg,#rsx{padding-left:16px;padding-right:16px}#lg .card,#rsx .card{padding:18px}}
+
 .msg{min-height:1.3em;font-size:.88rem;margin:12px 0 0;text-align:center}.msg.bad{color:var(--bad)}.msg.ok{color:var(--ink)}
 .lk{background:none;color:var(--pri);font-weight:600;width:100%;padding:12px;margin-top:4px}
 .foot{color:var(--mut);font-size:.8rem;margin-top:22px;text-align:center}
