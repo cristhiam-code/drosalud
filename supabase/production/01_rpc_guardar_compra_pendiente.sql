@@ -16,7 +16,8 @@ CREATE OR REPLACE FUNCTION public.guardar_compra_pendiente(
   p_notas text,
   p_recibo_id uuid,
   p_recibo_item_id uuid,
-  p_costo_real numeric DEFAULT NULL
+  p_costo_real numeric DEFAULT NULL,
+  p_actualizar_costo_real boolean DEFAULT false
 )
 RETURNS uuid
 LANGUAGE plpgsql
@@ -41,7 +42,7 @@ BEGIN
   IF p_costo_estimado IS NOT NULL AND p_costo_estimado < 0 THEN
     RAISE EXCEPTION 'El costo estimado no puede ser negativo.';
   END IF;
-  IF p_costo_real IS NOT NULL AND p_costo_real < 0 THEN
+  IF p_actualizar_costo_real AND p_costo_real IS NOT NULL AND p_costo_real < 0 THEN
     RAISE EXCEPTION 'El costo real no puede ser negativo.';
   END IF;
   IF p_estado IS NULL OR p_estado NOT IN ('pendiente','cotizando','comprado','entregado','cancelado') THEN
@@ -62,7 +63,7 @@ BEGIN
     ) THEN
       RAISE EXCEPTION 'La línea no pertenece al recibo indicado.';
     END IF;
-    IF p_costo_real IS NOT NULL THEN
+    IF p_actualizar_costo_real AND p_costo_real IS NOT NULL THEN
       RAISE EXCEPTION 'Para actualizar el costo real de una línea utiliza guardar_compra_con_costo_real.';
     END IF;
   END IF;
@@ -73,7 +74,7 @@ BEGIN
       costo_real,estado,notas,recibo_id,recibo_item_id
     ) VALUES (
       v_uid,trim(p_producto_nombre),p_cantidad,p_proveedor_id,p_costo_estimado,
-      p_costo_real,p_estado,p_notas,p_recibo_id,p_recibo_item_id
+      CASE WHEN p_actualizar_costo_real THEN p_costo_real ELSE NULL END,p_estado,p_notas,p_recibo_id,p_recibo_item_id
     )
     RETURNING id INTO v_id;
   ELSE
@@ -98,7 +99,7 @@ BEGIN
            cantidad=p_cantidad,
            proveedor_id=p_proveedor_id,
            costo_estimado=p_costo_estimado,
-           costo_real=p_costo_real,
+           costo_real=CASE WHEN p_actualizar_costo_real THEN p_costo_real ELSE v_compra.costo_real END,
            estado=p_estado,
            notas=p_notas,
            recibo_id=p_recibo_id,
@@ -112,8 +113,9 @@ END;
 $function$;
 
 DROP FUNCTION IF EXISTS public.guardar_compra_pendiente(uuid,text,integer,uuid,numeric,text,text,uuid,uuid);
+DROP FUNCTION IF EXISTS public.guardar_compra_pendiente(uuid,text,integer,uuid,numeric,text,text,uuid,uuid,numeric,boolean);
 
-REVOKE EXECUTE ON FUNCTION public.guardar_compra_pendiente(uuid,text,integer,uuid,numeric,text,text,uuid,uuid,numeric) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.guardar_compra_pendiente(uuid,text,integer,uuid,numeric,text,text,uuid,uuid,numeric) TO authenticated;
+REVOKE EXECUTE ON FUNCTION public.guardar_compra_pendiente(uuid,text,integer,uuid,numeric,text,text,uuid,uuid,numeric,boolean) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.guardar_compra_pendiente(uuid,text,integer,uuid,numeric,text,text,uuid,uuid,numeric,boolean) TO authenticated;
 
 COMMIT;
