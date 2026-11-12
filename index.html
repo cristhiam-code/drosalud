@@ -1629,6 +1629,7 @@ showLogin();
   $('#oc-save-receipt').onclick=async()=>{
    const lines=pendiente.map(x=>({orden_item_id:x.id,unidades:Number($('[data-oc-qty="'+x.id+'"]').value),costo_unitario_base:Number($('[data-oc-unitcost="'+x.id+'"]').value)})).filter(x=>x.unidades>0);
    if(!lines.length||lines.some(x=>!Number.isInteger(x.unidades)||x.unidades<0||!Number.isFinite(x.costo_unitario_base)||x.costo_unitario_base<0))throw new Error('Ingresa al menos una línea con cantidades y costos válidos.');
+   if(lines.some(x=>x.costo_unitario_base===0)&&!confirm('Hay productos con costo $0. Si no es una muestra gratuita, corrige el costo antes de continuar. ¿Confirmas que realmente tienen costo cero?'))return;
    const save=$('#oc-save-receipt');if(save.disabled)return;save.disabled=true;save.textContent='Registrando…';
    try{const {error}=await sb.rpc('registrar_recepcion_compra',{p_orden_id:id,p_documento_proveedor:$('#oc-receipt-doc').value,p_items:lines,p_operacion_id:operationId,p_notas:null});
     if(error)throw error;cerrar();await cargarOrdenes();await invCargarDatos();alert('Recepción registrada. Kardex y costos actualizados.');
