@@ -882,7 +882,7 @@ async function invCargarDatos(){
  const buscador=$('#inv-prod-search'),resultados=$('#inv-prod-results'),seleccion=$('#inv-prod-selected');
  if(buscador&&resultados){
   buscador.value='';$('#inv-prod').value='';seleccion.textContent='Selecciona un producto del catálogo.';
-  const pintar=()=>{const q=normalizarBusqueda(buscador.value),dig=q.replace(/\\D/g,'');const hallados=opts.filter(p=>normalizarBusqueda([p.nombre,p.laboratorio,p.codigo].join(' ')).includes(q)||(dig.length>=4&&String(p.codigo||'').replace(/\\D/g,'').includes(dig))).slice(0,12);
+  const pintar=()=>{const q=norm(buscador.value).trim(),dig=q.replace(/\\D/g,'');const hallados=opts.filter(p=>norm([p.nombre,p.laboratorio,p.codigo].join(' ')).includes(q)||(dig.length>=4&&String(p.codigo||'').replace(/\\D/g,'').includes(dig))).slice(0,12);
    resultados.innerHTML=hallados.map(p=>'<button type="button" class="btn alt full" data-inv-pick="'+p.id+'" style="text-align:left;margin:3px 0">'+esc(p.nombre)+' · '+esc(p.codigo||'Sin código')+' · '+esc(p.laboratorio||'')+'</button>').join('')||(q?'<p class="mut sm">No se encontraron coincidencias.</p>':'<p class="mut sm">Escribe para buscar en el catálogo.</p>');
   };
   buscador.oninput=()=>{ $('#inv-prod').value='';seleccion.textContent='Selecciona un producto del catálogo.';pintar() };
