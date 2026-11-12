@@ -1569,7 +1569,32 @@ showLogin();
    const render=()=>{const q=search.value;const found=P.filter(p=>coincideProducto(p,q)).slice(0,12);
     results.innerHTML=found.map(p=>'<button type="button" class="btn alt full" data-oc-pick="'+p.id+'" style="text-align:left;margin:3px 0">'+esc(p.nombre)+' · '+esc(p.codigo||'Sin código')+' · '+esc(p.laboratorio||'')+'</button>').join('')||(q?'<p class="mut sm">No se encontraron coincidencias.</p>':'<p class="mut sm">Escribe al menos parte del nombre o código.</p>');
    };
-   search.addEventListener('input',()=>{row.querySelector('[data-oc-product]').value='';row.querySelector('[data-oc-selected]').textContent='Selecciona un producto del catálogo.';render()});
+   let lookupSeq=0;
+   async function buscarEnCatalogo(){
+    const q=search.value.trim(),seq=++lookupSeq;
+    row.querySelector('[data-oc-product]').value='';
+    row.querySelector('[data-oc-selected]').textContent='Selecciona un producto del catálogo.';
+    render();
+    const digits=q.replace(/\D/g,'');
+    if(digits.length<8)return;
+    try{
+     const {data,error}=await sb.from('productos_app')
+      .select('id,codigo,nombre,laboratorio,linea,precio_compra,precio_venta,fraccionable,unidades_por_caja,unidades_por_venta')
+      .eq('codigo',digits).limit(12);
+     if(error)throw error;
+     if(seq!==lookupSeq||search.value.trim()!==q)return;
+     const merged=[...(data||[]),...P.filter(p=>String(p.codigo||'').replace(/\D/g,'')===digits)]
+      .filter((p,i,a)=>a.findIndex(x=>String(x.id)===String(p.id))===i);
+     if(merged.length){
+      results.innerHTML=merged.map(p=>'<button type="button" class="btn alt full" data-oc-pick="'+p.id+'" style="text-align:left;margin:3px 0">'+esc(p.nombre)+' · '+esc(p.codigo||'Sin código')+' · '+esc(p.laboratorio||'')+'</button>').join('');
+     }else{
+      results.innerHTML='<p class="mut sm">No se encontró ese código en el catálogo. Comprueba que esté registrado.</p>';
+     }
+    }catch(err){console.error('Búsqueda de código en compras:',err);if(seq===lookupSeq)results.innerHTML='<p class="mut sm">No se pudo consultar el catálogo. Revisa la conexión e intenta de nuevo.</p>'}
+   }
+   search.addEventListener('input',()=>{row.querySelector('[data-oc-product]').value='';row.querySelector('[data-oc-selected]').textContent='Selecciona un producto del catálogo.';render();if(search.value.replace(/\D/g,'').length>=8)buscarEnCatalogo()});
+   search.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();buscarEnCatalogo()}});
+
    results.addEventListener('click',e=>{const btn=e.target.closest('[data-oc-pick]');if(!btn)return;const p=P.find(x=>String(x.id)===btn.dataset.ocPick);if(!p)return;
     row.querySelector('[data-oc-product]').value=p.id;search.value=p.nombre;row.querySelector('[data-oc-selected]').textContent='Seleccionado: '+p.nombre+' · '+(p.codigo||'Sin código');results.innerHTML='';
    });
