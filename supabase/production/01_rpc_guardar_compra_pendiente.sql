@@ -111,6 +111,8 @@ BEGIN
 END;
 $function$;
 
+DROP FUNCTION IF EXISTS public.guardar_compra_pendiente(uuid,text,integer,uuid,numeric,text,text,uuid,uuid);
+
 REVOKE EXECUTE ON FUNCTION public.guardar_compra_pendiente(uuid,text,integer,uuid,numeric,text,text,uuid,uuid,numeric) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.guardar_compra_pendiente(uuid,text,integer,uuid,numeric,text,text,uuid,uuid,numeric) TO authenticated;
 
