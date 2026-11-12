@@ -1572,7 +1572,7 @@ showLogin();
     productosEncontrados=productos||[];
     results.innerHTML=productosEncontrados.map(p=>'<button type="button" class="btn alt full" data-oc-pick="'+p.id+'" style="text-align:left;margin:3px 0">'+esc(p.nombre)+' · '+esc(p.codigo||'Sin código')+' · '+esc(p.laboratorio||'')+'</button>').join('')||(search.value.trim()?'<p class="mut sm">No se encontraron coincidencias.</p>':'<p class="mut sm">Escribe al menos parte del nombre o código.</p>');
    };
-   const render=()=>{const q=search.value;const found=P.filter(p=>coincideProducto(p,q)).slice(0,12);pintarResultados(found)};
+   const render=()=>{const q=search.value.trim();if(!q){productosEncontrados=[];results.innerHTML='<p class="mut sm">Escribe el nombre o código del producto para buscarlo.</p>';return}const found=P.filter(p=>coincideProducto(p,q)).slice(0,12);pintarResultados(found)};
    let lookupSeq=0;
    async function buscarEnCatalogo(){
     const q=search.value.trim(),seq=++lookupSeq;
