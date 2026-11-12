@@ -1,11 +1,9 @@
--- PRODUCCIÓN / SCRIPT (a) v3 — 11 parámetros.
+-- PRODUCCIÓN / SCRIPT (a) v4 — 11 parámetros. CREATE OR REPLACE, sin DROP ni sobrecargas.
 -- Reemplaza explícitamente la firma v10 (10 parámetros) para evitar sobrecargas.
 -- Si p_actualizar_costo_real=false, conserva el costo existente.
 -- Si true, permite actualizarlo o limpiarlo explícitamente.
 
 BEGIN;
-
-DROP FUNCTION IF EXISTS public.guardar_compra_pendiente(uuid,text,integer,uuid,numeric,text,text,uuid,uuid,numeric);
 
 CREATE OR REPLACE FUNCTION public.guardar_compra_pendiente(
   p_compra_id uuid,
@@ -131,6 +129,14 @@ BEGIN
       RAISE EXCEPTION 'Esta compra ya tiene costo real. No cambies el recibo ni la línea vinculada.';
     END IF;
 
+    IF p_actualizar_costo_real
+       AND p_costo_real IS NULL
+       AND v_compra.costo_real IS NOT NULL
+       AND v_compra.recibo_id IS NOT NULL
+       AND v_compra.recibo_item_id IS NOT NULL THEN
+      RAISE EXCEPTION 'No se puede borrar el costo real de una compra vinculada a una línea de recibo.';
+    END IF;
+
     UPDATE public.compras_pendientes
        SET producto_nombre=trim(p_producto_nombre),
            cantidad=p_cantidad,
@@ -153,9 +159,7 @@ BEGIN
 END;
 $function$;
 
--- Elimina también la firma antigua de 9 parámetros.
-DROP FUNCTION IF EXISTS public.guardar_compra_pendiente(uuid,text,integer,uuid,numeric,text,text,uuid,uuid);
-
+-- No se eliminan firmas: esta versión reemplaza únicamente la función de 11 parámetros.
 -- Seguridad: solo usuarios autenticados.
 REVOKE EXECUTE ON FUNCTION public.guardar_compra_pendiente(uuid,text,integer,uuid,numeric,text,text,uuid,uuid,numeric,boolean)
 FROM PUBLIC, anon;
