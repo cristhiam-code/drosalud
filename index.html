@@ -1566,9 +1566,13 @@ showLogin();
    const row=document.createElement('div');row.className='item oc-line';
    row.innerHTML='<label>Buscar producto por nombre o código</label><input type="search" data-oc-search placeholder="Escribe nombre o código…" autocomplete="off"><div data-oc-results class="oc-search-results" role="listbox"></div><input type="hidden" data-oc-product value=""><p class="mut sm" data-oc-selected>Selecciona un producto del catálogo.</p><label>Unidades individuales solicitadas</label><input data-oc-units type="number" min="1" step="1" value="1"><label>Costo por unidad individual</label><input data-oc-cost type="number" min="0" step="0.01" value="0"><button type="button" class="btn bad full" data-oc-remove>Quitar producto</button>';
    const search=row.querySelector('[data-oc-search]'),results=row.querySelector('[data-oc-results]');
-   const render=()=>{const q=search.value;const found=P.filter(p=>coincideProducto(p,q)).slice(0,12);
-    results.innerHTML=found.map(p=>'<button type="button" class="btn alt full" data-oc-pick="'+p.id+'" style="text-align:left;margin:3px 0">'+esc(p.nombre)+' · '+esc(p.codigo||'Sin código')+' · '+esc(p.laboratorio||'')+'</button>').join('')||(q?'<p class="mut sm">No se encontraron coincidencias.</p>':'<p class="mut sm">Escribe al menos parte del nombre o código.</p>');
+   // Conserva también los productos consultados directamente en Supabase, aunque no estén en P.
+   let productosEncontrados=[];
+   const pintarResultados=productos=>{
+    productosEncontrados=productos||[];
+    results.innerHTML=productosEncontrados.map(p=>'<button type="button" class="btn alt full" data-oc-pick="'+p.id+'" style="text-align:left;margin:3px 0">'+esc(p.nombre)+' · '+esc(p.codigo||'Sin código')+' · '+esc(p.laboratorio||'')+'</button>').join('')||(search.value.trim()?'<p class="mut sm">No se encontraron coincidencias.</p>':'<p class="mut sm">Escribe al menos parte del nombre o código.</p>');
    };
+   const render=()=>{const q=search.value;const found=P.filter(p=>coincideProducto(p,q)).slice(0,12);pintarResultados(found)};
    let lookupSeq=0;
    async function buscarEnCatalogo(){
     const q=search.value.trim(),seq=++lookupSeq;
@@ -1586,8 +1590,9 @@ showLogin();
      const merged=[...(data||[]),...P.filter(p=>String(p.codigo||'').replace(/\D/g,'')===digits)]
       .filter((p,i,a)=>a.findIndex(x=>String(x.id)===String(p.id))===i);
      if(merged.length){
-      results.innerHTML=merged.map(p=>'<button type="button" class="btn alt full" data-oc-pick="'+p.id+'" style="text-align:left;margin:3px 0">'+esc(p.nombre)+' · '+esc(p.codigo||'Sin código')+' · '+esc(p.laboratorio||'')+'</button>').join('');
+      pintarResultados(merged);
      }else{
+      productosEncontrados=[];
       results.innerHTML='<p class="mut sm">No se encontró ese código en el catálogo. Comprueba que esté registrado.</p>';
      }
     }catch(err){console.error('Búsqueda de código en compras:',err);if(seq===lookupSeq)results.innerHTML='<p class="mut sm">No se pudo consultar el catálogo. Revisa la conexión e intenta de nuevo.</p>'}
@@ -1595,8 +1600,8 @@ showLogin();
    search.addEventListener('input',()=>{row.querySelector('[data-oc-product]').value='';row.querySelector('[data-oc-selected]').textContent='Selecciona un producto del catálogo.';render();if(search.value.replace(/\D/g,'').length>=8)buscarEnCatalogo()});
    search.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();buscarEnCatalogo()}});
 
-   results.addEventListener('click',e=>{const btn=e.target.closest('[data-oc-pick]');if(!btn)return;const p=P.find(x=>String(x.id)===btn.dataset.ocPick);if(!p)return;
-    row.querySelector('[data-oc-product]').value=p.id;search.value=p.nombre;row.querySelector('[data-oc-selected]').textContent='Seleccionado: '+p.nombre+' · '+(p.codigo||'Sin código');results.innerHTML='';
+   results.addEventListener('click',e=>{const btn=e.target.closest('[data-oc-pick]');if(!btn)return;const p=[...P,...productosEncontrados].find(x=>String(x.id)===btn.dataset.ocPick);if(!p)return;
+    row.querySelector('[data-oc-product]').value=p.id;search.value=p.nombre;row.querySelector('[data-oc-selected]').textContent='Seleccionado: '+p.nombre+' · '+(p.codigo||'Sin código');productosEncontrados=[];results.innerHTML='';
    });
    row.querySelector('[data-oc-remove]').onclick=()=>row.remove();render();lines.appendChild(row);
   }
