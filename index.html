@@ -765,7 +765,7 @@ nav button{font-size:.78rem}
 <script src="html5-qrcode.min.js"></script>
 <script src="qrcode.js"></script>
 <script>
-const esPreviewKardex=['drosalud-git-feature-inventario-pedidos-drosalud.vercel.app','drosalud-git-feature-compras-costos-integrados-drosalud.vercel.app','drosalud-git-feature-buscador-compras-recepcion-drosalud.vercel.app'].includes(location.hostname);
+const esPreviewKardex=['drosalud-git-feature-inventario-pedidos-drosalud.vercel.app','drosalud-git-feature-compras-costos-integrados-drosalud.vercel.app','drosalud-git-feature-buscador-compras-recepcion-drosalud.vercel.app','drosalud-git-feature-compras-rpc-drosalud.vercel.app'].includes(location.hostname);
 const sb=supabase.createClient(esPreviewKardex?'https://uorhpljsofnfgzblxcga.supabase.co':'https://fwkaqxzdhqpvvjhixeod.supabase.co',esPreviewKardex?'sb_publishable_wraiN0CZckSyFOp97eIIbQ_-_8NPKZb':'sb_publishable_ZJ24N_m8fFJDa2NZvERl5g_gvd4xbFz');
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -1469,10 +1469,15 @@ showLogin();
     p_recibo_item_id:reciboItemId,p_costo_real:costoReal
    });
    if(error)throw error;
-  }else if(id){
-   const res=await sb.from('compras_pendientes').update(row).eq('id',id).eq('owner_id',uid).select('id').maybeSingle();if(res.error)throw res.error;if(!res.data)throw new Error('La compra pendiente no se actualizó. No se encontró el registro o no tienes permiso.');
   }else{
-   const {error}=await sb.from('compras_pendientes').insert(row);if(error)throw error;
+   const {error}=await sb.rpc('guardar_compra_pendiente',{
+    p_compra_id:id||null,p_producto_nombre:row.producto_nombre,p_cantidad:row.cantidad,
+    p_proveedor_id:row.proveedor_id,p_costo_estimado:row.costo_estimado,
+    p_estado:row.estado,p_notas:row.notas,p_recibo_id:row.recibo_id,
+    p_recibo_item_id:row.recibo_item_id,p_costo_real:row.costo_real,
+    p_actualizar_costo_real:true
+   });
+   if(error)throw error;
   }
   $n('#modal').hidden=true;await load();
  }
