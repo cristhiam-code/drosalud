@@ -1,6 +1,8 @@
--- PRODUCCIÓN / SCRIPT 1 DE 2
--- Ejecutar solo tras autorización expresa.
--- No modifica datos históricos ni costos reales ni ganancia.
+-- PRODUCCIÓN / SCRIPT (a) v2
+-- RPC segura para compras pendientes.
+-- Incluye p_costo_real (campo de saveBuy), owner_id desde auth.uid(),
+-- y bloquea cambios de recibo/línea cuando la compra ya tiene costo_real.
+-- No modifica costo_real_unitario de recibo_items ni ganancia de recibos.
 
 BEGIN;
 
@@ -13,7 +15,8 @@ CREATE OR REPLACE FUNCTION public.guardar_compra_pendiente(
   p_estado text,
   p_notas text,
   p_recibo_id uuid,
-  p_recibo_item_id uuid
+  p_recibo_item_id uuid,
+  p_costo_real numeric DEFAULT NULL
 )
 RETURNS uuid
 LANGUAGE plpgsql
@@ -24,6 +27,7 @@ DECLARE
   v_uid uuid := auth.uid();
   v_admin boolean := public.es_admin_drosalud();
   v_id uuid;
+  v_compra public.compras_pendientes%rowtype;
 BEGIN
   IF v_uid IS NULL OR NOT public.es_usuario_drosalud() THEN
     RAISE EXCEPTION 'Usuario no autorizado';
@@ -36,6 +40,9 @@ BEGIN
   END IF;
   IF p_costo_estimado IS NOT NULL AND p_costo_estimado < 0 THEN
     RAISE EXCEPTION 'El costo estimado no puede ser negativo.';
+  END IF;
+  IF p_costo_real IS NOT NULL AND p_costo_real < 0 THEN
+    RAISE EXCEPTION 'El costo real no puede ser negativo.';
   END IF;
   IF p_estado IS NULL OR p_estado NOT IN ('pendiente','cotizando','comprado','entregado','cancelado') THEN
     RAISE EXCEPTION 'Estado de compra no válido.';
@@ -55,42 +62,56 @@ BEGIN
     ) THEN
       RAISE EXCEPTION 'La línea no pertenece al recibo indicado.';
     END IF;
+    IF p_costo_real IS NOT NULL THEN
+      RAISE EXCEPTION 'Para actualizar el costo real de una línea utiliza guardar_compra_con_costo_real.';
+    END IF;
   END IF;
 
   IF p_compra_id IS NULL THEN
     INSERT INTO public.compras_pendientes (
       owner_id,producto_nombre,cantidad,proveedor_id,costo_estimado,
-      estado,notas,recibo_id,recibo_item_id
+      costo_real,estado,notas,recibo_id,recibo_item_id
     ) VALUES (
       v_uid,trim(p_producto_nombre),p_cantidad,p_proveedor_id,p_costo_estimado,
-      p_estado,p_notas,p_recibo_id,p_recibo_item_id
+      p_costo_real,p_estado,p_notas,p_recibo_id,p_recibo_item_id
     )
     RETURNING id INTO v_id;
   ELSE
+    SELECT * INTO v_compra
+    FROM public.compras_pendientes
+    WHERE id=p_compra_id AND (owner_id=v_uid OR v_admin)
+    FOR UPDATE;
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'No se encontró la compra o no tienes permiso.';
+    END IF;
+
+    IF v_compra.costo_real IS NOT NULL
+       AND (
+         v_compra.recibo_id IS DISTINCT FROM p_recibo_id
+         OR v_compra.recibo_item_id IS DISTINCT FROM p_recibo_item_id
+       ) THEN
+      RAISE EXCEPTION 'Esta compra ya tiene costo real. No cambies el recibo ni la línea vinculada.';
+    END IF;
+
     UPDATE public.compras_pendientes
        SET producto_nombre=trim(p_producto_nombre),
            cantidad=p_cantidad,
            proveedor_id=p_proveedor_id,
            costo_estimado=p_costo_estimado,
+           costo_real=p_costo_real,
            estado=p_estado,
            notas=p_notas,
            recibo_id=p_recibo_id,
            recibo_item_id=p_recibo_item_id,
            actualizado_en=now()
      WHERE id=p_compra_id
-       AND (owner_id=v_uid OR v_admin)
     RETURNING id INTO v_id;
-
-    IF v_id IS NULL THEN
-      RAISE EXCEPTION 'No se encontró la compra o no tienes permiso.';
-    END IF;
   END IF;
-
   RETURN v_id;
 END;
 $function$;
 
-REVOKE EXECUTE ON FUNCTION public.guardar_compra_pendiente(uuid,text,integer,uuid,numeric,text,text,uuid,uuid) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.guardar_compra_pendiente(uuid,text,integer,uuid,numeric,text,text,uuid,uuid) TO authenticated;
+REVOKE EXECUTE ON FUNCTION public.guardar_compra_pendiente(uuid,text,integer,uuid,numeric,text,text,uuid,uuid,numeric) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.guardar_compra_pendiente(uuid,text,integer,uuid,numeric,text,text,uuid,uuid,numeric) TO authenticated;
 
 COMMIT;
