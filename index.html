@@ -765,7 +765,7 @@ nav button{font-size:.78rem}
 <script src="html5-qrcode.min.js"></script>
 <script src="qrcode.js"></script>
 <script>
-const esPreviewKardex=['drosalud-git-feature-inventario-pedidos-drosalud.vercel.app','drosalud-git-feature-compras-costos-integrados-drosalud.vercel.app','drosalud-git-feature-buscador-compras-recepcion-drosalud.vercel.app','drosalud-git-feature-compras-rpc-drosalud.vercel.app'].includes(location.hostname);
+const esPreviewKardex=location.hostname!=='drosalud.vercel.app';
 const sb=supabase.createClient(esPreviewKardex?'https://uorhpljsofnfgzblxcga.supabase.co':'https://fwkaqxzdhqpvvjhixeod.supabase.co',esPreviewKardex?'sb_publishable_wraiN0CZckSyFOp97eIIbQ_-_8NPKZb':'sb_publishable_ZJ24N_m8fFJDa2NZvERl5g_gvd4xbFz');
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
