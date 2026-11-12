@@ -765,7 +765,7 @@ nav button{font-size:.78rem}
 <script src="html5-qrcode.min.js"></script>
 <script src="qrcode.js"></script>
 <script>
-const esPreviewKardex=['drosalud-git-feature-inventario-pedidos-drosalud.vercel.app','drosalud-git-feature-compras-costos-integrados-drosalud.vercel.app'].includes(location.hostname);
+const esPreviewKardex=['drosalud-git-feature-inventario-pedidos-drosalud.vercel.app','drosalud-git-feature-compras-costos-integrados-drosalud.vercel.app','drosalud-git-feature-buscador-compras-recepcion-drosalud.vercel.app'].includes(location.hostname);
 const sb=supabase.createClient(esPreviewKardex?'https://uorhpljsofnfgzblxcga.supabase.co':'https://fwkaqxzdhqpvvjhixeod.supabase.co',esPreviewKardex?'sb_publishable_wraiN0CZckSyFOp97eIIbQ_-_8NPKZb':'sb_publishable_ZJ24N_m8fFJDa2NZvERl5g_gvd4xbFz');
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -882,7 +882,7 @@ async function invCargarDatos(){
  const buscador=$('#inv-prod-search'),resultados=$('#inv-prod-results'),seleccion=$('#inv-prod-selected');
  if(buscador&&resultados){
   buscador.value='';$('#inv-prod').value='';seleccion.textContent='Selecciona un producto del catálogo.';
-  const pintar=()=>{const q=normalizarBusqueda(buscador.value),dig=q.replace(/\\D/g,'');const hallados=opts.filter(p=>normalizarBusqueda([p.nombre,p.laboratorio,p.codigo].join(' ')).includes(q)||(dig.length>=4&&String(p.codigo||'').replace(/\\D/g,'').includes(dig))).slice(0,12);
+  const pintar=()=>{const q=norm(buscador.value).trim(),dig=q.replace(/\\D/g,'');const hallados=opts.filter(p=>norm([p.nombre,p.laboratorio,p.codigo].join(' ')).includes(q)||(dig.length>=4&&String(p.codigo||'').replace(/\\D/g,'').includes(dig))).slice(0,12);
    resultados.innerHTML=hallados.map(p=>'<button type="button" class="btn alt full" data-inv-pick="'+p.id+'" style="text-align:left;margin:3px 0">'+esc(p.nombre)+' · '+esc(p.codigo||'Sin código')+' · '+esc(p.laboratorio||'')+'</button>').join('')||(q?'<p class="mut sm">No se encontraron coincidencias.</p>':'<p class="mut sm">Escribe para buscar en el catálogo.</p>');
   };
   buscador.oninput=()=>{ $('#inv-prod').value='';seleccion.textContent='Selecciona un producto del catálogo.';pintar() };
@@ -1566,12 +1566,42 @@ showLogin();
    const row=document.createElement('div');row.className='item oc-line';
    row.innerHTML='<label>Buscar producto por nombre o código</label><input type="search" data-oc-search placeholder="Escribe nombre o código…" autocomplete="off"><div data-oc-results class="oc-search-results" role="listbox"></div><input type="hidden" data-oc-product value=""><p class="mut sm" data-oc-selected>Selecciona un producto del catálogo.</p><label>Unidades individuales solicitadas</label><input data-oc-units type="number" min="1" step="1" value="1"><label>Costo por unidad individual</label><input data-oc-cost type="number" min="0" step="0.01" value="0"><button type="button" class="btn bad full" data-oc-remove>Quitar producto</button>';
    const search=row.querySelector('[data-oc-search]'),results=row.querySelector('[data-oc-results]');
-   const render=()=>{const q=search.value;const found=P.filter(p=>coincideProducto(p,q)).slice(0,12);
-    results.innerHTML=found.map(p=>'<button type="button" class="btn alt full" data-oc-pick="'+p.id+'" style="text-align:left;margin:3px 0">'+esc(p.nombre)+' · '+esc(p.codigo||'Sin código')+' · '+esc(p.laboratorio||'')+'</button>').join('')||(q?'<p class="mut sm">No se encontraron coincidencias.</p>':'<p class="mut sm">Escribe al menos parte del nombre o código.</p>');
+   // Conserva también los productos consultados directamente en Supabase, aunque no estén en P.
+   let productosEncontrados=[];
+   const pintarResultados=productos=>{
+    productosEncontrados=productos||[];
+    results.innerHTML=productosEncontrados.map(p=>'<button type="button" class="btn alt full" data-oc-pick="'+p.id+'" style="text-align:left;margin:3px 0">'+esc(p.nombre)+' · '+esc(p.codigo||'Sin código')+' · '+esc(p.laboratorio||'')+'</button>').join('')||(search.value.trim()?'<p class="mut sm">No se encontraron coincidencias.</p>':'<p class="mut sm">Escribe al menos parte del nombre o código.</p>');
    };
-   search.addEventListener('input',()=>{row.querySelector('[data-oc-product]').value='';row.querySelector('[data-oc-selected]').textContent='Selecciona un producto del catálogo.';render()});
-   results.addEventListener('click',e=>{const btn=e.target.closest('[data-oc-pick]');if(!btn)return;const p=P.find(x=>String(x.id)===btn.dataset.ocPick);if(!p)return;
-    row.querySelector('[data-oc-product]').value=p.id;search.value=p.nombre;row.querySelector('[data-oc-selected]').textContent='Seleccionado: '+p.nombre+' · '+(p.codigo||'Sin código');results.innerHTML='';
+   const render=()=>{const q=search.value.trim();if(!q){productosEncontrados=[];results.innerHTML='<p class="mut sm">Escribe el nombre o código del producto para buscarlo.</p>';return}const found=P.filter(p=>coincideProducto(p,q)).slice(0,12);pintarResultados(found)};
+   let lookupSeq=0;
+   async function buscarEnCatalogo(){
+    const q=search.value.trim(),seq=++lookupSeq;
+    row.querySelector('[data-oc-product]').value='';
+    row.querySelector('[data-oc-selected]').textContent='Selecciona un producto del catálogo.';
+    render();
+    const digits=q.replace(/\D/g,'');
+    if(digits.length<8)return;
+    try{
+     const {data,error}=await sb.from('productos_app')
+      .select('id,codigo,nombre,laboratorio,linea,precio_compra,precio_venta,fraccionable,unidades_por_caja,unidades_por_venta')
+      .eq('codigo',digits).limit(12);
+     if(error)throw error;
+     if(seq!==lookupSeq||search.value.trim()!==q)return;
+     const merged=[...(data||[]),...P.filter(p=>String(p.codigo||'').replace(/\D/g,'')===digits)]
+      .filter((p,i,a)=>a.findIndex(x=>String(x.id)===String(p.id))===i);
+     if(merged.length){
+      pintarResultados(merged);
+     }else{
+      productosEncontrados=[];
+      results.innerHTML='<p class="mut sm">No se encontró ese código en el catálogo. Comprueba que esté registrado.</p>';
+     }
+    }catch(err){console.error('Búsqueda de código en compras:',err);if(seq===lookupSeq)results.innerHTML='<p class="mut sm">No se pudo consultar el catálogo. Revisa la conexión e intenta de nuevo.</p>'}
+   }
+   search.addEventListener('input',()=>{row.querySelector('[data-oc-product]').value='';row.querySelector('[data-oc-selected]').textContent='Selecciona un producto del catálogo.';render();if(search.value.replace(/\D/g,'').length>=8)buscarEnCatalogo()});
+   search.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();buscarEnCatalogo()}});
+
+   results.addEventListener('click',e=>{const btn=e.target.closest('[data-oc-pick]');if(!btn)return;const p=[...P,...productosEncontrados].find(x=>String(x.id)===btn.dataset.ocPick);if(!p)return;
+    row.querySelector('[data-oc-product]').value=p.id;search.value=p.nombre;row.querySelector('[data-oc-selected]').textContent='Seleccionado: '+p.nombre+' · '+(p.codigo||'Sin código');productosEncontrados=[];results.innerHTML='';
    });
    row.querySelector('[data-oc-remove]').onclick=()=>row.remove();render();lines.appendChild(row);
   }
@@ -1595,10 +1625,11 @@ showLogin();
   if(!pendiente.length)throw new Error('Esta orden ya está recibida completamente.');
   modal('<h2>Recepción física</h2><p class="mut sm">Registra solo lo que llegó. Los costos pueden variar frente a la orden.</p><label>Factura / documento proveedor</label><input id="oc-receipt-doc" maxlength="100"><label>Filtrar productos de esta orden por nombre o código</label><input id="oc-receipt-search" type="search" placeholder="Buscar en los productos pendientes…" autocomplete="off"><p class="mut sm">El filtro solo oculta líneas; no elimina cantidades ni productos de la recepción.</p><div id="oc-receipt-lines">'+pendiente.map(x=>'<div class="item oc-receipt-line" data-oc-filter="'+esc([x.productos?.nombre,x.productos?.codigo].join(' '))+'"><b>'+esc(x.productos?.nombre||'Producto')+'</b><p class="mut sm">Código: '+esc(x.productos?.codigo||'Sin código')+' · Pendiente: '+(x.unidades_solicitadas-x.unidades_recibidas)+' unidades</p><label>Unidades recibidas ahora</label><input type="number" min="0" max="'+(x.unidades_solicitadas-x.unidades_recibidas)+'" step="1" value="'+(x.unidades_solicitadas-x.unidades_recibidas)+'" data-oc-qty="'+x.id+'"><label>Costo real por unidad</label><input type="number" min="0" step="0.01" value="'+x.costo_unitario_base+'" data-oc-unitcost="'+x.id+'"></div>').join('')+'</div><div class="acts"><button class="btn full" id="oc-save-receipt">Confirmar recepción</button><button class="btn alt full" id="oc-cancel">Cancelar</button></div>');
   $('#oc-cancel').onclick=cerrar;
-  $('#oc-receipt-search').addEventListener('input',e=>{const q=normalizarBusqueda(e.target.value);document.querySelectorAll('#oc-receipt-lines .oc-receipt-line').forEach(el=>{el.hidden=!normalizarBusqueda(el.dataset.ocFilter).includes(q)})});
+  $('#oc-receipt-search').addEventListener('input',e=>{const normalizarFiltro=valor=>String(valor||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().trim();const q=normalizarFiltro(e.target.value);document.querySelectorAll('#oc-receipt-lines .oc-receipt-line').forEach(el=>{el.hidden=!normalizarFiltro(el.dataset.ocFilter).includes(q)})});
   $('#oc-save-receipt').onclick=async()=>{
    const lines=pendiente.map(x=>({orden_item_id:x.id,unidades:Number($('[data-oc-qty="'+x.id+'"]').value),costo_unitario_base:Number($('[data-oc-unitcost="'+x.id+'"]').value)})).filter(x=>x.unidades>0);
    if(!lines.length||lines.some(x=>!Number.isInteger(x.unidades)||x.unidades<0||!Number.isFinite(x.costo_unitario_base)||x.costo_unitario_base<0))throw new Error('Ingresa al menos una línea con cantidades y costos válidos.');
+   if(lines.some(x=>x.costo_unitario_base===0)&&!confirm('Hay productos con costo $0. Si no es una muestra gratuita, corrige el costo antes de continuar. ¿Confirmas que realmente tienen costo cero?'))return;
    const save=$('#oc-save-receipt');if(save.disabled)return;save.disabled=true;save.textContent='Registrando…';
    try{const {error}=await sb.rpc('registrar_recepcion_compra',{p_orden_id:id,p_documento_proveedor:$('#oc-receipt-doc').value,p_items:lines,p_operacion_id:operationId,p_notas:null});
     if(error)throw error;cerrar();await cargarOrdenes();await invCargarDatos();alert('Recepción registrada. Kardex y costos actualizados.');
