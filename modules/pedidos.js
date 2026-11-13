@@ -278,15 +278,27 @@
   }
 
   function renderAuthorization(pedido, items) {
+    const catalogOptions = state.products.map(product =>
+      `<option value="${esc(product.nombre)}" label="${esc(product.codigo || '')}"></option>`
+      + (product.codigo ? `<option value="${esc(product.codigo)}" label="${esc(product.nombre)}"></option>` : '')
+    ).join('');
     return `
       <div class="pedidos-admin-box">
         <b>Revisión del administrador</b>
-        <p>Modifica las cantidades que vas a autorizar. Puedes autorizar menos de lo solicitado.</p>
-        ${items.map(item => `
-          <label class="pedidos-auth-line"><span>${esc(item.producto_nombre)}<small>Solicitado: ${units(item.cantidad_solicitada)} unidades</small></span>
+        <p>Modifica las cantidades que vas a autorizar. Si el producto se escribió como texto, vincúlalo al catálogo aquí.</p>
+        <datalist id="ped-auth-catalog-${pedido.id}">${catalogOptions}</datalist>
+        ${items.map(item => {
+          const product = state.products.find(row => row.id === item.producto_id);
+          return `
+          <div class="pedidos-auth-line">
+            <span>${esc(item.producto_nombre)}<small>Solicitado: ${units(item.cantidad_solicitada)} unidades</small></span>
+            <input type="search" list="ped-auth-catalog-${pedido.id}" value="${esc(product?.nombre || '')}"
+              placeholder="Vincular al catálogo" data-auth-product="${item.id}"
+              aria-label="Producto de catálogo para ${esc(item.producto_nombre)}">
             <input type="number" min="0" max="${item.cantidad_solicitada}" step="1"
               value="${item.cantidad_solicitada}" data-auth-qty="${item.id}" aria-label="Cantidad autorizada para ${esc(item.producto_nombre)}">
-          </label>`).join('')}
+          </div>`;
+        }).join('')}
         <div class="pedidos-actions">
           <button type="button" class="btn" data-action="authorize" data-pedido-id="${pedido.id}">Autorizar pedido</button>
           <button type="button" class="btn bad" data-action="reject" data-pedido-id="${pedido.id}">Rechazar pedido</button>
@@ -492,10 +504,18 @@
     const items = itemsFor(pedidoId).map(item => {
       const input = root.querySelector('[data-auth-qty="' + item.id + '"]');
       const value = Number(input?.value);
+      const productInput = root.querySelector('[data-auth-product="' + item.id + '"]');
+      const productValue = productInput?.value.trim() || '';
+      const product = productValue ? resolveProduct(productValue) : null;
       if (!Number.isInteger(value) || value < 0 || value > Number(item.cantidad_solicitada)) {
         throw new Error('Revisa las cantidades autorizadas.');
       }
-      return {pedido_item_id:item.id,cantidad_autorizada:value};
+      if (productValue && !product) throw new Error('Selecciona un producto válido del catálogo para vincularlo.');
+      return {
+        pedido_item_id:item.id,
+        cantidad_autorizada:value,
+        producto_id:product?.id || item.producto_id || null
+      };
     });
     const {error} = await window.sb.rpc('autorizar_pedido',{
       p_pedido_id:pedidoId,p_items:items
