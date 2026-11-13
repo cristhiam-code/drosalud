@@ -44,12 +44,13 @@ La cobertura inicial es de 7 días. No se inventa un stock de seguridad ni un m�
 - `index.html`: integra el módulo en la navegación principal y proporciona el cliente de Supabase.
 
 ## Base de datos
-La migración `supabase/migrations/20261112210000_create_pedidos_module.sql` crea:
+La migración `supabase/migrations/` contiene las migraciones aditivas del módulo. Además de la estructura inicial, hay migraciones específicas para vincular productos durante la autorización y hacer idempotente la generación de órdenes. La migración inicial crea:
 - `pedidos` y `pedidos_items`.
 - Relaciones desde órdenes de compra a pedido y línea de pedido.
 - Vínculo opcional de cotizaciones con una línea de pedido.
 - Vista `pedidos_resumen` para estados operativos derivados.
 - RPC para guardar, enviar, autorizar, rechazar y generar órdenes.
+- Clave de operación y huella de solicitud para impedir órdenes duplicadas al reintentar una generación.
 
 ## Seguridad
 - Lectura de pedidos para usuarios activos del equipo.
