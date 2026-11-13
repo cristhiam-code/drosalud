@@ -260,6 +260,7 @@
         <div class="pedidos-section-title"><div><h3>${modeLabel}</h3>
           <p>${state.editing ? 'Edita el borrador y guarda los cambios.' : state.mode === 'urgente' ? 'Registra un agotado o una solicitud inmediata de un cliente.' : 'Solicita cantidades adicionales o incorpora productos.'}</p></div>
           ${editing ? '<span class="pedidos-tag">Editando borrador</span>' : ''}</div>
+        <button type="button" class="pedidos-back-link" data-action="back-home">‹ Volver a pedidos</button>
         <div class="pedidos-form-grid">
           <div class="pedidos-field pedidos-field-wide">
             <label for="ped-product-name">Producto del catálogo o nombre libre</label>
