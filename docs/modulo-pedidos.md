@@ -19,6 +19,8 @@ PEDIDOS es el flujo interno de abastecimiento. No es una orden de compra: una so
 ## Reglas de integridad
 - Cantidades de pedido y orden se expresan en unidades base.
 - No se puede autorizar más de lo solicitado.
+- El administrador puede vincular un producto escrito como texto a un registro del catálogo durante la autorización.
+- La generación de órdenes utiliza una clave de operación y huella de la solicitud: un reintento idéntico devuelve las órdenes ya creadas y no las duplica; reutilizar la clave con asignaciones distintas se rechaza.
 - Las asignaciones a proveedores no pueden superar el total autorizado, incluyendo órdenes ya generadas.
 - Un producto no catalogado puede registrarse como texto en un pedido; debe vincularse a un producto del catálogo antes de generar una orden formal.
 - Generar órdenes es una operación atómica. Si una validación falla, no queda ninguna orden parcial.
