@@ -317,7 +317,7 @@
         <div class="pedidos-allocation-rows">
           <div class="pedidos-allocation-row" data-allocation-row>
             <select data-alloc-provider aria-label="Proveedor">${providerOptions(state.providers[0].id)}</select>
-            <input type="number" min="1" step="1" max="${remaining}" value="${nextUnits}" data-alloc-units aria-label="Unidades a comprar">
+            <input type="number" min="1" step="1" max="${remaining}" value="${remaining}" data-alloc-units aria-label="Unidades a comprar">
             <input type="number" min="0" step="0.01" value="${defaultCost}" data-alloc-cost aria-label="Costo unitario base">
           </div>
         </div>
@@ -571,7 +571,7 @@
     row.setAttribute('data-allocation-row','');
     row.innerHTML = `
       <select data-alloc-provider aria-label="Proveedor">${providerOptions(state.providers[0]?.id)}</select>
-      <input type="number" min="1" step="1" max="${remaining}" value="${remaining}" data-alloc-units aria-label="Unidades a comprar">
+      <input type="number" min="1" step="1" max="${remaining}" value="${nextUnits}" data-alloc-units aria-label="Unidades a comprar">
       <input type="number" min="0" step="0.01" value="${Number(item?.costo_estimado)||0}" data-alloc-cost aria-label="Costo unitario base">
       <button type="button" class="pedidos-remove-allocation" aria-label="Quitar asignación">×</button>`;
     rows.appendChild(row);
