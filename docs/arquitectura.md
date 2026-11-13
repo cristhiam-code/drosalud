@@ -13,7 +13,9 @@ drosalud/
 │   └── pedidos.css
 ├── supabase/
 │   └── migrations/
-│       └── 20261112210000_create_pedidos_module.sql
+│       ├── 20261112210000_create_pedidos_module.sql
+│       ├── 20261112220000_link_products_on_pedido_authorization.sql
+│       └── 20261112223000_add_order_generation_idempotency.sql
 └── docs/
     ├── arquitectura.md
     └── modulo-pedidos.md
