@@ -27,6 +27,28 @@ PEDIDOS es el flujo interno de abastecimiento. No es una orden de compra: una so
 - `compras_pendientes` y sus cotizaciones históricas se conservan. `cotizaciones_proveedor` puede vincularse a una compra pendiente antigua o a una línea de pedido nueva, nunca a ambas.
 - Las órdenes de compra creadas desde un pedido autorizado quedan aprobadas para que continúen por el proceso actual de recepción.
 
+## Cálculo del pedido sugerido
+La interfaz utiliza una ventana móvil de 7 días, excluye recibos anulados, convierte presentaciones a unidades base, consulta el saldo de `inventario_saldos` y descuenta unidades pendientes de recibir en órdenes no canceladas.
+
+La fórmula inicial es:
+
+`cantidad sugerida = max(0, ventas de 7 días − existencia − pendientes de recibir)`
+
+La cobertura inicial es de 7 días. No se inventa un stock de seguridad ni un mínimo que el negocio todavía no tenga configurado. El administrador puede modificar cada cantidad antes de guardar o enviar.
+
+## Frontend
+- `modules/pedidos.js`: interfaz y lógica de PEDIDOS.
+- `modules/pedidos.css`: estilos del módulo.
+- `index.html`: integra el módulo en la navegación principal y proporciona el cliente de Supabase.
+
+## Base de datos
+La migración `supabase/migrations/20261112210000_create_pedidos_module.sql` crea:
+- `pedidos` y `pedidos_items`.
+- Relaciones desde órdenes de compra a pedido y línea de pedido.
+- Vínculo opcional de cotizaciones con una línea de pedido.
+- Vista `pedidos_resumen` para estados operativos derivados.
+- RPC para guardar, enviar, autorizar, rechazar y generar órdenes.
+
 ## Seguridad
 - Lectura de pedidos para usuarios activos del equipo.
 - Guardado y envío mediante RPC con validación de sesión y rol.
@@ -35,9 +57,12 @@ PEDIDOS es el flujo interno de abastecimiento. No es una orden de compra: una so
 - Las RPC privilegiadas revocan ejecución de PUBLIC/anon y conceden ejecución a authenticated.
 - La creación/aprobación de órdenes independientes queda restringida al administrador para impedir el bypass del flujo.
 
-## Estado operativo
+## Estados
 La tabla conserva estados administrativos: `borrador`, `pendiente_autorizacion`, `autorizado`, `rechazado`, `cancelado`.
 La vista `pedidos_resumen` calcula el avance operativo: `parcialmente_comprado`, `en_compra`, `parcialmente_recibido`, `completado`.
 
-## Cálculo del pedido sugerido
-La fórmula definitiva debe usar ventas no anuladas, equivalencias de presentación, inventario de `inventario_saldos` y unidades pendientes de recibir en órdenes no canceladas. No debe asumir stock mínimo si no está configurado. Cobertura inicial propuesta: 7 días, editable antes de enviar.
+## Alcance pendiente de completar
+- Captura y comparación de cotizaciones por línea de pedido desde la interfaz.
+- Pruebas manuales de extremo a extremo en el preview con una cuenta de vendedor y otra de administrador.
+- Revisión visual en móvil y escritorio.
+- Integración de los pedidos urgentes con el módulo antiguo de medicamentos por conseguir, sin borrar el historial legacy.
