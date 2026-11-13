@@ -75,7 +75,7 @@
       getAll(() => window.sb.from('ordenes_compra').select('id,estado').order('creado_en')),
       getAll(() => window.sb.from('ordenes_compra_items').select('orden_id,producto_id,unidades_solicitadas,unidades_recibidas').order('creado_en'))
     ]);
-    const activeOrders = new Set(orders.filter(order => order.estado !== 'cancelada').map(order => order.id));
+    const activeOrders = new Set(orders.filter(order => ['aprobada','parcial'].includes(order.estado)).map(order => order.id));
     const stock = {};
     balances.forEach(row => { stock[row.producto_id] = Number(row.saldo_unidades) || 0; });
     const pending = {};
