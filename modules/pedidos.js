@@ -7,7 +7,7 @@
   const state = {
     user: null, role: null, products: [], providers: [], pedidos: [], items: [],
     orders: [], orderItems: [], suggested: [], formItems: [], editing: null,
-    operationIds: {}, mode: 'sugerido', loading: false
+    operationIds: {}, mode: 'inicio', loading: false
   };
 
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({
@@ -141,7 +141,6 @@
     ]);
     state.orders = orders || [];
     state.orderItems = orderItems || [];
-    await loadSuggested();
   }
 
   function itemsFor(pedidoId) {
@@ -161,33 +160,46 @@
       <div class="pedidos-module">
         <header class="pedidos-heading">
           <div><span class="pedidos-kicker">ABASTECIMIENTO</span><h2>Pedidos</h2>
-            <p>Solicitudes internas, autorización y órdenes a proveedores.</p></div>
+            <p>Gestiona las necesidades de compra del negocio.</p></div>
           <span class="pedidos-role">${isAdmin() ? 'Administrador' : 'Vendedor'}</span>
         </header>
-        <nav class="pedidos-modes" aria-label="Tipos de pedido">
-          <button type="button" data-mode="sugerido" class="pedidos-mode">
-            <b>Pedido sugerido</b><small>Automático por rotación</small>
-          </button>
-          <button type="button" data-mode="urgente" class="pedidos-mode">
-            <b>Pedido urgente</b><small>Necesidad inmediata</small>
-          </button>
-          <button type="button" data-mode="extraordinario" class="pedidos-mode">
-            <b>Pedido extraordinario</b><small>Ampliación de inventario</small>
-          </button>
-        </nav>
         <p class="pedidos-message" data-pedidos-message role="status" hidden></p>
         <div data-pedidos-panel></div>
-        <section class="pedidos-history">
-          <div class="pedidos-section-title"><div><h3>Seguimiento de pedidos</h3>
-            <p>Historial compartido de solicitudes y abastecimiento.</p></div>
-            <button type="button" class="btn alt" data-action="refresh">Actualizar</button>
-          </div>
-          <div data-pedidos-list></div>
-        </section>
       </div>`;
-    root.querySelectorAll('[data-mode]').forEach(button => {
-      button.classList.toggle('is-active', button.dataset.mode === state.mode);
-    });
+  }
+
+  function renderHome() {
+    return `
+      <section class="pedidos-home">
+        <button type="button" class="pedidos-home-card pedidos-home-suggested" data-mode="sugerido">
+          <span class="pedidos-home-icon" aria-hidden="true">↻</span>
+          <span><b>Pedido sugerido</b><small>Reposición automática según rotación, existencias y compras pendientes.</small></span>
+          <span class="pedidos-home-arrow" aria-hidden="true">›</span>
+        </button>
+        <button type="button" class="pedidos-home-card" data-mode="urgente">
+          <span class="pedidos-home-icon" aria-hidden="true">!</span>
+          <span><b>Pedido urgente</b><small>Productos agotados o solicitados por clientes.</small></span>
+          <span class="pedidos-home-arrow" aria-hidden="true">›</span>
+        </button>
+        <button type="button" class="pedidos-home-card" data-mode="extraordinario">
+          <span class="pedidos-home-icon" aria-hidden="true">＋</span>
+          <span><b>Pedido extraordinario</b><small>Ampliar inventario, incorporar productos u oportunidades comerciales.</small></span>
+          <span class="pedidos-home-arrow" aria-hidden="true">›</span>
+        </button>
+        <button type="button" class="pedidos-home-history" data-mode="seguimiento">Ver seguimiento de pedidos <span>›</span></button>
+      </section>`;
+  }
+
+  function renderTracking() {
+    return `
+      <section class="pedidos-panel">
+        <div class="pedidos-section-title">
+          <div><h3>Seguimiento de pedidos</h3><p>Consulta solicitudes, autorizaciones y órdenes generadas.</p></div>
+          <button type="button" class="btn alt" data-action="refresh">Actualizar</button>
+        </div>
+        <div data-pedidos-list></div>
+        <div class="pedidos-actions"><button type="button" class="btn alt" data-action="back-home">Volver a pedidos</button></div>
+      </section>`;
   }
 
   function renderSuggested() {
@@ -210,10 +222,11 @@
       </article>`).join('');
     return `
       <section class="pedidos-panel">
-        <div class="pedidos-section-title"><div><h3>Pedido sugerido por rotación</h3>
-          <p>Ventas móviles de los últimos 7 días, saldo disponible y compras pendientes de recibir.</p></div>
+        <div class="pedidos-section-title"><div><h3>Pedido sugerido</h3>
+          <p>Propuesta de reposición basada en los últimos 7 días.</p></div>
           <button type="button" class="btn alt" data-action="recalc">Recalcular</button>
         </div>
+        <button type="button" class="pedidos-back-link" data-action="back-home">‹ Volver a pedidos</button>
         <div class="pedidos-kpis">
           <div><small>Productos por reponer</small><b>${units(state.suggested.length)}</b></div>
           <div><small>Unidades sugeridas</small><b>${units(total)}</b></div>
@@ -412,18 +425,19 @@
   function renderPanel() {
     const panel = root.querySelector('[data-pedidos-panel]');
     if (!panel) return;
-    panel.innerHTML = state.mode === 'sugerido' && !state.editing
-      ? renderSuggested()
-      : renderManualForm();
-    root.querySelectorAll('[data-mode]').forEach(button => {
-      button.classList.toggle('is-active', button.dataset.mode === state.mode && !state.editing);
-    });
+    if (state.mode === 'inicio' && !state.editing) panel.innerHTML = renderHome();
+    else if (state.mode === 'seguimiento' && !state.editing) panel.innerHTML = renderTracking();
+    else if (state.mode === 'sugerido' && !state.editing) {
+      panel.innerHTML = state.loading
+        ? '<section class="pedidos-panel pedidos-loading">Analizando ventas, existencias y compras pendientes…</section>'
+        : renderSuggested();
+    } else panel.innerHTML = renderManualForm();
+    if (state.mode === 'seguimiento') renderList();
   }
 
   function render() {
     renderShell();
     renderPanel();
-    renderList();
   }
 
   function resolveProduct(value) {
@@ -467,7 +481,7 @@
     const items = readSuggestedItems();
     const id = await savePedido(items,'sugerido','Propuesta automática de rotación · cobertura de 7 días');
     if (send) await window.sb.rpc('enviar_pedido',{p_pedido_id:id}).then(({error}) => { if(error) throw error; });
-    state.mode = 'sugerido';
+    state.mode = 'seguimiento';
     await reload();
     message(send ? 'Pedido sugerido enviado a autorización.' : 'Pedido sugerido guardado como borrador.');
   }
@@ -490,7 +504,7 @@
     }
     state.editing = null;
     state.formItems = [];
-    state.mode = tipo === 'sugerido' ? 'sugerido' : tipo;
+    state.mode = 'seguimiento';
     await reload();
     message(send ? 'Pedido enviado a autorización.' : 'Borrador guardado correctamente.');
   }
@@ -616,8 +630,22 @@
       state.editing = null;
       state.formItems = [];
       state.mode = modeButton.dataset.mode;
-      renderPanel();
       message('');
+      if (state.mode === 'sugerido') {
+        state.loading = true;
+        renderPanel();
+        try {
+          await loadSuggested();
+        } catch (error) {
+          console.error('PEDIDOS sugerido:',error);
+          message(error?.message || 'No se pudo calcular el pedido sugerido.',true);
+        } finally {
+          state.loading = false;
+          renderPanel();
+        }
+      } else {
+        renderPanel();
+      }
       return;
     }
     const button = event.target.closest('[data-action]');
@@ -625,10 +653,16 @@
     const action = button.dataset.action;
     try {
       button.disabled = true;
-      if (action === 'refresh') {
-        await reload(); message('Datos actualizados.');
+      if (action === 'back-home') {
+        state.editing = null; state.formItems = []; state.mode = 'inicio'; message(''); renderPanel();
+      } else if (action === 'refresh') {
+        if (state.mode === 'seguimiento') { await reload(); message('Datos actualizados.'); }
+        else if (state.mode === 'sugerido') { await loadSuggested(); renderPanel(); message('Cálculo actualizado.'); }
+        else { await loadData(); renderPanel(); message('Datos actualizados.'); }
       } else if (action === 'recalc') {
-        await loadSuggested(); renderPanel(); message('Cálculo actualizado con los datos más recientes.');
+        state.loading = true; renderPanel();
+        try { await loadSuggested(); message('Cálculo actualizado con los datos más recientes.'); }
+        finally { state.loading = false; renderPanel(); }
       } else if (action === 'save-suggested') {
         await saveSuggested(false);
       } else if (action === 'send-suggested') {
@@ -660,7 +694,7 @@
       } else if (action === 'save-send') {
         await saveManual(true);
       } else if (action === 'cancel-edit') {
-        state.editing = null; state.formItems = []; state.mode = 'sugerido'; renderPanel(); message('');
+        state.editing = null; state.formItems = []; state.mode = 'inicio'; renderPanel(); message('');
       } else if (action === 'edit') {
         editPedido(button.dataset.pedidoId);
       } else if (action === 'send') {
