@@ -116,7 +116,7 @@
 
     const [products, providers, pedidos] = await Promise.all([
       getAll(() => window.sb.from('productos_app')
-        .select('id,codigo,nombre,laboratorio,unidades_por_caja,unidades_por_venta')
+        .select('id,codigo,nombre,laboratorio,precio_compra,unidades_por_caja,unidades_por_venta')
         .order('nombre').order('id')),
       getAll(() => window.sb.from('proveedores').select('id,nombre,activo')
         .eq('activo', true).order('nombre')),
@@ -232,6 +232,7 @@
     const editing = !!state.editing;
     const options = state.products.map(product =>
       `<option value="${esc(product.nombre)}" label="${esc([product.codigo,product.laboratorio].filter(Boolean).join(' · '))}"></option>`
+      + (product.codigo ? `<option value="${esc(product.codigo)}" label="${esc(product.nombre)}"></option>` : '')
     ).join('');
     const lines = state.formItems.map((item,index) => `
       <article class="pedidos-form-line">
@@ -316,7 +317,7 @@
         <div class="pedidos-allocation-rows">
           <div class="pedidos-allocation-row" data-allocation-row>
             <select data-alloc-provider aria-label="Proveedor">${providerOptions(state.providers[0].id)}</select>
-            <input type="number" min="1" step="1" max="${remaining}" value="${remaining}" data-alloc-units aria-label="Unidades a comprar">
+            <input type="number" min="1" step="1" max="${remaining}" value="${nextUnits}" data-alloc-units aria-label="Unidades a comprar">
             <input type="number" min="0" step="0.01" value="${defaultCost}" data-alloc-cost aria-label="Costo unitario base">
           </div>
         </div>
@@ -337,7 +338,9 @@
         <b>Generar órdenes de compra</b>
         <p>Asigna cada línea a uno o varios proveedores. El sistema agrupa automáticamente una orden por proveedor.</p>
         ${lines}
-        <button type="button" class="btn full" data-action="generate-orders" data-pedido-id="${pedido.id}">Generar órdenes de compra</button>
+        ${items.some(item => item.producto_id && (Number(item.cantidad_autorizada)||0) > alreadyOrdered(item.id))
+        ? `<button type="button" class="btn full" data-action="generate-orders" data-pedido-id="${pedido.id}">Generar órdenes de compra</button>`
+        : '<p class="pedidos-done">No quedan unidades autorizadas pendientes de asignar.</p>'}
       </div>`;
   }
 
@@ -414,8 +417,10 @@
   function resolveProduct(value) {
     const q = norm(value);
     if (!q) return null;
+    const digits = q.replace(/\\D/g,'');
     return state.products.find(product =>
       norm(product.nombre) === q || norm(product.codigo) === q
+      || (digits.length >= 4 && String(product.codigo || '').replace(/\\D/g,'').includes(digits))
     ) || null;
   }
 
@@ -545,6 +550,22 @@
     const itemId = box.dataset.allocationItem;
     const item = state.items.find(row => row.id === itemId);
     const remaining = Number(box.dataset.remaining) || 0;
+    if (remaining <= 1) {
+      message('No hay unidades suficientes para dividir esta línea entre proveedores.',true);
+      return;
+    }
+    const existingRows = [...rows.querySelectorAll('[data-allocation-row]')];
+    const used = existingRows.reduce((sum,row) => sum + (Number(row.querySelector('[data-alloc-units]')?.value)||0),0);
+    let nextUnits = remaining - used;
+    if (nextUnits <= 0 && existingRows.length) {
+      const first = existingRows[0].querySelector('[data-alloc-units]');
+      const firstValue = Number(first?.value)||0;
+      if (first && firstValue > 1) {
+        first.value = String(firstValue - 1);
+        nextUnits = 1;
+      }
+    }
+    if (nextUnits <= 0) nextUnits = 1;
     const row = document.createElement('div');
     row.className = 'pedidos-allocation-row';
     row.setAttribute('data-allocation-row','');
