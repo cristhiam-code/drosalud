@@ -417,10 +417,10 @@
   function resolveProduct(value) {
     const q = norm(value);
     if (!q) return null;
-    const digits = q.replace(/\\D/g,'');
+    const digits = q.replace(/\D/g,'');
     return state.products.find(product =>
       norm(product.nombre) === q || norm(product.codigo) === q
-      || (digits.length >= 4 && String(product.codigo || '').replace(/\\D/g,'').includes(digits))
+      || (digits.length >= 4 && String(product.codigo || '').replace(/\D/g,'').includes(digits))
     ) || null;
   }
 
