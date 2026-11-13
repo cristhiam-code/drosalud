@@ -91,6 +91,7 @@ declare
   v_nombre text;
   v_cantidad integer;
   v_costo numeric;
+  v_keep_ids uuid[] := array[]::uuid[];
 begin
   if v_uid is null or not public.es_usuario_drosalud() then
     raise exception 'Usuario no autorizado';
@@ -148,11 +149,12 @@ begin
     end if;
 
     if v_item_id is null then
+      v_item_id := gen_random_uuid();
       insert into public.pedidos_items(
-        pedido_id, producto_id, producto_nombre, cantidad_solicitada,
+        id, pedido_id, producto_id, producto_nombre, cantidad_solicitada,
         justificacion, costo_estimado
       ) values (
-        v_pedido_id, v_producto_id, v_nombre, v_cantidad,
+        v_item_id, v_pedido_id, v_producto_id, v_nombre, v_cantidad,
         nullif(trim(v_item->>'justificacion'), ''), v_costo
       );
     else
@@ -168,17 +170,17 @@ begin
         raise exception 'Una línea no pertenece a este pedido';
       end if;
     end if;
+    if v_item_id = any(v_keep_ids) then
+      raise exception 'Una línea está repetida en el pedido';
+    end if;
+    v_keep_ids := array_append(v_keep_ids, v_item_id);
   end loop;
 
   if exists (
     select 1
       from public.pedidos_items pi
      where pi.pedido_id = v_pedido_id
-       and not exists (
-         select 1
-           from jsonb_array_elements(p_items) x
-          where nullif(x->>'id', '')::uuid = pi.id
-       )
+       and not (pi.id = any(v_keep_ids))
        and (
          exists (select 1 from public.cotizaciones_proveedor cp where cp.pedido_item_id = pi.id)
          or exists (select 1 from public.ordenes_compra_items oi where oi.pedido_item_id = pi.id)
@@ -189,11 +191,7 @@ begin
 
   delete from public.pedidos_items pi
    where pi.pedido_id = v_pedido_id
-     and not exists (
-       select 1
-         from jsonb_array_elements(p_items) x
-        where nullif(x->>'id', '')::uuid = pi.id
-     );
+     and not (pi.id = any(v_keep_ids));
 
   return v_pedido_id;
 end;
@@ -250,8 +248,10 @@ begin
     raise exception 'El pedido no existe o no está pendiente de autorización';
   end if;
   select count(*) into v_total from public.pedidos_items where pedido_id = p_pedido_id;
-  if jsonb_array_length(p_items) <> v_total then
-    raise exception 'Debes revisar todas las líneas del pedido';
+  if jsonb_array_length(p_items) <> v_total
+     or (select count(distinct x.pedido_item_id)
+           from jsonb_to_recordset(p_items) as x(pedido_item_id uuid, cantidad_autorizada integer)) <> v_total then
+    raise exception 'Debes revisar una sola vez todas las líneas del pedido';
   end if;
 
   for v_item in select value from jsonb_array_elements(p_items) loop
