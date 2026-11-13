@@ -55,9 +55,9 @@
 .pedidos-summary{display:flex;flex-wrap:wrap;gap:14px;padding:9px 0;border-top:1px solid var(--line);font-size:.74rem;color:var(--mut)}
 .pedidos-admin-box{margin-top:14px;padding:13px;border-radius:12px;background:var(--bg);border:1px solid var(--line)}
 .pedidos-admin-box>p{font-size:.78rem;color:var(--mut);margin:5px 0 10px}
-.pedidos-auth-line{display:grid;grid-template-columns:minmax(0,1fr) 100px;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line);font-size:.8rem}
+.pedidos-auth-line{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(160px,1fr) 90px;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line);font-size:.8rem}
 .pedidos-auth-line small{display:block;color:var(--mut);font-size:.72rem}
-.pedidos-auth-line input{margin:0;padding:8px}
+.pedidos-auth-line input{margin:0;padding:8px;min-width:0}
 .pedidos-order-line{padding:10px 0;border-top:1px solid var(--line)}
 .pedidos-allocation{margin-top:8px}
 .pedidos-allocation-head{display:flex;justify-content:space-between;gap:8px;font-size:.76rem}
@@ -77,6 +77,8 @@
  .pedidos-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
  .pedidos-form-grid{grid-template-columns:1fr}
  .pedidos-field-wide{grid-column:auto}
+ .pedidos-auth-line{grid-template-columns:minmax(0,1fr) 86px}
+ .pedidos-auth-line span{grid-column:1/-1}
  .pedidos-allocation-row{grid-template-columns:minmax(0,1fr) 80px}
  .pedidos-allocation-row [data-alloc-cost]{grid-column:1}
  .pedidos-allocation-row .pedidos-remove-allocation{grid-column:2;grid-row:2;justify-self:end}
