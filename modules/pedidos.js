@@ -7,7 +7,7 @@
   const state = {
     user: null, role: null, products: [], providers: [], pedidos: [], items: [],
     orders: [], orderItems: [], suggested: [], formItems: [], editing: null,
-    mode: 'sugerido', loading: false
+    operationIds: {}, mode: 'sugerido', loading: false
   };
 
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({
@@ -554,10 +554,13 @@
       });
     });
     if (!assignments.length) throw new Error('No hay cantidades pendientes para asignar.');
+    const operationId = state.operationIds[pedidoId] || crypto.randomUUID();
+    state.operationIds[pedidoId] = operationId;
     const {data,error} = await window.sb.rpc('generar_ordenes_compra_pedido',{
-      p_pedido_id:pedidoId,p_asignaciones:assignments
+      p_pedido_id:pedidoId,p_asignaciones:assignments,p_operacion_id:operationId
     });
     if (error) throw error;
+    delete state.operationIds[pedidoId];
     await reload();
     const count = Array.isArray(data?.ordenes) ? data.ordenes.length : 0;
     message(count + (count === 1 ? ' orden de compra generada.' : ' órdenes de compra generadas.'));
