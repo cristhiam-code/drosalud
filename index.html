@@ -15,6 +15,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="modules/pedidos.css">
 <style>
 :root{--bg:#F4F8FF;--card:#FFFFFF;--ink:#17365C;--mut:#718096;--line:#DCE7F1;--pri:#0756B5;--pri-ink:#FFFFFF;--soft:#E7F2FC;--gain:#22B573;--bad:#C62828;--secondary:#08A9D6;--accent:#22B573;--nav-bg:#FFFFFF;--nav-ink:#17365C;--hover:#E7F2FC;--selected:#D8EAFE;--focus:#08A9D6;--warning:#D97706;--success:#22B573;color-scheme:light;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -462,7 +463,7 @@ nav button{font-size:.78rem}
   <div class="home-grid">
    <button class="home-tile" data-home="venta"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/ventas.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Facturación POS</strong><small>Crear recibo y registrar venta</small></button>
    <button class="home-tile" data-home="inventario"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/inventario.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Generar Kardex</strong><small>Consultar e imprimir existencias</small></button>
-   <button class="home-tile" data-home="pedidos"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/pedidos.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Pedidos</strong><small>Preparar pedido según rotación</small></button>
+   <button class="home-tile" data-home="pedidos"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/pedidos.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Pedidos</strong><small>Sugeridos, urgentes y extraordinarios</small></button>
    <button class="home-tile" data-home="recepcion"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/recepcion.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Recepción</strong><small>Registrar mercancía recibida</small></button>
    <button class="home-tile" data-home="cat"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/productos.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Productos</strong><small>Consultar y administrar catálogo</small></button>
    <button class="home-tile" data-home="cli"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/clientes.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Clientes</strong><small>Consultar y retomar clientes</small></button>
@@ -552,8 +553,7 @@ nav button{font-size:.78rem}
  <p class="mut sm" id="inv-status" aria-live="polite"></p>
 </section>
 <section id="v-pedidos" hidden>
- <h2>Pedidos</h2><p class="mut sm">Pedido sugerido por rotación de los últimos siete días. No descuenta existencias actuales. Puedes ajustar cantidades antes de imprimir.</p>
- <div id="inv-pedidos-list"></div><button class="btn alt full" id="inv-print" type="button">Imprimir pedido sugerido</button><p class="mut sm" id="ped-status" aria-live="polite"></p>
+ <div id="pedidos-app"><p class="mut sm">Abriendo módulo de pedidos…</p></div>
 </section>
 <section id="v-recepcion" hidden>
  <h2>Recepción de mercancía</h2><p class="mut sm">Registra únicamente productos que ya llegaron físicamente a Bodega.</p>
@@ -767,12 +767,13 @@ nav button{font-size:.78rem}
 <script>
 const esPreviewKardex=location.hostname!=='drosalud.vercel.app';
 const sb=supabase.createClient(esPreviewKardex?'https://uorhpljsofnfgzblxcga.supabase.co':'https://fwkaqxzdhqpvvjhixeod.supabase.co',esPreviewKardex?'sb_publishable_wraiN0CZckSyFOp97eIIbQ_-_8NPKZb':'sb_publishable_ZJ24N_m8fFJDa2NZvERl5g_gvd4xbFz');
+window.sb=sb;
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 const money=n=>'$'+Math.round(n).toLocaleString('es-CO');
 const DEF={m:25,r:100,biz:'DROGUERIA DROSALUD.SAS',nit:'900.109.443-0',ciu:'Cúcuta',tel:'3112581564',dir:'',msg:'Gracias por su compra',nota:'Resolución de facturación electrónica N° 1845101586525 de 2025-11-12. Vigencia 24 meses.',sHora:true,sCed:true,sTel:true,sPago:true,big:false,sLogo:true,mMin:10,colorPri:'#0756B5',colorBg:'#F4F8FF',colorCard:'#FFFFFF',colorInk:'#17365C',colorSecondary:'#08A9D6',colorAccent:'#22B573',colorMuted:'#718096',colorBorder:'#DCE7F1',colorSoft:'#E7F2FC',colorNavBg:'#FFFFFF',colorNavInk:'#17365C',colorHover:'#E7F2FC',colorSelected:'#D8EAFE',colorFocus:'#08A9D6',colorSuccess:'#22B573',colorWarning:'#D97706',colorError:'#C62828',cotDias:3,cotNota:'Precios sujetos a cambio y disponibilidad.',respDias:30,breb:'3112581564',pagoTitular:'',pagoCot:true,pagoRec:'siempre',qrTexto:'',qrImg:'',vendedorDef:'',msgRetomar:'Hola {nombre}, ¿cómo estás? Te escribimos de Drosalud. Hace un tiempo no sabemos de ti, ¿te ayudamos con algo? Tu salud, nuestra prioridad.'};
-const VERSION='2026-11-10.2-compras-integradas';
+const VERSION='2026-11-12.1-modulo-pedidos';
 let P=[],C=[],H=[],CO=[],cart=[],savingVenta=false,savingCotizacion=false,savingAjustes=false,cfg={...DEF},draft=null,usuarioDrosalud=null,rolDrosalud=null;
 // Control de interfaz por rol. La autorización definitiva debe aplicarse también en RLS.
 async function cargarRolDrosalud(){const{data,error}=await sb.auth.getUser();if(error)throw error;if(!data.user)throw new Error('Inicia sesión nuevamente.');const{data:perfil,error:ep}=await sb.from('usuarios_drosalud').select('rol,activo').eq('user_id',data.user.id).maybeSingle();if(ep)throw ep;if(!perfil||perfil.activo!==true||!['admin','vendedor'].includes(perfil.rol))throw new Error('Tu usuario no tiene un rol activo en Drosalud. Solicita al administrador que lo habilite.');usuarioDrosalud=data.user;rolDrosalud=perfil.rol;return perfil.rol}
@@ -939,9 +940,8 @@ async function loadInventario(){
  catch(e){console.error(e);$('#inv-status').textContent='No se pudo cargar Kardex. La migración de inventario debe estar instalada en el entorno de pruebas. '+(e.message||'')}
 }
 async function loadPedidos(){
- $('#ped-status').textContent='Calculando ventas de la semana actual (lunes a domingo)…';
- try{if(!invProductos.length)await invCargarDatos();await invCargarPedidos();$('#ped-status').textContent='Pedido sugerido calculado. Ajusta las cantidades antes de imprimir.'}
- catch(e){console.error(e);$('#ped-status').textContent='No se pudo calcular el pedido: '+(e.message||'')}
+ if(window.DrosaludPedidos){await window.DrosaludPedidos.load();return}
+ const box=$('#pedidos-app');if(box)box.textContent='El módulo de pedidos no pudo cargarse. Actualiza la página e inténtalo de nuevo.';
 }
 async function loadRecepcion(){
  $('#recep-status').textContent='Cargando catálogo…';
@@ -1654,5 +1654,6 @@ showLogin();
 })();
 </script>
 
+<script src="modules/pedidos.js"></script>
 </body>
 </html>
