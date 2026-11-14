@@ -22,6 +22,7 @@
    return !n||normalizarBusqueda([p.nombre,p.laboratorio,p.codigo].join(' ')).includes(n)||(dig.length>=4&&codigo.includes(dig));
   }
  async function nuevaOrden(){
+  if(window.__drosaludRole!=='admin')throw new Error('Solo el administrador puede crear órdenes de compra.');
   const providers=await cargarProveedores();
   if(!providers.length)throw new Error('Primero registra un proveedor activo.');
   if(!P.length)throw new Error('No se pudo cargar el catálogo.');
@@ -81,7 +82,7 @@
    cerrar();await cargarOrdenes();alert('Orden creada como borrador.');
   };
  }
- async function aprobar(id){const {error}=await sb.rpc('aprobar_orden_compra',{p_orden_id:id});if(error)throw error;await cargarOrdenes()}
+ async function aprobar(id){if(window.__drosaludRole!=='admin')throw new Error('Solo el administrador puede aprobar órdenes de compra.');const {error}=await sb.rpc('aprobar_orden_compra',{p_orden_id:id});if(error)throw error;await cargarOrdenes()}
  async function recibir(id){
   const operationId=crypto.randomUUID();
   const {data:items,error}=await sb.from('ordenes_compra_items').select('id,producto_id,unidades_solicitadas,unidades_recibidas,costo_unitario_base,productos(nombre,codigo)').eq('orden_id',id);
