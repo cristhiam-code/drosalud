@@ -32,10 +32,11 @@
     pedidos: async filtro => rows(await rpc('ps_listar_pedidos_sucursal', {
       p_filtro: filtro || 'historial'
     })),
-    crear: (tipo, items, notas = null) => rpc('ps_crear_pedido_sucursal', {
+    crear: (tipo, items, notas = null, operacionId) => rpc('ps_crear_pedido_sucursal', {
       p_tipo: tipo,
       p_items: items,
-      p_notas: notas
+      p_notas: notas,
+      p_operacion_id: operacionId
     }),
     autorizar: (pedidoId, items) => rpc('ps_autorizar_pedido_sucursal', {
       p_pedido_id: pedidoId,
@@ -45,15 +46,17 @@
       p_pedido_id: pedidoId,
       p_motivo: motivo
     }),
-    despachar: (pedidoId, items, notas = null) => rpc('ps_registrar_despacho_sucursal', {
+    despachar: (pedidoId, items, notas = null, operacionId) => rpc('ps_registrar_despacho_sucursal', {
       p_pedido_id: pedidoId,
       p_items: items,
-      p_notas: notas
+      p_notas: notas,
+      p_operacion_id: operacionId
     }),
-    confirmarRecepcion: (despachoId, items, notas = null) => rpc('ps_confirmar_recepcion_sucursal', {
+    confirmarRecepcion: (despachoId, items, notas = null, operacionId) => rpc('ps_confirmar_recepcion_sucursal', {
       p_despacho_id: despachoId,
       p_items: items,
-      p_notas: notas
+      p_notas: notas,
+      p_operacion_id: operacionId
     })
   });
 })();
