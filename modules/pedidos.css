@@ -106,3 +106,14 @@
  .pedidos-home-card b{font-size:.91rem}
  .pedidos-home-card small{font-size:.77rem}
 }
+
+
+/* Pedido urgente: tabla simple con cantidades expresadas en cajas. */
+.pedidos-urgent-table-wrap{overflow-x:auto;margin-top:14px;border:1px solid var(--line);border-radius:12px}
+.pedidos-urgent-table{width:100%;min-width:560px;border-collapse:collapse;background:var(--card);font-size:.84rem}
+.pedidos-urgent-table th,.pedidos-urgent-table td{padding:11px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.pedidos-urgent-table th{background:var(--soft);color:var(--ink);font-size:.76rem;white-space:nowrap}
+.pedidos-urgent-table tbody tr:last-child td{border-bottom:0}
+.pedidos-urgent-table td:nth-child(3),.pedidos-urgent-table td:nth-child(4){text-align:center;font-variant-numeric:tabular-nums}
+.pedidos-urgent-table .pedidos-empty{text-align:center;padding:18px}
+.pedidos-urgent-table .pedidos-remove{display:grid;place-items:center}
