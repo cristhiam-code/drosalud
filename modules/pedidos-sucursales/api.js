@@ -38,6 +38,7 @@
       p_notas: notas,
       p_operacion_id: operacionId
     }),
+    iniciarRevision: pedidoId => rpc('ps_iniciar_revision_pedido_sucursal', { p_pedido_id: pedidoId }),
     autorizar: (pedidoId, items) => rpc('ps_autorizar_pedido_sucursal', {
       p_pedido_id: pedidoId,
       p_items: items
