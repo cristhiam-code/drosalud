@@ -43,12 +43,15 @@ No usar `migration repair` para ocultar diferencias de esquema. No renombrar arc
 
 ## Validaciones realizadas
 
-- El despliegue de vista previa para el commit de esta rama terminó en estado `READY`.
-- La página principal responde HTTP 200 y entrega el HTML del candidato.
-- `modules/pedidos.js` y `modules/pedidos.css` se sirven desde la vista previa.
-- La base QA contiene la firma final de idempotencia y concede ejecución a `authenticated`, no a `anon`.
-- Estas comprobaciones no equivalen a una prueba E2E autenticada. No se ha creado ningún pedido, orden ni recepción durante esta revisión.
-- No se ejecutó SQL ni se modificó producción.
+- Se creó una migración consolidada e idempotente: `20261114182004_pedidos_release_consolidated_20261114.sql`.
+- Se aplicó únicamente en QA. Supabase registró la versión `20261114182004`, con el mismo nombre que el archivo versionado; así no queda una segunda migración pendiente con otra fecha.
+- El despliegue de vista previa de la rama terminó en estado `READY`. La página principal responde HTTP 200 y entrega el HTML candidato; `modules/pedidos.js` y `modules/pedidos.css` se sirven correctamente.
+- Prueba transaccional en QA, revertida al terminar: crear pedido urgente, enviarlo, autorizarlo, dividir una misma línea entre dos proveedores, generar dos órdenes, repetir la misma operación y recibir parcialmente una orden. La repetición devolvió la operación existente; no creó órdenes duplicadas.
+- Prueba transaccional de roles, también revertida: un vendedor puede crear/enviar pedidos y registrar recepción; no puede autorizar/rechazar pedidos, crear/aprobar órdenes independientes ni generar órdenes desde Pedidos.
+- Después de ambas pruebas, QA conservó los mismos datos operativos: 0 pedidos de prueba, 2 órdenes, 1 recepción y 11 movimientos; el proveedor temporal no existe y el usuario QA volvió a rol administrador.
+- Los RPC de Pedidos y Compras tienen ejecución para `authenticated`, no para `anon`. El asesor de seguridad conserva 28 avisos de funciones SECURITY DEFINER autenticadas y 1 aviso de protección de contraseñas filtradas; son avisos del proyecto QA, no se intentó ocultarlos ni revocar funciones usadas por la app.
+- Estas son pruebas transaccionales directas contra funciones SQL y validación de vista previa, no una prueba E2E visual desde navegador autenticado.
+- No se aplicó ninguna migración ni se modificó ningún dato en producción.
 
 ## Bloqueo de salida
 
