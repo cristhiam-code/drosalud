@@ -15,6 +15,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="modules/pedidos.css">
 <style>
 :root{--bg:#F4F8FF;--card:#FFFFFF;--ink:#17365C;--mut:#718096;--line:#DCE7F1;--pri:#0756B5;--pri-ink:#FFFFFF;--soft:#E7F2FC;--gain:#22B573;--bad:#C62828;--secondary:#08A9D6;--accent:#22B573;--nav-bg:#FFFFFF;--nav-ink:#17365C;--hover:#E7F2FC;--selected:#D8EAFE;--focus:#08A9D6;--warning:#D97706;--success:#22B573;color-scheme:light;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -552,8 +553,7 @@ nav button{font-size:.78rem}
  <p class="mut sm" id="inv-status" aria-live="polite"></p>
 </section>
 <section id="v-pedidos" hidden>
- <h2>Pedidos</h2><p class="mut sm">Pedido sugerido por rotación de los últimos siete días. No descuenta existencias actuales. Puedes ajustar cantidades antes de imprimir.</p>
- <div id="inv-pedidos-list"></div><button class="btn alt full" id="inv-print" type="button">Imprimir pedido sugerido</button><p class="mut sm" id="ped-status" aria-live="polite"></p>
+ <div id="pedidos-app"><p class="mut sm">Abriendo módulo de pedidos…</p></div>
 </section>
 <section id="v-recepcion" hidden>
  <h2>Recepción de mercancía</h2><p class="mut sm">Registra únicamente productos que ya llegaron físicamente a Bodega.</p>
@@ -939,9 +939,24 @@ async function loadInventario(){
  catch(e){console.error(e);$('#inv-status').textContent='No se pudo cargar Kardex. La migración de inventario debe estar instalada en el entorno de pruebas. '+(e.message||'')}
 }
 async function loadPedidos(){
- $('#ped-status').textContent='Calculando ventas de la semana actual (lunes a domingo)…';
- try{if(!invProductos.length)await invCargarDatos();await invCargarPedidos();$('#ped-status').textContent='Pedido sugerido calculado. Ajusta las cantidades antes de imprimir.'}
- catch(e){console.error(e);$('#ped-status').textContent='No se pudo calcular el pedido: '+(e.message||'')}
+ const root=$('#pedidos-app');
+ if(!root)return;
+ root.innerHTML='<div class="pedidos-loading">Comprobando el esquema del módulo…</div>';
+ try{
+  if(!window.DrosaludPedidos)throw new Error('No se pudo cargar el módulo de pedidos.');
+  const {error}=await sb.from('pedidos_resumen').select('id').limit(1);
+  if(error){
+   if(/does not exist|schema cache|could not find the table/i.test(String(error.message||error))){
+    root.innerHTML='<div class="pedidos-panel"><h3>Pedidos en preparación</h3><p class="pedidos-warning">La estructura de base de datos de Pedidos aún no está instalada en este entorno. El módulo está protegido y no realizará cambios hasta completar esa instalación.</p></div>';
+    return;
+   }
+   throw error;
+  }
+  await window.DrosaludPedidos.load();
+ }catch(e){
+  console.error('Carga del módulo Pedidos:',e);
+  root.innerHTML='<div class="pedidos-panel"><h3>No se pudo abrir Pedidos</h3><p class="pedidos-warning">'+esc(e.message||'Error de conexión')+'</p></div>';
+ }
 }
 async function loadRecepcion(){
  $('#recep-status').textContent='Cargando catálogo…';
@@ -1654,5 +1669,6 @@ showLogin();
 })();
 </script>
 
+<script src="modules/pedidos.js"></script>
 </body>
 </html>
