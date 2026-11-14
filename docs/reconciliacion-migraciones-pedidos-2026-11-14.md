@@ -9,12 +9,14 @@ No ejecutar todavía las tres migraciones de Pedidos tal como están en esta ram
 | Producción | `20261112223131 compras_rls_rpc` | No existen `pedidos`, `pedidos_items` ni RPC de Pedidos |
 | QA | `20261112223020 guardar_compra_pendiente_v4`, luego `20261113020211`, `20261113020736`, `20261113020840` | Pedidos y sus RPC existen |
 
-Las tres migraciones de Pedidos versionadas en Git usan otros identificadores:
-- `20261112210000_create_pedidos_module.sql`
-- `20261112220000_link_products_on_pedido_authorization.sql`
-- `20261112223000_add_order_generation_idempotency.sql`
+Los tres archivos originales de Pedidos se renombraron para coincidir con las versiones ya registradas en QA:
+- `20261113020211_create_pedidos_module.sql`
+- `20261113020736_link_products_on_pedido_authorization.sql`
+- `20261113020840_add_order_generation_idempotency.sql`
 
-Por tanto, los identificadores registrados en QA no corresponden con los nombres/fechas de los archivos versionados. Además, producción ya tiene una migración posterior a la fecha de la primera migración Pedidos. No se debe confiar en un `db push` directo ni en reparar el historial para marcar como aplicadas migraciones cuyo esquema todavía no existe en producción.
+Así QA reconoce esos tres archivos como ya aplicados y producción, cuyo último registro actual es `20261112223131`, los ejecutaría cronológicamente después de Compras. La migración consolidada posterior queda en `20261114182004_pedidos_release_consolidated_20261114.sql`.
+
+**Bloqueo independiente de historial:** producción tiene 32 versiones registradas. Comprobé que varias migraciones de ese historial —incluidas las de seguridad/caja y las tres de Compras `20261112214210`, `20261112223125` y `20261112223131`— no tienen su SQL original en este repositorio. Por ello no autorizo un `supabase db push` ni una reparación masiva del historial: primero hay que recuperar o documentar el baseline real de producción. La publicación de Pedidos debe hacerse con el SQL revisado y una migración explícita, después de aprobación.
 
 ## Ruta segura de publicación
 
@@ -43,6 +45,7 @@ No usar `migration repair` para ocultar diferencias de esquema. No renombrar arc
 
 ## Validaciones realizadas
 
+- Se crearon/renombraron las migraciones de Pedidos para que sus versiones coincidan con el historial QA: `20261113020211`, `20261113020736` y `20261113020840`.
 - Se creó una migración consolidada e idempotente: `20261114182004_pedidos_release_consolidated_20261114.sql`.
 - Se aplicó únicamente en QA. Supabase registró la versión `20261114182004`, con el mismo nombre que el archivo versionado; así no queda una segunda migración pendiente con otra fecha.
 - El despliegue de vista previa de la rama terminó en estado `READY`. La página principal responde HTTP 200 y entrega el HTML candidato; `modules/pedidos.js` y `modules/pedidos.css` se sirven correctamente.
