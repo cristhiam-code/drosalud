@@ -59,3 +59,14 @@ No usar `migration repair` para ocultar diferencias de esquema. No renombrar arc
 ## Bloqueo de salida
 
 La rama no está lista para fusionarse a `main` hasta que exista la migración de avance reconciliada, se aplique y valide en QA y se completen las pruebas de roles y operación real.
+
+
+## Actualización: baseline real de producción (14/11/2026)
+
+Se realizó una inspección de solo lectura directamente en producción y QA. El inventario completo, diferencias de columnas, permisos, funciones y secuencia de transición están documentados en [baseline-produccion-transicion-controlada-2026-11-14.md](./baseline-produccion-transicion-controlada-2026-11-14.md).
+
+**Esta actualización precisa la ruta anterior:** la migración consolidada actual NO está lista para producción. Se comprobó que producción permite crear/aprobar órdenes independientes a cualquier usuario activo del equipo, mientras QA exige administrador. La migración consolidada sustituye esas funciones y cambia ese comportamiento. Para preservar la operatividad vigente, la siguiente revisión debe mantener las definiciones/permisos productivos de Compras independientes y aplicar el requisito de administrador únicamente a autorización/rechazo y generación de órdenes desde Pedidos.
+
+También se confirmó que `registrar_recepcion_compra` tiene la misma firma y flujo general en ambos entornos, pero definiciones SQL distintas; se debe conservar la productiva hasta cerrar una comparación funcional y pruebas de regresión.
+
+No se ejecutó ninguna escritura ni migración en producción. No usar `supabase db push` ni desplegar el SQL consolidado sin los ajustes indicados.
