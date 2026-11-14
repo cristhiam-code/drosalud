@@ -5,7 +5,7 @@
   if (!root) return;
 
   const state = {
-    user: null, role: null, products: [], providers: [], pedidos: [], items: [],
+    user: null, role: null, products: [], negativeProducts: [], providers: [], pedidos: [], items: [],
     orders: [], orderItems: [], suggested: [], formItems: [], editing: null,
     operationIds: {}, mode: 'inicio', loading: false
   };
@@ -114,15 +114,20 @@
     }
     state.role = profile.rol;
 
-    const [products, providers, pedidos] = await Promise.all([
+    const [products, providers, pedidos, balances] = await Promise.all([
       getAll(() => sb.from('productos_app')
         .select('id,codigo,nombre,laboratorio,precio_compra,unidades_por_caja,unidades_por_venta')
         .order('nombre').order('id')),
       getAll(() => sb.from('proveedores').select('id,nombre,activo')
         .eq('activo', true).order('nombre')),
-      getAll(() => sb.from('pedidos_resumen').select('*').order('creado_en', { ascending:false }))
+      getAll(() => sb.from('pedidos_resumen').select('*').order('creado_en', { ascending:false })),
+      getAll(() => sb.from('inventario_saldos').select('producto_id,saldo_unidades').order('producto_id'))
     ]);
     state.products = products || [];
+    const negativeIds = new Set((balances || [])
+      .filter(row => Number(row.saldo_unidades) < 0)
+      .map(row => row.producto_id));
+    state.negativeProducts = state.products.filter(product => negativeIds.has(product.id));
     state.providers = providers || [];
     state.pedidos = pedidos || [];
 
@@ -178,7 +183,7 @@
         </button>
         <button type="button" class="pedidos-home-card" data-mode="urgente">
           <span class="pedidos-home-icon" aria-hidden="true">!</span>
-          <span><b>Pedido urgente</b><small>Productos agotados o solicitados por clientes.</small></span>
+          <span><b>Pedido urgente</b><small>Solo productos con inventario negativo.</small></span>
           <span class="pedidos-home-arrow" aria-hidden="true">›</span>
         </button>
         <button type="button" class="pedidos-home-card" data-mode="extraordinario">
@@ -243,7 +248,9 @@
 
   function renderManualForm() {
     const editing = !!state.editing;
-    const options = state.products.map(product =>
+    const urgentMode = state.mode === 'urgente' || state.editing?.tipo === 'urgente';
+    const selectableProducts = urgentMode ? state.negativeProducts : state.products;
+    const options = selectableProducts.map(product =>
       `<option value="${esc(product.nombre)}" label="${esc([product.codigo,product.laboratorio].filter(Boolean).join(' · '))}"></option>`
       + (product.codigo ? `<option value="${esc(product.codigo)}" label="${esc(product.nombre)}"></option>` : '')
     ).join('');
@@ -263,10 +270,10 @@
         <button type="button" class="pedidos-back-link" data-action="back-home">‹ Volver a pedidos</button>
         <div class="pedidos-form-grid">
           <div class="pedidos-field pedidos-field-wide">
-            <label for="ped-product-name">Producto del catálogo o nombre libre</label>
-            <input id="ped-product-name" list="ped-product-options" placeholder="Busca por nombre o escribe el producto">
+            <label for="ped-product-name">${urgentMode ? 'Producto con inventario negativo' : 'Producto del catálogo o nombre libre'}</label>
+            <input id="ped-product-name" list="ped-product-options" placeholder="${urgentMode ? 'Busca un producto con saldo menor a cero' : 'Busca por nombre o escribe el producto'}">
             <datalist id="ped-product-options">${options}</datalist>
-            <small>Si no está en el catálogo, puedes escribirlo. Para generar una orden deberá vincularse después.</small>
+            <small>${urgentMode ? 'Solo se permiten productos cuyo inventario actual sea negativo.' : 'Si no está en el catálogo, puedes escribirlo. Para generar una orden deberá vincularse después.'}</small>
           </div>
           <div class="pedidos-field">
             <label for="ped-product-qty">Cantidad solicitada (unidades)</label>
@@ -714,6 +721,10 @@
         if (!name) throw new Error('Escribe o selecciona un producto.');
         if (!Number.isInteger(quantity) || quantity <= 0) throw new Error('La cantidad debe ser un entero mayor que cero.');
         const product = resolveProduct(name);
+        const urgentMode = state.mode === 'urgente' || state.editing?.tipo === 'urgente';
+        if (urgentMode && (!product || !state.negativeProducts.some(row => row.id === product.id))) {
+          throw new Error('El pedido urgente solo admite productos con inventario negativo. Actualiza los datos e inténtalo de nuevo.');
+        }
         const productName = product?.nombre || name;
         const existing = state.formItems.find(item => product
           ? item.producto_id === product.id
