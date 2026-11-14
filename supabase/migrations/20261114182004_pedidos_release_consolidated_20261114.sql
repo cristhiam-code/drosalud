@@ -492,78 +492,8 @@ select p.*,
 
 grant select on public.pedidos_resumen to authenticated;
 
--- Cierre de bypass: la creación y aprobación de órdenes independientes también
--- queda reservada al administrador. Los pedidos nuevos usan su RPC de generación.
-create or replace function public.crear_orden_compra(
-  p_proveedor_id uuid,
-  p_items jsonb,
-  p_documento text default null,
-  p_notas text default null
-) returns uuid
-language plpgsql
-security definer
-set search_path to ''
-as $function$
-declare
-  v_id uuid;
-  v_item jsonb;
-  v_producto uuid;
-  v_unidades integer;
-  v_costo numeric;
-begin
-  if auth.uid() is null or not public.es_admin_drosalud() then
-    raise exception 'Solo el administrador puede crear órdenes de compra';
-  end if;
-  if not exists(select 1 from public.proveedores where id = p_proveedor_id and activo) then
-    raise exception 'Proveedor inexistente o inactivo';
-  end if;
-  if p_items is null or jsonb_typeof(p_items) <> 'array' or jsonb_array_length(p_items) = 0 then
-    raise exception 'La orden debe contener productos';
-  end if;
-  insert into public.ordenes_compra(proveedor_id, documento_proveedor, notas, creado_por)
-  values (p_proveedor_id, nullif(trim(p_documento), ''), nullif(trim(p_notas), ''), auth.uid())
-  returning id into v_id;
-
-  for v_item in select value from jsonb_array_elements(p_items) loop
-    v_producto := (v_item->>'producto_id')::uuid;
-    v_unidades := (v_item->>'unidades_solicitadas')::integer;
-    v_costo := (v_item->>'costo_unitario_base')::numeric;
-    if v_unidades is null or v_unidades <= 0 or v_costo is null or v_costo < 0 then
-      raise exception 'Unidades o costo inválido en orden';
-    end if;
-    if not exists(select 1 from public.productos where id = v_producto) then
-      raise exception 'Producto inexistente en orden';
-    end if;
-    insert into public.ordenes_compra_items(
-      orden_id, producto_id, unidades_solicitadas, costo_unitario_base
-    ) values (v_id, v_producto, v_unidades, v_costo);
-  end loop;
-  return v_id;
-end;
-$function$;
-
-create or replace function public.aprobar_orden_compra(p_orden_id uuid)
-returns void
-language plpgsql
-security definer
-set search_path to ''
-as $function$
-begin
-  if auth.uid() is null or not public.es_admin_drosalud() then
-    raise exception 'Solo el administrador puede aprobar órdenes de compra';
-  end if;
-  if not exists(select 1 from public.ordenes_compra_items where orden_id = p_orden_id) then
-    raise exception 'No se puede aprobar una orden vacía';
-  end if;
-  update public.ordenes_compra
-     set estado = 'aprobada', actualizado_en = now()
-   where id = p_orden_id and estado = 'borrador';
-  if not found then
-    raise exception 'La orden no existe o no está en borrador';
-  end if;
-end;
-$function$;
-
+-- Compatibilidad: no se reemplazan crear_orden_compra ni aprobar_orden_compra.
+-- Se conservan sus definiciones y permisos existentes para no alterar Compras.
 revoke all on function public.guardar_pedido(uuid,text,text,jsonb) from public, anon, authenticated;
 revoke all on function public.enviar_pedido(uuid) from public, anon, authenticated;
 revoke all on function public.autorizar_pedido(uuid,jsonb) from public, anon, authenticated;
