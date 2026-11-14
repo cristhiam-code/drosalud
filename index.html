@@ -1094,7 +1094,7 @@ $('#cj-history-toggle').addEventListener('click',()=>show('cajahistorial'));
 $('#v-cajahistorial').addEventListener('click',e=>{if(e.target.closest('[data-cj-back]')){show('caja');return}if(e.target.closest('#cj-history-retry'))return loadHistorialCierres();const b=e.target.closest('[data-cj-history-date]');if(b){const f=b.dataset.cjHistoryDate;$('#cj-f').value=f;show('caja')}});
 $('#v-caja').addEventListener('input',e=>{if(e.target.id==='cj-base'||e.target.id==='cj-cont')cajaCalc()});
 $('#cj-f').addEventListener('change',e=>go(()=>cajaVer(e.target.value)));
-$('#coq').addEventListener('input',renderCotizaciones);
+$('#coq').addEventListener('input',()=>DrosaludCotizaciones.render());
 $('#q').addEventListener('input',rRes);
 $('#q2').addEventListener('input',rCat);
 let ultimoDocConsultado='';
