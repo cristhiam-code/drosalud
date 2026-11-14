@@ -882,7 +882,7 @@ async function invCargarDatos(){
  const buscador=$('#inv-prod-search'),resultados=$('#inv-prod-results'),seleccion=$('#inv-prod-selected');
  if(buscador&&resultados){
   buscador.value='';$('#inv-prod').value='';seleccion.textContent='Selecciona un producto del catálogo.';
-  const pintar=()=>{const q=norm(buscador.value).trim(),dig=q.replace(/\\D/g,'');const hallados=opts.filter(p=>norm([p.nombre,p.laboratorio,p.codigo].join(' ')).includes(q)||(dig.length>=4&&String(p.codigo||'').replace(/\\D/g,'').includes(dig))).slice(0,12);
+  const pintar=()=>{const q=norm(buscador.value).trim(),dig=q.replace(/\D/g,'');const hallados=opts.filter(p=>norm([p.nombre,p.laboratorio,p.codigo].join(' ')).includes(q)||(dig.length>=4&&String(p.codigo||'').replace(/\D/g,'').includes(dig))).slice(0,12);
    resultados.innerHTML=hallados.map(p=>'<button type="button" class="btn alt full" data-inv-pick="'+p.id+'" style="text-align:left;margin:3px 0">'+esc(p.nombre)+' · '+esc(p.codigo||'Sin código')+' · '+esc(p.laboratorio||'')+'</button>').join('')||(q?'<p class="mut sm">No se encontraron coincidencias.</p>':'<p class="mut sm">Escribe para buscar en el catálogo.</p>');
   };
   buscador.oninput=()=>{ $('#inv-prod').value='';seleccion.textContent='Selecciona un producto del catálogo.';pintar() };
@@ -1169,9 +1169,9 @@ function consentHTML(id){return `<div class="cons"><label class="ck"><input type
 async function cargarConsentimientos(){try{const r=await all('consentimientos_clientes','aceptado_en');CONS=new Set();r.forEach(x=>{if(!x.cliente_id)return;if(x.aceptado)CONS.add(x.cliente_id);else CONS.delete(x.cliente_id)})}catch(e){console.error('Consentimientos:',e)}}
 async function registrarConsentimiento(cid,canal){if(!cid||CONS.has(cid))return;const{error}=await sb.from('consentimientos_clientes').insert({cliente_id:cid,version_texto:POLITICA_VERSION,aceptado:true,canal:canal||'mostrador'});if(error)throw error;CONS.add(cid)}
 function faltaConsentimiento(tieneDatos,marcada,cid){return CONSENTIMIENTO_OBLIGATORIO&&tieneDatos&&!marcada&&!(cid&&CONS.has(cid))}
-function partesNombre(n){const p=String(n||'').trim().split(/\\s+/).filter(Boolean);return{nombres:p.shift()||'',apellidos:p.join(' ')}}
-function nombreCompleto(n,a){return[n,a].map(x=>String(x||'').trim()).filter(Boolean).join(' ').replace(/\\s+/g,' ')}
-function buscarCliente(ced,tel){const ce=String(ced||'').replace(/\\D/g,'');if(ce)return C.find(x=>String(x.cedula||'').replace(/\\D/g,'')===ce)||null;const te=String(tel||'').replace(/\\D/g,'');return te?C.find(x=>String(x.telefono||'').replace(/\\D/g,'')===te)||null:null}
+function partesNombre(n){const p=String(n||'').trim().split(/\s+/).filter(Boolean);return{nombres:p.shift()||'',apellidos:p.join(' ')}}
+function nombreCompleto(n,a){return[n,a].map(x=>String(x||'').trim()).filter(Boolean).join(' ').replace(/\s+/g,' ')}
+function buscarCliente(ced,tel){const ce=String(ced||'').replace(/\D/g,'');if(ce)return C.find(x=>String(x.cedula||'').replace(/\D/g,'')===ce)||null;const te=String(tel||'').replace(/\D/g,'');return te?C.find(x=>String(x.telefono||'').replace(/\D/g,'')===te)||null:null}
 function esClienteNoInscrito(ced){return String(ced||'').replace(/\D/g,'')==='999'}
 function actualizarEstadoClientePOS(clienteForzado){
  const ced=$('#ced').value,guest=esClienteNoInscrito(ced),status=$('#cliente-estado'),name=$('#cliente-nombre-pos');
@@ -1376,7 +1376,7 @@ $('#q').addEventListener('input',rRes);
 $('#q2').addEventListener('input',rCat);
 let ultimoDocConsultado='';
 function consultarClientePOS(){
- const doc=$('#ced').value.trim(),norm=doc.replace(/\\D/g,'');
+ const doc=$('#ced').value.trim(),norm=doc.replace(/\D/g,'');
  if(!doc){ultimoDocConsultado='';actualizarEstadoClientePOS();return}
  if(esClienteNoInscrito(doc)){ultimoDocConsultado=norm;actualizarEstadoClientePOS();return}
  if(norm===ultimoDocConsultado)return;
@@ -1441,8 +1441,8 @@ showLogin();
   const uid=await owner(),v=k=>$n('#nf-'+k).value.trim();
   const row={owner_id:uid,nombre:v('nombre'),contacto:v('contacto'),telefono:v('telefono'),whatsapp:v('whatsapp'),email:v('email'),notas:v('notas'),activo:v('activo')==='true'};
   if(!row.nombre)throw new Error('Escribe el nombre del proveedor.');
-  const clean=s=>String(s||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
-  const phone=s=>String(s||'').replace(/\\D/g,'');
+  const clean=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  const phone=s=>String(s||'').replace(/\D/g,'');
   const duplicate=providers.find(p=>p.id!==id&&(
    clean(p.nombre)===clean(row.nombre)||
    (phone(row.telefono).length>=7&&phone(p.telefono)===phone(row.telefono))||
@@ -1570,10 +1570,10 @@ showLogin();
  async function cargarProveedores(){const {data,error}=await sb.from('proveedores').select('id,nombre,activo').eq('activo',true).order('nombre');if(error)throw error;window.__ocProviders=data||[];return data||[]}
  function modal(html){$('#modal').hidden=false;$('#sheet').innerHTML=html}
  function cerrar(){ $('#modal').hidden=true}
-  function normalizarBusqueda(v){return String(v||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().trim()}
+  function normalizarBusqueda(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim()}
   function coincideProducto(p,q){
-   const n=normalizarBusqueda(q),codigo=String(p.codigo||'').toLowerCase().replace(/\\D/g,'');
-   const dig=n.replace(/\\D/g,'');
+   const n=normalizarBusqueda(q),codigo=String(p.codigo||'').toLowerCase().replace(/\D/g,'');
+   const dig=n.replace(/\D/g,'');
    return !n||normalizarBusqueda([p.nombre,p.laboratorio,p.codigo].join(' ')).includes(n)||(dig.length>=4&&codigo.includes(dig));
   }
  async function nuevaOrden(){
@@ -1645,7 +1645,7 @@ showLogin();
   if(!pendiente.length)throw new Error('Esta orden ya está recibida completamente.');
   modal('<h2>Recepción física</h2><p class="mut sm">Registra solo lo que llegó. Los costos pueden variar frente a la orden.</p><label>Factura / documento proveedor</label><input id="oc-receipt-doc" maxlength="100"><label>Filtrar productos de esta orden por nombre o código</label><input id="oc-receipt-search" type="search" placeholder="Buscar en los productos pendientes…" autocomplete="off"><p class="mut sm">El filtro solo oculta líneas; no elimina cantidades ni productos de la recepción.</p><div id="oc-receipt-lines">'+pendiente.map(x=>'<div class="item oc-receipt-line" data-oc-filter="'+esc([x.productos?.nombre,x.productos?.codigo].join(' '))+'"><b>'+esc(x.productos?.nombre||'Producto')+'</b><p class="mut sm">Código: '+esc(x.productos?.codigo||'Sin código')+' · Pendiente: '+(x.unidades_solicitadas-x.unidades_recibidas)+' unidades</p><label>Unidades recibidas ahora</label><input type="number" min="0" max="'+(x.unidades_solicitadas-x.unidades_recibidas)+'" step="1" value="'+(x.unidades_solicitadas-x.unidades_recibidas)+'" data-oc-qty="'+x.id+'"><label>Costo real por unidad</label><input type="number" min="0" step="0.01" value="'+x.costo_unitario_base+'" data-oc-unitcost="'+x.id+'"></div>').join('')+'</div><div class="acts"><button class="btn full" id="oc-save-receipt">Confirmar recepción</button><button class="btn alt full" id="oc-cancel">Cancelar</button></div>');
   $('#oc-cancel').onclick=cerrar;
-  $('#oc-receipt-search').addEventListener('input',e=>{const normalizarFiltro=valor=>String(valor||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().trim();const q=normalizarFiltro(e.target.value);document.querySelectorAll('#oc-receipt-lines .oc-receipt-line').forEach(el=>{el.hidden=!normalizarFiltro(el.dataset.ocFilter).includes(q)})});
+  $('#oc-receipt-search').addEventListener('input',e=>{const normalizarFiltro=valor=>String(valor||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();const q=normalizarFiltro(e.target.value);document.querySelectorAll('#oc-receipt-lines .oc-receipt-line').forEach(el=>{el.hidden=!normalizarFiltro(el.dataset.ocFilter).includes(q)})});
   $('#oc-save-receipt').onclick=async()=>{
    const lines=pendiente.map(x=>({orden_item_id:x.id,unidades:Number($('[data-oc-qty="'+x.id+'"]').value),costo_unitario_base:Number($('[data-oc-unitcost="'+x.id+'"]').value)})).filter(x=>x.unidades>0);
    if(!lines.length||lines.some(x=>!Number.isInteger(x.unidades)||x.unidades<0||!Number.isFinite(x.costo_unitario_base)||x.costo_unitario_base<0))throw new Error('Ingresa al menos una línea con cantidades y costos válidos.');
