@@ -796,9 +796,7 @@ if(/42P01|42703|PGRST20[45]|does not exist|schema cache/i.test(c+' '+m))return '
 return 'Error: '+m};
 async function go(f){try{await f()}catch(e){console.error(e);const m=msgErr(e);if(/sesión venció/.test(m))showLogin();toast(m)}}
 async function cotizar(){if(savingCotizacion)return;if(!cart.length){toast('Agrega al menos un producto');return}savingCotizacion=true;const ventaItems=cart.map(i=>({...i}));try{const nm=nombreCompleto($('#nombres').value,$('#apellidos').value),tel=$('#tel').value.trim(),ced=$('#ced').value.trim(),dir=$('#dircli').value.trim(),noInscrito=esClienteNoInscrito(ced),vend=($('#vend').value||'').trim(),k=calc();const consOk=!noInscrito&&!!($('#cons')&&$('#cons').checked);if(!noInscrito&&faltaConsentimiento(!!(nm||ced||tel||dir),consOk,buscarCliente(ced,tel)?.id)){toast('Falta la autorización de datos del cliente: marca la casilla, o deja los datos del cliente vacíos.');return}const cliente=noInscrito?null:await guardarCliente(nm,ced,tel,dir);if(consOk&&cliente?.id)await registrarConsentimiento(cliente.id,'cotizacion');const vence=new Date();vence.setDate(vence.getDate()+(+cfg.cotDias||3));const valida=vence.getFullYear()+'-'+String(vence.getMonth()+1).padStart(2,'0')+'-'+String(vence.getDate()).padStart(2,'0');const p_cotizacion={cliente_id:cliente?.id||null,cliente_nombre:nm||cliente?.nombre||null,cliente_cedula:noInscrito?'999':(ced||cliente?.cedula||null),cliente_telefono:noInscrito?null:(tel||cliente?.telefono||null),cliente_direccion:noInscrito?null:(dir||cliente?.direccion||null),vendedor:vend||null,descuento:k.ds,domicilio:k.dm,subtotal:k.st,total:k.total,valida_hasta:valida};const p_items=ventaItems.map(i=>({producto_id:i.pid||null,nombre:i.n,cantidad:i.q,precio_venta:i.p,presentacion:i.presentacion||'Unidad',unidades_por_presentacion:i.unidadesPorPresentacion||1}));const{data:co,error}=await sb.rpc('crear_cotizacion_venta_drosalud',{p_cotizacion,p_items});if(error)throw error;CO.unshift(co);showRec({...co,cot:true},ventaItems.map(i=>({nombre:i.n,cantidad:i.q,precio_venta:i.p,presentacion:i.presentacion||'Unidad',unidades_por_presentacion:i.unidadesPorPresentacion||1})));}finally{savingCotizacion=false}}
-async function loadCotizaciones(){const{data,error}=await sb.from('cotizaciones_venta_app').select('*').order('creado_en',{ascending:false}).order('numero',{ascending:false}).limit(500);if(error)throw error;CO=data||[];renderCotizaciones()}
-function renderCotizaciones(){const q=norm($('#coq').value),L=CO.filter(r=>!q||norm((r.cliente_nombre||'')+' '+r.numero).includes(q));$('#colist').innerHTML=L.length?L.map(r=>'<button class="row" data-cotid="'+r.id+'"><span class="nm">Cotización '+pad(r.numero)+(r.cliente_nombre?' · '+esc(tcase(r.cliente_nombre)):'')+'<small>'+esc(fmt(r.creado_en))+' · '+esc(r.estado)+(r.valida_hasta?' · válida hasta '+esc(fd(r.valida_hasta)):'')+'</small></span><span class="pr">'+money(r.total)+'</span></button>').join(''):'<p class="mut">No hay cotizaciones guardadas.</p>'}
-async function abrirCotizacion(r){const{data,error}=await sb.from('cotizacion_venta_items_app').select('*').eq('cotizacion_id',r.id).order('id');if(error)throw error;showRec({...r,cot:true},(data||[]).map(i=>({nombre:i.nombre,cantidad:i.cantidad,precio_venta:i.precio_venta,presentacion:i.presentacion,unidades_por_presentacion:i.unidades_por_presentacion})));}
+
 
 // INVENTARIO · UI de preview (requiere aplicar la migración SQL en entorno de pruebas).
 </script>
@@ -860,7 +858,7 @@ function renderVentaDateTime(){const f=$('#venta-fecha'),h=$('#venta-hora');if(!
 setInterval(renderVentaDateTime,60000);
 function renderHomeDate(){const el=$('#home-date');if(!el)return;const mobile=window.matchMedia('(max-width: 620px)').matches;const opts=mobile?{weekday:'short',day:'numeric',month:'short',timeZone:'America/Bogota'}:{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'America/Bogota'};const s=new Intl.DateTimeFormat('es-CO',opts).format(new Date());el.textContent=s.charAt(0).toLocaleUpperCase('es-CO')+s.slice(1)}
 function showHome(){cajaBadge();renderHomeDate();$('#back-home').hidden=true;$('#home').hidden=false;['venta','cat','cli','his','cot','aju','neg','caja','cajahistorial','ayuda','inventario','pedidos','recepcion'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=true});$('#more-menu').hidden=true;$('#ttl').textContent='Drosalud';window.scrollTo(0,0)}
- function show(v){$('#back-home').hidden=false;$('#home').hidden=true;['venta','cat','cli','his','cot','aju','neg','caja','cajahistorial','ayuda','inventario','pedidos','recepcion'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=k!==v});$('#more-menu').hidden=true;$('#nav [data-v="mas"]').setAttribute('aria-expanded','false');document.querySelectorAll('#nav button').forEach(b=>{if(b.dataset.v!=='mas')b.setAttribute('aria-current',String(b.dataset.v===v));else b.setAttribute('aria-current',String(!['venta','cat','cli'].includes(v)))});$('#ttl').textContent=TT[v]||'Negocio';if(v==='venta')renderVentaDateTime();if(v==='aju')fillAju();if(v==='caja')go(loadCaja);if(v==='cajahistorial')go(loadHistorialCierres);if(v==='ayuda'){go(loadAyudaEstado);$('#ayuda-version').textContent='v'+VERSION}if(v==='his')go(loadHis);if(v==='cli')loadCST().catch(()=>{});if(v==='cot')go(loadCotizaciones);if(v==='inventario')go(loadInventario);if(v==='pedidos')go(loadPedidos);if(v==='recepcion')go(loadRecepcion);window.scrollTo(0,0)}
+ function show(v){$('#back-home').hidden=false;$('#home').hidden=true;['venta','cat','cli','his','cot','aju','neg','caja','cajahistorial','ayuda','inventario','pedidos','recepcion'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=k!==v});$('#more-menu').hidden=true;$('#nav [data-v="mas"]').setAttribute('aria-expanded','false');document.querySelectorAll('#nav button').forEach(b=>{if(b.dataset.v!=='mas')b.setAttribute('aria-current',String(b.dataset.v===v));else b.setAttribute('aria-current',String(!['venta','cat','cli'].includes(v)))});$('#ttl').textContent=TT[v]||'Negocio';if(v==='venta')renderVentaDateTime();if(v==='aju')fillAju();if(v==='caja')go(loadCaja);if(v==='cajahistorial')go(loadHistorialCierres);if(v==='ayuda'){go(loadAyudaEstado);$('#ayuda-version').textContent='v'+VERSION}if(v==='his')go(loadHis);if(v==='cli')loadCST().catch(()=>{});if(v==='cot')go(DrosaludCotizaciones.load);if(v==='inventario')go(loadInventario);if(v==='pedidos')go(loadPedidos);if(v==='recepcion')go(loadRecepcion);window.scrollTo(0,0)}
 function rRes(){const q=$('#q').value.trim(),b=$('#res');if(!q){b.innerHTML='';return}const a=find(q,20);b.innerHTML=a.length?a.map(p=>`<button class="row" data-add="${p.id}"><span class="nm">${esc(p.nombre)}<small>${esc(p.laboratorio||'')}</small></span><span class="pr">${pv(p)==null?'Precio pendiente':money(pv(p))}<small>compra ${money(p.precio_compra)}</small></span></button>`).join(''):'<p class="mut">No hay resultados. Agrégalo en Catálogo.</p>'}
 function calc(){const st=cart.reduce((s,i)=>s+i.p*i.q,0),g=cart.reduce((s,i)=>s+(i.p-(i.c||0))*i.q,0),ds=Math.max(0,+$('#dsc').value||0),dm=Math.max(0,+$('#dom').value||0),mens=Math.max(0,+$('#mens').value||0);return{st,ds,dm,mens,total:Math.max(0,st-ds+dm),gan:g==null?null:g-ds+dm-mens}}
 function rCart(){const b=$('#cart');b.innerHTML=cart.length?cart.map((i,k)=>`<div class="item"><div class="top"><span>${esc(i.n)}</span><button class="rm" data-rm="${k}" aria-label="Quitar">✕</button></div><div class="ctl"><div class="step"><button data-dec="${k}" aria-label="Menos">−</button><span>${i.q} ${i.q===1?'unidad':'unidades'}</span><button data-inc="${k}" aria-label="Más">+</button></div><label class="pp">$<input type="number" inputmode="numeric" data-pr="${k}" value="${i.p}" aria-label="Precio de venta por unidad"></label><span class="lt">${money(i.p*i.q)}</span></div><small class="mut">${esc(etiquetaCarrito(i))}· Compra ${money(i.c)} c/u${` · ganas ${money((i.p-i.c)*i.q)}${warnM(i.p,i.c)}`}</small></div>`).join(''):'<p class="mut">Busca un producto y tócalo para agregarlo.</p>';const k=calc(),n=cart.reduce((s,i)=>s+i.q,0);$('#tot').textContent=money(k.total);$('#gn').textContent=cart.length?'Ganancia estimada (productos + domicilio − mensajero − descuento): '+money(k.gan):'';const e=$('#bg');e.hidden=!n;e.textContent=n;rVue(k)}
@@ -1060,7 +1058,7 @@ if(id==='fgt')return go(doForgot);
 if(id==='rsok')return go(doReset);
 if(id==='upb')return actualizar();
 if(id==='cot')return go(cotizar);
-if(d.cotid){const r=CO.find(x=>x.id===d.cotid);if(r)return go(()=>abrirCotizacion(r))}
+if(d.cotid)return DrosaludCotizaciones.open(d.cotid)
 if(d.rcc){const r=CR.find(x=>x.id===d.rcc);return go(()=>abrirRec(r))}
 if(id==='hmore'){hisShown+=100;return rHis()}
 if(id==='lowm'){catLow=true;return rCat()}
@@ -1091,12 +1089,12 @@ if(id==='out'||id==='out-top')return go(async()=>{await detenerRealtime();const{
 $('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeM()});
 $('#back-home').addEventListener('click',showHome);
  $('#home').addEventListener('click',e=>{const b=e.target.closest('[data-home]');if(!b)return;const v=b.dataset.home;if(v==='neg'){const target=document.querySelector('#more-menu [data-v="neg"]');if(target)target.click();return}show(v)});
-$('#v-caja').addEventListener('click',cajaClics);
+$('#v-caja').addEventListener('click',e=>cajaClics(e));
 $('#cj-history-toggle').addEventListener('click',()=>show('cajahistorial'));
 $('#v-cajahistorial').addEventListener('click',e=>{if(e.target.closest('[data-cj-back]')){show('caja');return}if(e.target.closest('#cj-history-retry'))return loadHistorialCierres();const b=e.target.closest('[data-cj-history-date]');if(b){const f=b.dataset.cjHistoryDate;$('#cj-f').value=f;show('caja')}});
 $('#v-caja').addEventListener('input',e=>{if(e.target.id==='cj-base'||e.target.id==='cj-cont')cajaCalc()});
 $('#cj-f').addEventListener('change',e=>go(()=>cajaVer(e.target.value)));
-$('#coq').addEventListener('input',renderCotizaciones);
+$('#coq').addEventListener('input',()=>DrosaludCotizaciones.render());
 $('#q').addEventListener('input',rRes);
 $('#q2').addEventListener('input',rCat);
 let ultimoDocConsultado='';
@@ -1139,6 +1137,8 @@ showLogin();
 
 <script src="modules/ordenes-compra.js"></script>
 
+<script src="modules/core.js"></script>
+<script src="modules/cotizaciones.js"></script>
 <script src="modules/pedidos.js"></script>
 <script src="modules/historial-ventas.js"></script>
 </body>
