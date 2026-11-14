@@ -26,4 +26,3 @@
 .rm-error{color:var(--bad)}
 @media(min-width:700px){.rm-overlay{align-items:center}.rm-dialog{max-height:90vh}}
 
-.excel-icon{display:inline-block;width:18px;height:18px;flex:none;vertical-align:-4px;color:#16834a}
