@@ -1022,8 +1022,7 @@ let CST={},CR=[];let catLow=false,hv='ventas',hisShown=100;
 function lowList(){return P.filter(p=>p.precio_venta!=null&&mg(Number(p.precio_venta),Number(p.precio_compra))<cfg.mMin)}
 function rLow(){const n=lowList().length,b=$('#lowb');b.hidden=!n&&!catLow;b.innerHTML=catLow?`<button class="row warnrow" id="lowx">Mostrando ${n} con ganancia baja · Quitar filtro</button>`:(n?`<button class="row warnrow" id="lowm">⚠ ${n} producto${n>1?'s':''} con ganancia menor a ${cfg.mMin}% · Ver</button>`:'')}
 function rVue(k){const ef=$('#fp').value==='Efectivo';$('#efw').hidden=!ef;const rc=+$('#rec').value||0;$('#vue').textContent=!ef||!rc||!cart.length?'':(rc>=k.total?'Vueltos: '+money(rc-k.total):'Faltan '+money(k.total-rc))}
-async function cambios(){const{data,error}=await sb.from('historial_precios').select('*').order('creado_en',{ascending:false}).limit(30);if(error)throw error;const nm=id=>(P.find(p=>p.id===id)||{}).nombre||'Producto eliminado';
-openM(`<h2 style="margin-top:0">Cambios recientes de precio</h2>${data.length?data.map(x=>{const d=(x.precio_nuevo-x.precio_anterior)/x.precio_anterior*100;return `<div class="item"><div class="top"><span>${esc(nm(x.producto_id))}</span></div><small class="mut">${esc(fd(x.creado_en))} · ${money(x.precio_anterior)} → ${money(x.precio_nuevo)} <b class="${d>0?'warn':''}">(${d>0?'+':''}${d.toFixed(1).replace('.',',')}%)</b></small></div>`}).join(''):'<p class="mut">Aún no hay cambios registrados.</p>'}<div class="acts"><button class="btn alt full" id="cx2">Cerrar</button></div>`);$('#cx2').onclick=closeM}
+
 async function excel(scope){if(typeof XLSX==='undefined'){toast('La descarga no está disponible en la demostración');return}
 toast('Preparando el Excel…');const wb=XLSX.utils.book_new(),nm=id=>(P.find(p=>p.id===id)||{}).nombre||'';
 const add=(n,rows,w)=>{const ws=XLSX.utils.json_to_sheet(rows.length?rows:[{Aviso:'Sin datos'}],{dateNF:'yyyy-mm-dd hh:mm',cellDates:true});if(w)ws['!cols']=w.map(x=>({wch:x}));XLSX.utils.book_append_sheet(wb,ws,n)};
@@ -1063,7 +1062,7 @@ if(d.rcc){const r=CR.find(x=>x.id===d.rcc);return go(()=>abrirRec(r))}
 if(id==='hmore'){hisShown+=100;return rHis()}
 if(id==='lowm'){catLow=true;return rCat()}
 if(id==='lowx'){catLow=false;return rCat()}
-if(id==='chg')return go(cambios);
+if(id==='chg')return go(DrosaludCambiosPrecios.open);
 if(id==='xlsT')return go(()=>excel('todo'));
 if(id==='xlsH')return go(()=>excel('periodo'));
 if(d.add){const p=P.find(x=>x.id===d.add);if(p)addCart(p);$('#q').value='';rRes();return}
@@ -1141,5 +1140,6 @@ showLogin();
 <script src="modules/cotizaciones.js"></script>
 <script src="modules/pedidos.js"></script>
 <script src="modules/historial-ventas.js"></script>
+<script src="modules/historial-precios.js"></script>
 </body>
 </html>
