@@ -129,7 +129,8 @@
     const items = window.PedidosSucursalesSugerido.collect(root, state.suggested);
     if (!items.length) throw new Error('Ajusta al menos una cantidad mayor que cero.');
     const operacionId = operationIdFor('sugerido', items);
-    await window.PedidosSucursalesAPI.crear('sugerido', items, null, operacionId);\n    state.pendingOperation = null;
+    await window.PedidosSucursalesAPI.crear('sugerido', items, null, operacionId);
+    state.pendingOperation = null;
     state.mode = 'historial';
     await loadOrders('historial');
     render();
@@ -141,7 +142,8 @@
     const reason = window.PedidosSucursalesUrgente.reason(root);
     if (!reason) throw new Error('Escribe el motivo de la urgencia.');
     const operacionId = operationIdFor('urgente', { items, reason });
-    await window.PedidosSucursalesAPI.crear('urgente', items, reason, operacionId);\n    state.pendingOperation = null;
+    await window.PedidosSucursalesAPI.crear('urgente', items, reason, operacionId);
+    state.pendingOperation = null;
     state.mode = 'historial';
     await loadOrders('historial');
     render();
