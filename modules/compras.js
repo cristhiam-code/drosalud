@@ -29,8 +29,8 @@
   const uid=await owner(),v=k=>$n('#nf-'+k).value.trim();
   const row={owner_id:uid,nombre:v('nombre'),contacto:v('contacto'),telefono:v('telefono'),whatsapp:v('whatsapp'),email:v('email'),notas:v('notas'),activo:v('activo')==='true'};
   if(!row.nombre)throw new Error('Escribe el nombre del proveedor.');
-  const clean=s=>String(s||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
-  const phone=s=>String(s||'').replace(/\\D/g,'');
+  const clean=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  const phone=s=>String(s||'').replace(/\D/g,'');
   const duplicate=providers.find(p=>p.id!==id&&(
    clean(p.nombre)===clean(row.nombre)||
    (phone(row.telefono).length>=7&&phone(p.telefono)===phone(row.telefono))||
