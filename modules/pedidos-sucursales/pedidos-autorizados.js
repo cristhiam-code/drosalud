@@ -36,7 +36,7 @@
                       ${isAdmin && order.estado === 'pendiente_autorizacion' ? `
                         <label class="ps-quantity">Cantidad a autorizar
                           <input type="number" min="0" max="${fmt(item.cantidad_solicitada)}" step="1"
-                            data-ps-authorize-qty="${esc(item.id)}" value="${fmt(item.cantidad_solicitada)}">
+                            data-ps-authorize-qty="${esc(item.id)}" value="${fmt(item.cantidad_autorizada == null ? item.cantidad_solicitada : item.cantidad_autorizada)}">
                         </label>` : ''}
                     </div>`).join('')}
                 </div>
