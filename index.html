@@ -796,187 +796,12 @@ if(/42P01|42703|PGRST20[45]|does not exist|schema cache/i.test(c+' '+m))return '
 return 'Error: '+m};
 async function go(f){try{await f()}catch(e){console.error(e);const m=msgErr(e);if(/sesión venció/.test(m))showLogin();toast(m)}}
 async function cotizar(){if(savingCotizacion)return;if(!cart.length){toast('Agrega al menos un producto');return}savingCotizacion=true;const ventaItems=cart.map(i=>({...i}));try{const nm=nombreCompleto($('#nombres').value,$('#apellidos').value),tel=$('#tel').value.trim(),ced=$('#ced').value.trim(),dir=$('#dircli').value.trim(),noInscrito=esClienteNoInscrito(ced),vend=($('#vend').value||'').trim(),k=calc();const consOk=!noInscrito&&!!($('#cons')&&$('#cons').checked);if(!noInscrito&&faltaConsentimiento(!!(nm||ced||tel||dir),consOk,buscarCliente(ced,tel)?.id)){toast('Falta la autorización de datos del cliente: marca la casilla, o deja los datos del cliente vacíos.');return}const cliente=noInscrito?null:await guardarCliente(nm,ced,tel,dir);if(consOk&&cliente?.id)await registrarConsentimiento(cliente.id,'cotizacion');const vence=new Date();vence.setDate(vence.getDate()+(+cfg.cotDias||3));const valida=vence.getFullYear()+'-'+String(vence.getMonth()+1).padStart(2,'0')+'-'+String(vence.getDate()).padStart(2,'0');const p_cotizacion={cliente_id:cliente?.id||null,cliente_nombre:nm||cliente?.nombre||null,cliente_cedula:noInscrito?'999':(ced||cliente?.cedula||null),cliente_telefono:noInscrito?null:(tel||cliente?.telefono||null),cliente_direccion:noInscrito?null:(dir||cliente?.direccion||null),vendedor:vend||null,descuento:k.ds,domicilio:k.dm,subtotal:k.st,total:k.total,valida_hasta:valida};const p_items=ventaItems.map(i=>({producto_id:i.pid||null,nombre:i.n,cantidad:i.q,precio_venta:i.p,presentacion:i.presentacion||'Unidad',unidades_por_presentacion:i.unidadesPorPresentacion||1}));const{data:co,error}=await sb.rpc('crear_cotizacion_venta_drosalud',{p_cotizacion,p_items});if(error)throw error;CO.unshift(co);showRec({...co,cot:true},ventaItems.map(i=>({nombre:i.n,cantidad:i.q,precio_venta:i.p,presentacion:i.presentacion||'Unidad',unidades_por_presentacion:i.unidadesPorPresentacion||1})));}finally{savingCotizacion=false}}
-async function loadCotizaciones(){const{data,error}=await sb.from('cotizaciones_venta_app').select('*').order('creado_en',{ascending:false}).order('numero',{ascending:false}).limit(500);if(error)throw error;CO=data||[];renderCotizaciones()}
-function renderCotizaciones(){const q=norm($('#coq').value),L=CO.filter(r=>!q||norm((r.cliente_nombre||'')+' '+r.numero).includes(q));$('#colist').innerHTML=L.length?L.map(r=>'<button class="row" data-cotid="'+r.id+'"><span class="nm">Cotización '+pad(r.numero)+(r.cliente_nombre?' · '+esc(tcase(r.cliente_nombre)):'')+'<small>'+esc(fmt(r.creado_en))+' · '+esc(r.estado)+(r.valida_hasta?' · válida hasta '+esc(fd(r.valida_hasta)):'')+'</small></span><span class="pr">'+money(r.total)+'</span></button>').join(''):'<p class="mut">No hay cotizaciones guardadas.</p>'}
-async function abrirCotizacion(r){const{data,error}=await sb.from('cotizacion_venta_items_app').select('*').eq('cotizacion_id',r.id).order('id');if(error)throw error;showRec({...r,cot:true},(data||[]).map(i=>({nombre:i.nombre,cantidad:i.cantidad,precio_venta:i.precio_venta,presentacion:i.presentacion,unidades_por_presentacion:i.unidades_por_presentacion})));}
+
 
 // INVENTARIO · UI de preview (requiere aplicar la migración SQL en entorno de pruebas).
-let invProductos=[],invSaldos={},invPedidos=[],invLaboratorios=[],invLabsSeleccionados=new Set(),invResultados=[],invRecepcionIntento=null,invSaldoDisponible=false;
-function invSaldo(p){return Number(invSaldos[p.id]||0)}
-function invPartes(s,f){f=Math.max(1,Number(f)||1);s=Math.trunc(s);if(s<0)return{cajas:0,sueltas:s};return{cajas:Math.floor(s/f),sueltas:s%f}}
-function invRenderLabs(){
- const q=norm($('#inv-q').value||'');
- const visibles=invLaboratorios.filter(l=>!q||norm(l).includes(q)||invProductos.some(p=>(p.laboratorio||'Sin laboratorio').trim()===l&&norm([p.nombre,p.codigo].join(' ')).includes(q)));
- $('#inv-labs').innerHTML=visibles.map(l=>'<label class="inv-lab"><input type="checkbox" data-inv-lab="'+esc(l)+'" '+(invLabsSeleccionados.has(l)?'checked':'')+'> '+esc(l)+'</label>').join('')||'<p class="mut sm">No hay laboratorios coincidentes.</p>';
- $('#inv-lab-count').textContent='Laboratorios · '+invLabsSeleccionados.size+' seleccionados';
-}
-function invFiltrar(){
- const q=norm($('#inv-q').value||'');
- const contenido=document.querySelector('input[name="inv-contenido"]:checked')?.value||'todos';
- invResultados=invProductos.filter(p=>{
-  const lab=(p.laboratorio||'Sin laboratorio').trim(),saldo=invSaldo(p);
-  if(!invLabsSeleccionados.has(lab))return false;
-  const lineaSeleccionada=$('#inv-linea').value;
-  if(lineaSeleccionada&&(p.linea||'')!==lineaSeleccionada)return false;
-  if(q&&!norm([p.nombre,p.laboratorio,p.codigo].join(' ')).includes(q))return false;
-  if(contenido==='negativos'&&saldo>=0)return false;
-  if(contenido==='cero'&&saldo!==0)return false;
-  if(contenido==='con_existencia'&&saldo===0)return false;
-  return true;
- }).sort((a,b)=>(a.laboratorio||'').localeCompare(b.laboratorio||'','es',{sensitivity:'base'})||a.nombre.localeCompare(b.nombre,'es',{sensitivity:'base'}));
- return invResultados;
-}
-function invRenderInforme(){
- if(!invSaldoDisponible){$('#inv-kardex-list').innerHTML='<p class="mut">El catálogo está disponible, pero el Kardex requiere instalar las migraciones de inventario en este entorno.</p>';$('#inv-print-kardex').hidden=true;$('#inv-status').textContent='Falta instalar el esquema de inventario en este entorno.';return []}
- const rows=invFiltrar(),labs=[...new Set(rows.map(p=>(p.laboratorio||'Sin laboratorio').trim()))];
- const html=labs.map(l=>'<div class="item"><h3>'+esc(l)+'</h3><div class="cj-line inv-cols"><b>Producto</b><b>Cantidad</b><b>Unidades</b></div>'+rows.filter(p=>(p.laboratorio||'Sin laboratorio').trim()===l).map(p=>{const v=invPartes(invSaldo(p),p.unidades_por_caja);return '<div class="cj-line inv-cols"><span>'+esc(p.nombre)+'</span><b>'+v.cajas+'</b><b>'+v.sueltas+'</b></div>'}).join('')+'</div>').join('');
- $('#inv-kardex-list').innerHTML=html||'<p class="mut">No hay productos para los filtros seleccionados.</p>';
- $('#inv-print-kardex').hidden=!rows.length;
- $('#inv-status').textContent=rows.length+' productos incluidos en el informe.';
- return rows;
-}
-function invLabsClick(e){
- const box=e.target.closest('[data-inv-lab]');if(!box)return;
- const lab=box.dataset.invLab;if(e.target.checked)invLabsSeleccionados.add(lab);else invLabsSeleccionados.delete(lab);
- invRenderLabs();
-}
-function invGenerarKardex(){
- const rows=invRenderInforme();if(!rows.length){toast('No hay productos que coincidan con los filtros. Revisa la línea o la búsqueda.');return}
- const formato=document.querySelector('input[name="inv-formato"]:checked')?.value||'pantalla';
- if(formato==='pantalla')return;
- if(formato==='excel'){
-  const data=[['Laboratorio','Producto','Cantidad','Unidades'],...rows.map(p=>{const v=invPartes(invSaldo(p),p.unidades_por_caja);return[p.laboratorio||'Sin laboratorio',p.nombre,v.cajas,v.sueltas]})];
-  const csv='\uFEFF'+data.map(r=>r.map(x=>{let v=x??'';if(typeof v==='string'&&(['=','+','@','-'].includes(v[0])||v.charCodeAt(0)===9||v.charCodeAt(0)===13))v="'"+v;return '"'+String(v).replace(/"/g,'""')+'"'}).join(';')).join('\r\n');
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='kardex-drosalud.csv';a.click();URL.revokeObjectURL(url);return;
- }
- invImprimirKardex(formato==='pos');
-}
-async function invLeerTodo(construir){
- const salida=[];let desde=0,lote=[];
- do{
-  const{data,error}=await construir().range(desde,desde+999);
-  if(error)throw error;
-  lote=data||[];salida.push(...lote);desde+=lote.length;
- }while(lote.length===1000);
- return salida;
-}
-async function invCargarDatos(){
- // El catálogo se carga aparte: el Preview puede apuntar a una BD sin migraciones de inventario.
- // Si la columna linea aún no existe, cargar el catálogo sin ese filtro y continuar.
- let productos;
- try{
-  productos=await invLeerTodo(()=>sb.from('productos_app').select('id,codigo,nombre,laboratorio,linea,unidades_por_caja').order('nombre').order('id'));
- }catch(e){
-  if(!/linea|column/i.test(String(e.message||e)))throw e;
-  productos=await invLeerTodo(()=>sb.from('productos_app').select('id,codigo,nombre,laboratorio,unidades_por_caja').order('nombre').order('id'));
-  productos=productos.map(p=>({...p,linea:null}));
- }
- invProductos=productos;invSaldos={};invSaldoDisponible=false;
- try{
-  const movimientos=await invLeerTodo(()=>sb.from('inventario_saldos').select('producto_id,saldo_unidades').order('producto_id'));
-  movimientos.forEach(m=>{invSaldos[m.producto_id]=Number(m.saldo_unidades||0)});
-  invSaldoDisponible=true;
- }catch(e){console.warn('Kardex aún no instalado en este entorno:',e)}
- invLaboratorios=[...new Set(invProductos.map(p=>(p.laboratorio||'Sin laboratorio').trim()))].sort((a,b)=>a.localeCompare(b,'es',{sensitivity:'base'}));
- const opts=invProductos.slice().sort((a,b)=>a.nombre.localeCompare(b.nombre,'es',{sensitivity:'base'}));
- $('#inv-prod').innerHTML='<option value="">Seleccionar producto</option>'+opts.map(p=>'<option value="'+p.id+'">'+esc(p.nombre)+' · '+esc(p.laboratorio||'Sin laboratorio')+'</option>').join('');
- const buscador=$('#inv-prod-search'),resultados=$('#inv-prod-results'),seleccion=$('#inv-prod-selected');
- if(buscador&&resultados){
-  buscador.value='';$('#inv-prod').value='';seleccion.textContent='Selecciona un producto del catálogo.';
-  const pintar=()=>{const q=norm(buscador.value).trim(),dig=q.replace(/\\D/g,'');const hallados=opts.filter(p=>norm([p.nombre,p.laboratorio,p.codigo].join(' ')).includes(q)||(dig.length>=4&&String(p.codigo||'').replace(/\\D/g,'').includes(dig))).slice(0,12);
-   resultados.innerHTML=hallados.map(p=>'<button type="button" class="btn alt full" data-inv-pick="'+p.id+'" style="text-align:left;margin:3px 0">'+esc(p.nombre)+' · '+esc(p.codigo||'Sin código')+' · '+esc(p.laboratorio||'')+'</button>').join('')||(q?'<p class="mut sm">No se encontraron coincidencias.</p>':'<p class="mut sm">Escribe para buscar en el catálogo.</p>');
-  };
-  buscador.oninput=()=>{ $('#inv-prod').value='';seleccion.textContent='Selecciona un producto del catálogo.';pintar() };
-  resultados.onclick=e=>{const btn=e.target.closest('[data-inv-pick]');if(!btn)return;const p=opts.find(x=>String(x.id)===btn.dataset.invPick);if(!p)return;$('#inv-prod').value=p.id;buscador.value=p.nombre;seleccion.textContent='Seleccionado: '+p.nombre+' · '+(p.codigo||'Sin código');resultados.innerHTML=''};
-  pintar();
- }
- const lineas=[...new Set(invProductos.map(p=>(p.linea||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es',{sensitivity:'base'}));
- $('#inv-linea').innerHTML='<option value="">'+(lineas.length?'Todas las líneas':'Líneas disponibles al instalar migración')+'</option>'+lineas.map(l=>'<option value="'+esc(l)+'">'+esc(l)+'</option>').join('');
- $('#inv-linea').disabled=!lineas.length;
- invRenderLabs();
-}
-function invImprimirKardex(pos=false){
- const rows=invFiltrar();
- if(!rows.length){toast('No hay productos para imprimir');return}
- const title='Kardex de inventario',stamp=new Date().toLocaleString('es-CO');
- let h='<h2>'+title+'</h2><p>Consulta: '+stamp+'</p>';
- const labs=[...new Set(rows.map(p=>(p.laboratorio||'Sin laboratorio').trim()))];
- labs.forEach(l=>{h+='<h3>'+esc(l)+'</h3><div class="cj-line inv-cols"><b>Producto</b><b>Cantidad</b><b>Unidades</b></div>';rows.filter(p=>(p.laboratorio||'Sin laboratorio').trim()===l).forEach(p=>{const v=invPartes(invSaldo(p),p.unidades_por_caja);h+='<div class="cj-line inv-cols"><span>'+esc(p.nombre)+'</span><b>'+v.cajas+'</b><b>'+v.sueltas+'</b></div>'})});
- openM(h+'<div class="acts"><button class="btn alt full" onclick="closeM()">Cerrar</button></div>');
- document.body.classList.add('print-inventario');if(pos)document.body.classList.add('print-pos');
- window.addEventListener('afterprint',()=>document.body.classList.remove('print-inventario','print-pos'),{once:true});window.print();
-}
-function invImprimirPedido(){
- let h='<h2>Pedido sugerido</h2><p>Ventas de la semana actual (desde el lunes) · '+new Date().toLocaleDateString('es-CO')+'</p>';
- invPedidos.forEach((x,i)=>{const cajas=Math.max(0,Math.trunc(Number($('#inv-c-'+i).value)||0)),sueltas=Math.max(0,Math.trunc(Number($('#inv-s-'+i).value)||0));h+='<div class="cj-line"><span>'+esc(x.p.nombre)+'<small> · '+esc(x.p.laboratorio||'Sin laboratorio')+'</small></span><b>'+cajas+' cajas</b><b>'+sueltas+' unidades</b></div>'});
- openM(h+'<div class="acts"><button class="btn alt full" onclick="closeM()">Cerrar</button></div>');document.body.classList.add('print-inventario','print-pos');window.addEventListener('afterprint',()=>document.body.classList.remove('print-inventario','print-pos'),{once:true});window.print();
-}
-function invFechaInicio(){
- // Semana calendario desde el lunes 00:00, zona horaria fija de Colombia.
- const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Bogota',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
- const v={};parts.forEach(p=>{v[p.type]=p.value});
- const inicio=new Date(Date.UTC(Number(v.year),Number(v.month)-1,Number(v.day),5));
- inicio.setUTCDate(inicio.getUTCDate()-((inicio.getUTCDay()+6)%7));
- return inicio.toISOString();
-}
-function invFechaFin(){const fin=new Date(invFechaInicio());fin.setUTCDate(fin.getUTCDate()+7);return fin.toISOString();}
-async function invCargarPedidos(){
- const recibos=await invLeerTodo(()=>sb.from('recibos_app').select('id').eq('anulado',false).gte('creado_en',invFechaInicio()).lt('creado_en',invFechaFin()).order('creado_en').order('id'));
- const ventas={};
- for(let i=0;i<recibos.length;i+=100){
-  const ids=recibos.slice(i,i+100).map(r=>r.id);
-  const items=await invLeerTodo(()=>sb.from('recibo_items_app').select('producto_id,cantidad,unidades_por_presentacion').in('recibo_id',ids).order('id'));
-  items.forEach(x=>{if(x.producto_id)ventas[x.producto_id]=(ventas[x.producto_id]||0)+(Number(x.cantidad||0)*Math.max(1,Number(x.unidades_por_presentacion)||1))});
- }
- invPedidos=invProductos.filter(p=>(ventas[p.id]||0)>0).map(p=>{
-  const u=ventas[p.id],f=Math.max(1,Number(p.unidades_por_caja)||1);
-  return{p,unidades:u,cajas:Math.floor(u/f),sueltas:u%f};
- }).sort((a,b)=>(a.p.laboratorio||'').localeCompare(b.p.laboratorio||'','es',{sensitivity:'base'})||a.p.nombre.localeCompare(b.p.nombre,'es',{sensitivity:'base'}));
- $('#inv-pedidos-list').innerHTML=invPedidos.length?invPedidos.map((x,i)=>'<div class="item"><div class="top"><b>'+esc(x.p.nombre)+'</b><span class="mut">'+esc(x.p.laboratorio||'Sin laboratorio')+'</span></div><p class="sm">Vendido: '+x.cajas+' cajas · '+x.sueltas+' unidades ('+x.unidades+' unidades en total)</p><div class="two"><div><label for="inv-c-'+i+'">Cajas a pedir</label><input id="inv-c-'+i+'" type="number" min="0" step="1" value="'+x.cajas+'"></div><div><label for="inv-s-'+i+'">Unidades sueltas</label><input id="inv-s-'+i+'" type="number" min="0" max="'+(Math.max(1,Number(x.p.unidades_por_caja)||1)-1)+'" step="1" value="'+x.sueltas+'"></div></div></div>').join(''):'<p class="mut">No hay ventas de productos en la semana actual.</p>';
-}
-async function loadInventario(){
- $('#inv-status').textContent='Cargando productos y existencias…';
- try{await invCargarDatos();$('#inv-status').textContent=invSaldoDisponible?'Datos cargados. Selecciona laboratorios y genera el informe.':'Catálogo cargado. Para generar el Kardex falta instalar las migraciones en este entorno.'}
- catch(e){console.error(e);$('#inv-status').textContent='No se pudo cargar Kardex. La migración de inventario debe estar instalada en el entorno de pruebas. '+(e.message||'')}
-}
-async function loadPedidos(){
- if(window.DrosaludPedidos){await window.DrosaludPedidos.load();return}
- const box=$('#pedidos-app');if(box)box.textContent='El módulo de pedidos no pudo cargarse. Actualiza la página e inténtalo de nuevo.';
-}
-async function loadRecepcion(){
- $('#recep-status').textContent='Cargando catálogo…';
- try{await invCargarDatos();$('#recep-status').textContent='Selecciona el producto y registra solo las unidades que llegaron físicamente.'}
- catch(e){console.error(e);$('#recep-status').textContent='No se pudo cargar el catálogo: '+(e.message||'')}
-}
-async function invRegistrarRecepcion(){
- const id=$('#inv-prod').value,u=Number($('#inv-unidades').value),nota=$('#inv-notas').value.trim();
- if(!id){toast('Selecciona el producto recibido');return}
- if(!Number.isInteger(u)||u<=0){toast('Escribe una cantidad válida de unidades individuales');return}
- const b=$('#inv-recibir');b.disabled=true;
- try{
-  const datos=JSON.stringify([id,u,nota]);if(!invRecepcionIntento||invRecepcionIntento.datos!==datos)invRecepcionIntento={datos,id:crypto.randomUUID()};
-  const{error}=await sb.rpc('registrar_recepcion_inventario',{p_producto_id:id,p_unidades:u,p_notas:nota||null,p_operacion_id:invRecepcionIntento.id});
-  if(error)throw error;
-  $('#inv-unidades').value='';$('#inv-notas').value='';invRecepcionIntento=null;
-  toast('Recepción registrada');$('#recep-status').textContent='Recepción guardada. El saldo fue actualizado.';await invCargarDatos();
- }catch(e){console.error(e);$('#recep-status').textContent='No se pudo registrar la recepción: '+(e.message||'Error desconocido');toast(e.message||'No se pudo registrar la recepción')}
- finally{b.disabled=false}
-}
-const vistaInventario=document.querySelector('#v-inventario');
-vistaInventario.addEventListener('click',e=>{
- if(e.target.closest('#inv-generar'))invGenerarKardex();
- if(e.target.closest('#inv-print-kardex'))invImprimirKardex(document.querySelector('input[name="inv-formato"]:checked')?.value==='pos');
- if(e.target.closest('#inv-labs-all')){invLabsSeleccionados=new Set(invLaboratorios);invRenderLabs();invRenderInforme()}
- if(e.target.closest('#inv-labs-none')){invLabsSeleccionados.clear();invRenderLabs();invRenderInforme()}
-});
-vistaInventario.addEventListener('change',e=>{
- if(e.target.matches('[data-inv-lab]')){invLabsClick(e);invRenderInforme()}
- if(e.target.matches('#inv-linea')||e.target.matches('input[name="inv-contenido"]'))invRenderInforme();
-});
-$('#inv-q').addEventListener('input',()=>{invRenderLabs();invRenderInforme()});
-document.querySelector('#v-pedidos').addEventListener('click',e=>{if(e.target.closest('#inv-print'))invImprimirPedido()});
-document.querySelector('#v-recepcion').addEventListener('click',e=>{if(e.target.closest('#inv-recibir'))invRegistrarRecepcion()});
-
+</script>
+<script src="modules/inventario.js"></script>
+<script>
 let syncChannel=null,syncTimer=null,realtimeRequested=false;
 function syncStatus(message){const el=$('#sync-state');if(el)el.textContent=message}
 function iniciarRealtime(){
@@ -1026,68 +851,14 @@ $('#mfa-ok').onclick=()=>go(async()=>{const code=$('#mfa-code').value.replace(/\
 async function mfaDesactivar(){const{data:l,error:e0}=await sb.auth.mfa.listFactors();if(e0)throw e0;const f=(l.totp||[])[0];if(!f){mfaEstado();return}if(!confirm('¿Desactivar la verificación en dos pasos? Tu cuenta quedará protegida solo con la contraseña.'))return;const{error}=await sb.auth.mfa.unenroll({factorId:f.id});if(error){toast(/aal2|assurance|verif/i.test(String(error.message))?'Para desactivarla debes haber entrado con tu código.':'No se pudo desactivar. Intenta de nuevo.');return}toast('Verificación en dos pasos desactivada');mfaEstado()}
 function showLogin(){$('#spl').hidden=true;$('#app').hidden=true;$('#rsx').hidden=true;$('#mfa').hidden=true;$('#lg').hidden=false;try{const e=localStorage.getItem('lastEmail');if(e&&!$('#em').value){$('#em').value=e;$('#pw').focus()}}catch(x){}}
 const TT={venta:'Recibo',cat:'Catálogo',cli:'Clientes',his:'Historial',cot:'Cotizaciones',aju:'Ajustes',caja:'Caja',cajahistorial:'Historial de cierres',ayuda:'Ayuda y sistema',inventario:'Generar Kardex',pedidos:'Pedidos',recepcion:'Recepción'}
-/*CAJA-INICIO*/
-let CJ={fecha:null,res:null,gastos:[]},savingCaja=false;
-const hoyCO=()=>new Date().toLocaleDateString('en-CA',{timeZone:'America/Bogota'});
-const dineroS=n=>(n<0?'−':'')+money(Math.abs(n));
-function fechaLarga(f){const[y,m,d]=f.split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}
-function fechaCorta(f){return f.slice(8,10)+'/'+f.slice(5,7)}
-async function cajaBadge(){try{const{data,error}=await sb.rpc('jornadas_pendientes_drosalud');if(error)throw error;const n=(data||[]).length,s=$('#caja-sub');if(s)s.textContent=n?n+(n===1?' jornada sin cerrar':' jornadas sin cerrar'):'Cierre de jornada'}catch(e){}}
-async function loadCaja(){const f=$('#cj-f');f.max=hoyCO();if(!f.value)f.value=hoyCO();await cajaPend();await cajaVer(f.value)}
-let cajaHistorialAbierto=false;
-const cajaHistMoney=n=>money(Number(n)||0);
-async function loadHistorialCierres(){
- const box=$('#cj-history');if(!box)return;
- box.hidden=false;box.innerHTML='<p class="mut sm">Cargando cierres…</p>';
- try{
-  const [cierres,historial]=await Promise.all([
-   sb.from('cierres_caja').select('id,fecha,base_inicial,ventas_efectivo,ventas_total,gastos_efectivo,efectivo_esperado,efectivo_contado,diferencia,estado,cerrado_en').order('fecha',{ascending:false}).limit(500),
-   sb.from('cierres_caja_historial').select('id,fecha,version,motivo,registrado_en,registrado_por').order('registrado_en',{ascending:false}).limit(100)
-  ]);
-  if(cierres.error)throw cierres.error;if(historial.error)throw historial.error;
-  const moneyHist=n=>cajaHistMoney(n),difHist=n=>{const d=Number(n)||0;return d===0?'$0':(d<0?'Faltante ':'Sobrante ')+moneyHist(Math.abs(d))};
-  const estadoHist=e=>e==='cerrada'?'Cerrada':e==='reabierta'?'Reabierta':(e||'—');
-  const lista=(cierres.data||[]).map(x=>'<article class="cj-history-card"><div class="cj-history-head"><div><strong>Jornada '+fechaLarga(String(x.fecha))+'</strong><div class="cj-history-meta">Cierre actual · '+estadoHist(x.estado)+'</div></div><span class="cj-tag">'+estadoHist(x.estado)+'</span></div><div class="cj-history-grid"><div>Base inicial<b>'+moneyHist(x.base_inicial)+'</b></div><div>Efectivo contado<b>'+moneyHist(x.efectivo_contado)+'</b></div><div>Efectivo esperado<b>'+moneyHist(x.efectivo_esperado)+'</b></div><div>Diferencia<b>'+difHist(x.diferencia)+'</b></div><div>Ventas totales<b>'+moneyHist(x.ventas_total)+'</b></div><div>Ventas en efectivo<b>'+moneyHist(x.ventas_efectivo)+'</b></div><div>Gastos en efectivo<b>'+moneyHist(x.gastos_efectivo)+'</b></div></div><button type="button" class="btn alt full" data-cj-history-date="'+esc(String(x.fecha))+'" style="margin-top:10px">Consultar esta jornada</button></article>').join('');
-  const cambios=(historial.data||[]).map(x=>{
-   const v=x.version||{},uid=x.registrado_por?String(x.registrado_por).slice(-6):'No disponible';
-   const motivo=x.motivo==='reapertura'?'Reapertura':x.motivo==='recierre'?'Recierre':String(x.motivo||'Modificación');
-   const fechaRegistro=x.registrado_en?new Date(x.registrado_en).toLocaleString('es-CO',{dateStyle:'medium',timeStyle:'short'}):'—';
-   return '<article class="cj-history-card"><div class="cj-history-head"><div><strong>Jornada '+fechaCorta(String(x.fecha))+'</strong><div class="cj-history-meta">'+motivo+' · '+fechaRegistro+'</div></div><span class="cj-tag">Estado anterior: '+estadoHist(v.estado)+'</span></div><div class="cj-history-grid"><div>Base<b>'+moneyHist(v.base_inicial)+'</b></div><div>Efectivo contado<b>'+moneyHist(v.efectivo_contado)+'</b></div><div>Efectivo esperado<b>'+moneyHist(v.efectivo_esperado)+'</b></div><div>Diferencia<b>'+difHist(v.diferencia)+'</b></div></div><p class="cj-history-note">Ventas: '+moneyHist(v.ventas_total)+' · Efectivo vendido: '+moneyHist(v.ventas_efectivo)+' · Usuario …'+uid+'</p>'+(v.motivo_reapertura?'<p class="cj-history-note">Nota del cierre anterior: '+esc(v.motivo_reapertura)+'</p>':'')+(v.notas?'<p class="cj-history-note">Observación: '+esc(v.notas)+'</p>':'')+'</article>';
-  }).join('');
-  box.innerHTML='<h2>Todos los cierres</h2><p class="mut sm">Aquí aparecen todas las jornadas guardadas, aunque nunca se hayan reabierto. Los valores corresponden al cierre actual de cada día.</p>'+(lista||'<div class="cj-history-empty">Todavía no hay jornadas cerradas.</div>')+'<h2>Historial de modificaciones</h2><p class="mut sm">Reaperturas y recierres. Cada registro conserva cómo estaba el cierre antes del cambio.</p>'+(cambios||'<div class="cj-history-empty">No hay modificaciones registradas.</div>');
- }catch(e){console.error('No se pudo cargar el historial de cierres:',e);box.innerHTML='<div class="cj-history-error">No se pudieron consultar los cierres. Verifica los permisos de lectura de tu cuenta y vuelve a intentarlo.</div><button type="button" class="btn alt full" id="cj-history-retry" style="margin-top:8px">Reintentar</button>'}
-}
-async function cajaPend(){const{data,error}=await sb.rpc('jornadas_pendientes_drosalud');if(error)throw error;$('#cj-pend').innerHTML=(data||[]).length?'<p class="mut sm" style="margin:6px 0 2px">Jornadas sin cerrar:</p><div class="chips">'+data.map(r=>`<button type="button" class="chip" data-cj-f="${esc(r.fecha)}">${fechaCorta(r.fecha)} · ${r.ventas} venta${r.ventas===1?'':'s'}${r.gastos?' · '+r.gastos+' gasto'+(r.gastos===1?'':'s'):''}</button>`).join('')+'</div>':'<p class="mut sm">No hay jornadas sin cerrar.</p>'}
-async function cajaVer(f){if(!f)return;CJ.fecha=f;const[a,g]=await Promise.all([sb.rpc('resumen_caja_drosalud',{p_fecha:f}),sb.from('gastos').select('id,concepto,categoria,monto,forma_pago,anulado,motivo_anulacion,creado_en').eq('fecha',f).order('creado_en',{ascending:true})]);if(a.error)throw a.error;if(g.error)throw g.error;CJ.res=a.data;CJ.gastos=g.data||[];pintarCaja()}
-function pintarCaja(){const r=CJ.res,c=r.cierre,cer=r.estado==='cerrada',adm=esAdminDrosalud(),b=$('#cj-body');
-const estado={abierta:'Abierta',cerrada:'Cerrada',reabierta:'Reabierta'}[r.estado]||r.estado;
-const formas=Object.entries(r.ventas_por_forma||{}).map(([k,v])=>`<div class="cj-line"><span>${esc(k)}</span><b>${money(+v)}</b></div>`).join('')||'<p class="mut sm">Sin ventas en esta jornada.</p>';
-const gl=CJ.gastos.map(g=>`<div class="cj-line${g.anulado?' cj-anul':''}"><span>${esc(g.concepto)}<small class="mut"> · ${esc(g.forma_pago)}${g.categoria?' · '+esc(g.categoria):''}${g.anulado?' · anulado':''}</small></span><span><b>${money(+g.monto)}</b>${adm&&!g.anulado&&!cer?` <button type="button" class="btn bad" data-cj-anular="${esc(g.id)}" style="min-height:32px;padding:4px 10px;font-size:.78rem">Anular</button>`:''}</span></div>`).join('')||'<p class="mut sm">Sin gastos.</p>';
-let h=`<p class="mut sm" style="margin:10px 0 6px">${esc(fechaLarga(r.fecha))} · <span class="cj-tag">${estado}</span></p><div class="kpi"><div>Vendido<b>${money(+r.ventas_total)}</b></div><div>Gastos<b>${money(+r.gastos_total)}</b></div></div><div class="item"><b>Ventas por forma de pago</b>${formas}</div>`;
-if(r.sin_forma_n>0)h+=`<div class="cj-warn"><b>${r.sin_forma_n} venta${r.sin_forma_n===1?'':'s'} sin forma de pago</b> (${money(+r.sin_forma_total)}). Hay que corregirla antes de cerrar la jornada; pide ayuda al administrador.</div>`;
-h+=`<div class="item"><b>Gastos</b>${gl}${cer?'':'<button type="button" class="btn alt full" id="cj-add" style="margin-top:10px">＋ Agregar gasto</button>'}</div>`;
-if(r.cambios_despues_del_cierre)h+='<div class="cj-warn"><b>Hubo cambios después del cierre.</b> Los totales actuales no coinciden con los del cierre. Pide al administrador que reabra la jornada.</div>';
-if(cer&&c){h+=`<div class="item"><b>Cierre</b><div class="cj-line"><span>Base con la que abrió</span><b>${money(+c.base_inicial)}</b></div><div class="cj-line"><span>Efectivo esperado</span><b>${money(+c.efectivo_esperado)}</b></div><div class="cj-line"><span>Efectivo contado</span><b>${money(+c.efectivo_contado)}</b></div></div>`;
-const d=+c.diferencia;h+=`<div class="cj-dif ${d<0?'falta':d>0?'sobra':''}">${d===0?'Cuadra: diferencia $0':d<0?'Faltaron '+money(-d):'Sobraron '+money(d)}</div>`;
-if(c.notas)h+=`<p class="sm"><b>Nota:</b> ${esc(c.notas)}</p>`;
-if(adm)h+='<button type="button" class="btn bad full" id="cj-reopen">Reabrir jornada</button>';
-h+='<p class="mut sm">Jornada cerrada: no se pueden agregar gastos. Solo el administrador con código puede reabrirla.</p>'}
-else{const base=c&&c.base_inicial!=null?c.base_inicial:'',sinMov=r.recibos===0&&r.gastos_n===0;
-h+=`<div class="item"><label for="cj-base">Base con la que abrió la caja</label><input id="cj-base" type="number" inputmode="numeric" min="0" step="1" value="${esc(base)}" placeholder="0"><div class="cj-line"><span>Efectivo esperado</span><b id="cj-esp">—</b></div><label for="cj-cont" style="margin-top:8px;display:block">Efectivo contado</label><input id="cj-cont" type="number" inputmode="numeric" min="0" step="1" placeholder="0"><div id="cj-dif" class="cj-dif">Escribe la base y el efectivo contado.</div><label for="cj-notas">Nota (opcional)</label><input id="cj-notas" maxlength="500" autocomplete="off"></div><button type="button" class="btn full" id="cj-close"${r.sin_forma_n>0||sinMov?' disabled':''}>Cerrar jornada</button>`;
-if(sinMov)h+='<p class="mut sm">No hay ventas ni gastos en esta jornada, así que no hay nada que cerrar.</p>';
-if(r.estado==='reabierta'&&c&&c.motivo_reapertura)h+=`<p class="mut sm">Reabierta: ${esc(c.motivo_reapertura)}</p>`}
-b.innerHTML=h;if(!(cer&&c))cajaCalc()}
-function cajaCalc(){const r=CJ.res;if(!r||!$('#cj-base'))return;const b=$('#cj-base').value,ct=$('#cj-cont').value,esp=b===''?null:(+b)+(+r.ventas_efectivo)-(+r.gastos_efectivo);$('#cj-esp').textContent=esp==null?'—':dineroS(esp);const d=$('#cj-dif');if(esp==null||ct===''){d.className='cj-dif';d.textContent='Escribe la base y el efectivo contado.';return}const x=Math.round(+ct)-Math.round(esp);d.className='cj-dif '+(x<0?'falta':x>0?'sobra':'');d.textContent=x===0?'Cuadra: diferencia $0':x<0?'Faltan '+money(-x):'Sobran '+money(x)}
-async function cajaCerrar(){if(savingCaja)return;const b=$('#cj-base').value,ct=$('#cj-cont').value;if(b===''||ct===''){toast('Escribe la base y el efectivo contado');return}if(+b<0||+ct<0){toast('Los valores no pueden ser negativos');return}const r=CJ.res,esp=Math.round(+b+(+r.ventas_efectivo)-(+r.gastos_efectivo)),x=Math.round(+ct)-esp;if(!confirm('¿Cerrar la jornada del '+fechaCorta(CJ.fecha)+'?\nEfectivo esperado: '+dineroS(esp)+'\nEfectivo contado: '+money(+ct)+'\nDiferencia: '+dineroS(x)+'\nDespués de cerrar no se podrán agregar gastos.'))return;savingCaja=true;try{const{error}=await sb.rpc('cerrar_caja_drosalud',{p_fecha:CJ.fecha,p_base:Math.round(+b),p_contado:Math.round(+ct),p_notas:($('#cj-notas').value||'').trim()||null});if(error)throw error;toast('Jornada cerrada');await cajaPend();await cajaVer(CJ.fecha);cajaBadge()}finally{savingCaja=false}}
-function cajaGastoForm(){openM(`<h2 style="margin-top:0">Agregar gasto</h2><label for="cg-c">Concepto</label><input id="cg-c" maxlength="120" autocomplete="off"><label for="cg-m">Monto</label><input id="cg-m" type="number" inputmode="numeric" min="1" step="1"><label for="cg-p">Forma de pago</label><select id="cg-p"><option>Efectivo</option><option>Transferencia</option><option>Nequi</option><option>Tarjeta</option></select><label for="cg-k">Categoría (opcional)</label><input id="cg-k" maxlength="40" autocomplete="off"><div class="acts"><button class="btn full" id="cg-ok">Guardar gasto</button><button class="btn alt full" id="cg-no">Cancelar</button></div>`);$('#cg-no').onclick=closeM;$('#cg-ok').onclick=()=>go(async()=>{if(savingCaja)return;const c=$('#cg-c').value.trim(),m=Math.round(+$('#cg-m').value);if(!c){toast('Escribe el concepto del gasto');return}if(!(m>0)){toast('Escribe un monto mayor que cero');return}savingCaja=true;try{const{error}=await sb.rpc('registrar_gasto_drosalud',{p_fecha:CJ.fecha,p_concepto:c,p_monto:m,p_forma_pago:$('#cg-p').value,p_categoria:$('#cg-k').value.trim()||null});if(error)throw error;closeM();toast('Gasto guardado');await cajaPend();await cajaVer(CJ.fecha);cajaBadge()}finally{savingCaja=false}})}
-function cajaMotivo(titulo,boton,fn){openM(`<h2 style="margin-top:0">${esc(titulo)}</h2><label for="cm-t">Motivo (mínimo 5 letras)</label><input id="cm-t" maxlength="200" autocomplete="off"><div class="acts"><button class="btn full" id="cm-ok">${esc(boton)}</button><button class="btn alt full" id="cm-no">Cancelar</button></div>`);$('#cm-no').onclick=closeM;$('#cm-ok').onclick=()=>go(async()=>{const m=$('#cm-t').value.trim();if(m.length<5){toast('Escribe el motivo (mínimo 5 letras)');return}await fn(m);closeM()})}
-function cajaClics(e){const t=e.target.closest('button');if(!t)return;if(t.dataset.cjF){$('#cj-f').value=t.dataset.cjF;go(()=>cajaVer(t.dataset.cjF));return}if(t.id==='cj-add'){cajaGastoForm();return}if(t.id==='cj-close'){go(cajaCerrar);return}if(t.id==='cj-reopen'){cajaMotivo('Reabrir jornada','Reabrir',async m=>{const{error}=await sb.rpc('reabrir_caja_drosalud',{p_fecha:CJ.fecha,p_motivo:m});if(error)throw error;toast('Jornada reabierta');await cajaPend();await cajaVer(CJ.fecha);cajaBadge()});return}if(t.dataset.cjAnular){const id=t.dataset.cjAnular;cajaMotivo('Anular gasto','Anular gasto',async m=>{const{error}=await sb.rpc('anular_gasto_drosalud',{p_id:id,p_motivo:m});if(error)throw error;toast('Gasto anulado');await cajaPend();await cajaVer(CJ.fecha);cajaBadge()})}}
-/*CAJA-FIN*/;
+</script>
+<script src="modules/caja.js"></script>
+<script>;
 function renderVentaDateTime(){const f=$('#venta-fecha'),h=$('#venta-hora');if(!f||!h)return;const now=new Date(),tz='America/Bogota';f.textContent=new Intl.DateTimeFormat('es-CO',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:tz}).format(now);h.textContent=new Intl.DateTimeFormat('es-CO',{hour:'2-digit',minute:'2-digit',hour12:true,timeZone:tz}).format(now)}
 setInterval(renderVentaDateTime,60000);
 function renderHomeDate(){const el=$('#home-date');if(!el)return;const mobile=window.matchMedia('(max-width: 620px)').matches;const opts=mobile?{weekday:'short',day:'numeric',month:'short',timeZone:'America/Bogota'}:{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'America/Bogota'};const s=new Intl.DateTimeFormat('es-CO',opts).format(new Date());el.textContent=s.charAt(0).toLocaleUpperCase('es-CO')+s.slice(1)}
 function showHome(){cajaBadge();renderHomeDate();$('#back-home').hidden=true;$('#home').hidden=false;['venta','cat','cli','his','cot','aju','neg','caja','cajahistorial','ayuda','inventario','pedidos','recepcion'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=true});$('#more-menu').hidden=true;$('#ttl').textContent='Drosalud';window.scrollTo(0,0)}
- function show(v){$('#back-home').hidden=false;$('#home').hidden=true;['venta','cat','cli','his','cot','aju','neg','caja','cajahistorial','ayuda','inventario','pedidos','recepcion'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=k!==v});$('#more-menu').hidden=true;$('#nav [data-v="mas"]').setAttribute('aria-expanded','false');document.querySelectorAll('#nav button').forEach(b=>{if(b.dataset.v!=='mas')b.setAttribute('aria-current',String(b.dataset.v===v));else b.setAttribute('aria-current',String(!['venta','cat','cli'].includes(v)))});$('#ttl').textContent=TT[v]||'Negocio';if(v==='venta')renderVentaDateTime();if(v==='aju')fillAju();if(v==='caja')go(loadCaja);if(v==='cajahistorial')go(loadHistorialCierres);if(v==='ayuda'){go(loadAyudaEstado);$('#ayuda-version').textContent='v'+VERSION}if(v==='his')go(loadHis);if(v==='cli')loadCST().catch(()=>{});if(v==='cot')go(loadCotizaciones);if(v==='inventario')go(loadInventario);if(v==='pedidos')go(loadPedidos);if(v==='recepcion')go(loadRecepcion);window.scrollTo(0,0)}
+ function show(v){$('#back-home').hidden=false;$('#home').hidden=true;['venta','cat','cli','his','cot','aju','neg','caja','cajahistorial','ayuda','inventario','pedidos','recepcion'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=k!==v});$('#more-menu').hidden=true;$('#nav [data-v="mas"]').setAttribute('aria-expanded','false');document.querySelectorAll('#nav button').forEach(b=>{if(b.dataset.v!=='mas')b.setAttribute('aria-current',String(b.dataset.v===v));else b.setAttribute('aria-current',String(!['venta','cat','cli'].includes(v)))});$('#ttl').textContent=TT[v]||'Negocio';if(v==='venta')renderVentaDateTime();if(v==='aju')fillAju();if(v==='caja')go(loadCaja);if(v==='cajahistorial')go(loadHistorialCierres);if(v==='ayuda'){go(loadAyudaEstado);$('#ayuda-version').textContent='v'+VERSION}if(v==='his')go(loadHis);if(v==='cli')loadCST().catch(()=>{});if(v==='cot')go(DrosaludCotizaciones.load);if(v==='inventario')go(loadInventario);if(v==='pedidos')go(loadPedidos);if(v==='recepcion')go(loadRecepcion);window.scrollTo(0,0)}
 function rRes(){const q=$('#q').value.trim(),b=$('#res');if(!q){b.innerHTML='';return}const a=find(q,20);b.innerHTML=a.length?a.map(p=>`<button class="row" data-add="${p.id}"><span class="nm">${esc(p.nombre)}<small>${esc(p.laboratorio||'')}</small></span><span class="pr">${pv(p)==null?'Precio pendiente':money(pv(p))}<small>compra ${money(p.precio_compra)}</small></span></button>`).join(''):'<p class="mut">No hay resultados. Agrégalo en Catálogo.</p>'}
 function calc(){const st=cart.reduce((s,i)=>s+i.p*i.q,0),g=cart.reduce((s,i)=>s+(i.p-(i.c||0))*i.q,0),ds=Math.max(0,+$('#dsc').value||0),dm=Math.max(0,+$('#dom').value||0),mens=Math.max(0,+$('#mens').value||0);return{st,ds,dm,mens,total:Math.max(0,st-ds+dm),gan:g==null?null:g-ds+dm-mens}}
 function rCart(){const b=$('#cart');b.innerHTML=cart.length?cart.map((i,k)=>`<div class="item"><div class="top"><span>${esc(i.n)}</span><button class="rm" data-rm="${k}" aria-label="Quitar">✕</button></div><div class="ctl"><div class="step"><button data-dec="${k}" aria-label="Menos">−</button><span>${i.q} ${i.q===1?'unidad':'unidades'}</span><button data-inc="${k}" aria-label="Más">+</button></div><label class="pp">$<input type="number" inputmode="numeric" data-pr="${k}" value="${i.p}" aria-label="Precio de venta por unidad"></label><span class="lt">${money(i.p*i.q)}</span></div><small class="mut">${esc(etiquetaCarrito(i))}· Compra ${money(i.c)} c/u${` · ganas ${money((i.p-i.c)*i.q)}${warnM(i.p,i.c)}`}</small></div>`).join(''):'<p class="mut">Busca un producto y tócalo para agregarlo.</p>';const k=calc(),n=cart.reduce((s,i)=>s+i.q,0);$('#tot').textContent=money(k.total);$('#gn').textContent=cart.length?'Ganancia estimada (productos + domicilio − mensajero − descuento): '+money(k.gan):'';const e=$('#bg');e.hidden=!n;e.textContent=n;rVue(k)}
@@ -1251,41 +1022,7 @@ let CST={},CR=[];let catLow=false,hv='ventas',hisShown=100;
 function lowList(){return P.filter(p=>p.precio_venta!=null&&mg(Number(p.precio_venta),Number(p.precio_compra))<cfg.mMin)}
 function rLow(){const n=lowList().length,b=$('#lowb');b.hidden=!n&&!catLow;b.innerHTML=catLow?`<button class="row warnrow" id="lowx">Mostrando ${n} con ganancia baja · Quitar filtro</button>`:(n?`<button class="row warnrow" id="lowm">⚠ ${n} producto${n>1?'s':''} con ganancia menor a ${cfg.mMin}% · Ver</button>`:'')}
 function rVue(k){const ef=$('#fp').value==='Efectivo';$('#efw').hidden=!ef;const rc=+$('#rec').value||0;$('#vue').textContent=!ef||!rc||!cart.length?'':(rc>=k.total?'Vueltos: '+money(rc-k.total):'Faltan '+money(k.total-rc))}
-function rango(){const v=$('#hp').value,n=new Date(),d0=new Date(n.getFullYear(),n.getMonth(),n.getDate()),day=864e5;let a,b;
-if(v==='hoy'){a=d0;b=new Date(d0.getTime()+day)}
-else if(v==='sem'){a=new Date(d0.getTime()-((d0.getDay()+6)%7)*day);b=new Date(a.getTime()+7*day)}
-else if(v==='mes'){a=new Date(n.getFullYear(),n.getMonth(),1);b=new Date(n.getFullYear(),n.getMonth()+1,1)}
-else if(v==='mant'){a=new Date(n.getFullYear(),n.getMonth()-1,1);b=new Date(n.getFullYear(),n.getMonth(),1)}
-else if(v==='30'){a=new Date(d0.getTime()-29*day);b=new Date(d0.getTime()+day)}
-else if(v==='rango'){const x=$('#hd1').value,y=$('#hd2').value;a=x?new Date(x+'T00:00:00'):new Date(2000,0,1);b=y?new Date(new Date(y+'T00:00:00').getTime()+day):new Date(d0.getTime()+day)}
-else{a=new Date(2000,0,1);b=new Date(d0.getTime()+day)}
-return[a,b]}
-function hisFiltered(){const q=norm($('#hq').value);return q?H.filter(r=>norm((r.cliente_nombre||'')+' '+r.numero+' '+pad(r.numero)).includes(q)):H}
-async function loadHis(){const[a,b]=rango();let o=[],f=0;for(;;){const{data,error}=await sb.from('recibos_app').select('*').gte('creado_en',a.toISOString()).lt('creado_en',b.toISOString()).order('creado_en',{ascending:false}).order('id').range(f,f+999);if(error)throw error;o=o.concat(data);if(data.length<1000)break;f+=1000}H=o;hisShown=100;rHis();if(hv==='res')await rResumen()}
-function rHis(){const all=hisFiltered(),valid=all.filter(r=>!r.anulado),anul=all.filter(r=>!!r.anulado),V=hv==='anul'?anul:valid,s=valid.reduce((a,r)=>a+Number(r.total),0),g=valid.reduce((a,r)=>a+Number(r.ganancia),0);$('#hs').textContent=money(s);$('#hg').textContent=money(g);$('#hn').textContent=hv==='anul'?anul.length+(anul.length===1?' operación anulada':' operaciones anuladas')+' en este período':valid.length+(valid.length===1?' venta':' ventas')+' en este período'+(anul.length?' · '+anul.length+' anulada'+(anul.length===1?'':'s')+' aparte':'');
-$('#hl').innerHTML=V.length?V.slice(0,hisShown).map(r=>`<button class="row${r.anulado?' anul':''}" data-rc="${r.id}"><span class="nm">Recibo ${pad(r.numero)}${r.cliente_nombre?' · '+esc(tcase(r.cliente_nombre)):''}<small>${esc(fmt(r.creado_en))}${r.anulado?' · ANULADO · '+esc(r.motivo_anulacion||'Sin motivo registrado'):''}</small></span><span class="pr">${money(r.total)}${`<small>ganancia ${money(r.ganancia)}</small>`}</span></button>`).join(''):'<p class="mut">'+(hv==='anul'?'No hay operaciones anuladas en este período.':'No hay ventas en este período.')+'</p>';$('#hmore').hidden=V.length<=hisShown}
-async function itemsDe(rs){let it=[];for(let i=0;i<rs.length;i+=40){const ids=rs.slice(i,i+40).map(r=>r.id);const{data,error}=await sb.from('recibo_items_app').select('*').in('recibo_id',ids);if(error)throw error;it=it.concat(data)}return it}
-function setHV(v){if(v==='res'&&!usuarioDrosalud){toast('Inicia sesión.');return}hv=v;document.querySelectorAll('[data-hv]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.hv===v)));$('#hrec').hidden=v==='res';$('#hres').hidden=v!=='res';if(v!=='res'){hisShown=100;rHis()}else go(rResumen)}
-const hisValid=()=>hisFiltered().filter(r=>!r.anulado);
-async function rResumen(){const L=hisValid(),box=$('#hres');if(!L.length){box.innerHTML='<p class="mut">No hay ventas en este período.</p>';return}
-box.innerHTML='<p class="mut">Calculando…</p>';const it=await itemsDe(L),T=L.reduce((a,r)=>a+Number(r.total),0),G=L.reduce((a,r)=>a+Number(r.ganancia),0),D=L.reduce((a,r)=>a+Number(r.domicilio||0),0),M=L.reduce((a,r)=>a+Number(r.costo_mensajero||0),0),base=T-D;
-const mp=new Map();it.forEach(i=>{const o=mp.get(i.nombre)||{n:i.nombre,u:0,v:0,g:0};o.u+=i.cantidad;o.v+=i.precio_venta*i.cantidad;o.g+=(i.precio_venta-(i.costo_real_unitario==null?i.precio_compra:i.costo_real_unitario))*i.cantidad;mp.set(i.nombre,o)});
-const top=[...mp.values()].sort((a,b)=>b.g-a.g).slice(0,8),topUnidades=[...mp.values()].sort((a,b)=>b.u-a.u).slice(0,10),mx=Math.max(1,...top.map(x=>x.g));
-const fp={};L.forEach(r=>{const k=r.forma_pago||'Sin dato';fp[k]=(fp[k]||0)+Number(r.total)});
-const low=it.filter(i=>i.precio_venta<i.precio_compra||mg(i.precio_venta,i.precio_compra)<cfg.mMin).length;
-const ds=L.map(r=>new Date(r.creado_en).getTime()),mn=new Date(Math.min(...ds)),mxd=new Date(Math.max(...ds)),byM=(mxd-mn)/864e5>62,key=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+(byM?'':'-'+String(d.getDate()).padStart(2,'0'));
-const sv={};L.forEach(r=>{const k=key(new Date(r.creado_en));sv[k]=(sv[k]||0)+Number(r.total)});
-const keys=[],c=byM?new Date(mn.getFullYear(),mn.getMonth(),1):new Date(mn.getFullYear(),mn.getMonth(),mn.getDate());while(c<=mxd){keys.push(key(c));if(byM)c.setMonth(c.getMonth()+1);else c.setDate(c.getDate()+1)}
-const vd={};L.forEach(r=>{const k=(r.vendedor||'').trim()||'Sin vendedor';vd[k]=(vd[k]||0)+Number(r.total)});const vdH=Object.keys(vd).length>=2?'<h2>Por vendedor</h2>'+Object.entries(vd).sort((a,b)=>b[1]-a[1]).map(e=>`<div class="rk"><span>${esc(e[0])}</span><b>${money(e[1])}</b></div>`).join(''):'';
-const vmax=Math.max(1,...keys.map(k=>sv[k]||0)),lab=k=>byM?k.slice(5)+'/'+k.slice(2,4):k.slice(8);
-box.innerHTML=`<div class="kpi"><div>Ventas<b>${money(T)}</b></div><div>Ganancia<b>${money(G)}</b></div><div>Recibos<b>${L.length}</b></div><div>Ticket promedio<b>${money(T/L.length)}</b></div><div>Ganancia sobre ventas<b>${base>0?(G/base*100).toFixed(1).replace('.',','):0}%</b></div><div>Domicilios cobrados<b>${money(D)}</b></div><div>Pagos a mensajeros<b>${money(M)}</b></div></div>
-<h2>Ventas por ${byM?'mes':'día'}</h2><div class="bars">${keys.map(k=>`<div title="${k}: ${money(sv[k]||0)}"><i style="height:${Math.round((sv[k]||0)/vmax*100)}%"></i>${lab(k)}</div>`).join('')}</div>
-<h2>Productos más vendidos</h2>${topUnidades.map((x,n)=>`<div class="rk"><span>${n+1}. ${esc(x.n)}<small>${x.u} unidades · ${money(x.v)} vendido</small></span><b>${x.u} und</b></div>`).join('')}<h2>Productos que más ganancia dejan</h2>${top.map((x,n)=>{const w=Math.round(x.g/mx*100);return `<div class="rk" style="background:linear-gradient(90deg,var(--soft) ${w}%,var(--card) ${w}%)"><span>${n+1}. ${esc(x.n)}<small>${x.u} und · ${money(x.v)} vendido</small></span><b>${money(x.g)}</b></div>`}).join('')}
-<h2>Por forma de pago</h2>${Object.entries(fp).sort((a,b)=>b[1]-a[1]).map(e=>`<div class="rk"><span>${esc(e[0])}</span><b>${money(e[1])}</b></div>`).join('')}${vdH}
-${low?`<p class="warn">⚠ ${low} línea${low>1?'s':''} vendida${low>1?'s':''} con ganancia menor a ${cfg.mMin}%.</p>`:''}
-<p class="mut sm">La ganancia por producto es antes de descuentos. La ganancia del recibo ya resta el descuento y no cuenta el domicilio.</p>`}
-async function cambios(){const{data,error}=await sb.from('historial_precios').select('*').order('creado_en',{ascending:false}).limit(30);if(error)throw error;const nm=id=>(P.find(p=>p.id===id)||{}).nombre||'Producto eliminado';
-openM(`<h2 style="margin-top:0">Cambios recientes de precio</h2>${data.length?data.map(x=>{const d=(x.precio_nuevo-x.precio_anterior)/x.precio_anterior*100;return `<div class="item"><div class="top"><span>${esc(nm(x.producto_id))}</span></div><small class="mut">${esc(fd(x.creado_en))} · ${money(x.precio_anterior)} → ${money(x.precio_nuevo)} <b class="${d>0?'warn':''}">(${d>0?'+':''}${d.toFixed(1).replace('.',',')}%)</b></small></div>`}).join(''):'<p class="mut">Aún no hay cambios registrados.</p>'}<div class="acts"><button class="btn alt full" id="cx2">Cerrar</button></div>`);$('#cx2').onclick=closeM}
+
 async function excel(scope){if(typeof XLSX==='undefined'){toast('La descarga no está disponible en la demostración');return}
 toast('Preparando el Excel…');const wb=XLSX.utils.book_new(),nm=id=>(P.find(p=>p.id===id)||{}).nombre||'';
 const add=(n,rows,w)=>{const ws=XLSX.utils.json_to_sheet(rows.length?rows:[{Aviso:'Sin datos'}],{dateNF:'yyyy-mm-dd hh:mm',cellDates:true});if(w)ws['!cols']=w.map(x=>({wch:x}));XLSX.utils.book_append_sheet(wb,ws,n)};
@@ -1320,12 +1057,12 @@ if(id==='fgt')return go(doForgot);
 if(id==='rsok')return go(doReset);
 if(id==='upb')return actualizar();
 if(id==='cot')return go(cotizar);
-if(d.cotid){const r=CO.find(x=>x.id===d.cotid);if(r)return go(()=>abrirCotizacion(r))}
+if(d.cotid)return DrosaludCotizaciones.open(d.cotid)
 if(d.rcc){const r=CR.find(x=>x.id===d.rcc);return go(()=>abrirRec(r))}
 if(id==='hmore'){hisShown+=100;return rHis()}
 if(id==='lowm'){catLow=true;return rCat()}
 if(id==='lowx'){catLow=false;return rCat()}
-if(id==='chg')return go(cambios);
+if(id==='chg')return go(DrosaludCambiosPrecios.open);
 if(id==='xlsT')return go(()=>excel('todo'));
 if(id==='xlsH')return go(()=>excel('periodo'));
 if(d.add){const p=P.find(x=>x.id===d.add);if(p)addCart(p);$('#q').value='';rRes();return}
@@ -1351,12 +1088,12 @@ if(id==='out'||id==='out-top')return go(async()=>{await detenerRealtime();const{
 $('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeM()});
 $('#back-home').addEventListener('click',showHome);
  $('#home').addEventListener('click',e=>{const b=e.target.closest('[data-home]');if(!b)return;const v=b.dataset.home;if(v==='neg'){const target=document.querySelector('#more-menu [data-v="neg"]');if(target)target.click();return}show(v)});
-$('#v-caja').addEventListener('click',cajaClics);
+$('#v-caja').addEventListener('click',e=>cajaClics(e));
 $('#cj-history-toggle').addEventListener('click',()=>show('cajahistorial'));
 $('#v-cajahistorial').addEventListener('click',e=>{if(e.target.closest('[data-cj-back]')){show('caja');return}if(e.target.closest('#cj-history-retry'))return loadHistorialCierres();const b=e.target.closest('[data-cj-history-date]');if(b){const f=b.dataset.cjHistoryDate;$('#cj-f').value=f;show('caja')}});
 $('#v-caja').addEventListener('input',e=>{if(e.target.id==='cj-base'||e.target.id==='cj-cont')cajaCalc()});
 $('#cj-f').addEventListener('change',e=>go(()=>cajaVer(e.target.value)));
-$('#coq').addEventListener('input',renderCotizaciones);
+$('#coq').addEventListener('input',()=>DrosaludCotizaciones.render());
 $('#q').addEventListener('input',rRes);
 $('#q2').addEventListener('input',rCat);
 let ultimoDocConsultado='';
@@ -1394,125 +1131,15 @@ showLogin();
 (async()=>{try{const{data,error}=await sb.auth.getSession();if(error)throw error;if(data.session)await start()}catch(e){console.error('No se pudo comprobar la sesión al iniciar:',e);showLogin()}})();
 </script>
 
+
 <script src="modules/compras.js"></script>
 
-<script>
-(()=>{
- const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- let ordenes=[];
- async function cargarOrdenes(){
-  const {data,error}=await sb.from('ordenes_compra').select('id,numero,proveedor_id,estado,documento_proveedor,creado_en').order('creado_en',{ascending:false}).limit(100);
-  if(error)throw error;ordenes=data||[];renderOrdenes();
- }
- function renderOrdenes(){
-  const box=$('#oc-list');if(!box)return;
-  box.innerHTML=ordenes.length?ordenes.map(o=>{
-   const p=(window.__ocProviders||[]).find(x=>x.id===o.proveedor_id);
-   return '<article class="item"><div class="top"><b>Orden #'+o.numero+'</b><span>'+esc(o.estado)+'</span></div><p class="sm">'+esc(p?.nombre||'Proveedor')+' · '+esc(o.documento_proveedor||'Sin documento')+'</p><div class="acts">'+(o.estado==='borrador'&&window.__drosaludRole==='admin'?'<button class="btn alt full" data-oc-approve="'+o.id+'">Aprobar orden</button>':'')+(o.estado==='aprobada'||o.estado==='parcial'?'<button class="btn full" data-oc-receive="'+o.id+'">Registrar recepción</button>':'')+'</div></article>';
-  }).join(''):'<p class="mut sm">Todavía no hay órdenes de compra.</p>';
- }
- async function cargarProveedores(){const {data,error}=await sb.from('proveedores').select('id,nombre,activo').eq('activo',true).order('nombre');if(error)throw error;window.__ocProviders=data||[];return data||[]}
- function modal(html){$('#modal').hidden=false;$('#sheet').innerHTML=html}
- function cerrar(){ $('#modal').hidden=true}
-  function normalizarBusqueda(v){return String(v||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().trim()}
-  function coincideProducto(p,q){
-   const n=normalizarBusqueda(q),codigo=String(p.codigo||'').toLowerCase().replace(/\\D/g,'');
-   const dig=n.replace(/\\D/g,'');
-   return !n||normalizarBusqueda([p.nombre,p.laboratorio,p.codigo].join(' ')).includes(n)||(dig.length>=4&&codigo.includes(dig));
-  }
- async function nuevaOrden(){
-  const providers=await cargarProveedores();
-  if(!providers.length)throw new Error('Primero registra un proveedor activo.');
-  if(!P.length)throw new Error('No se pudo cargar el catálogo.');
-  modal('<h2>Crear orden de compra</h2><label>Proveedor</label><select id="oc-provider">'+providers.map(p=>'<option value="'+p.id+'">'+esc(p.nombre)+'</option>').join('')+'</select><label>Factura / documento proveedor (opcional)</label><input id="oc-doc" maxlength="100"><h3>Productos de la orden</h3><div id="oc-order-lines"></div><button type="button" class="btn alt full" id="oc-add-line">＋ Agregar producto</button><div class="acts"><button class="btn full" id="oc-save">Guardar borrador</button><button class="btn alt full" id="oc-cancel">Cancelar</button></div>');
-  const lines=$('#oc-order-lines');
-  function addLine(){
-   const row=document.createElement('div');row.className='item oc-line';
-   row.innerHTML='<label>Buscar producto por nombre o código</label><input type="search" data-oc-search placeholder="Escribe nombre o código…" autocomplete="off"><div data-oc-results class="oc-search-results" role="listbox"></div><input type="hidden" data-oc-product value=""><p class="mut sm" data-oc-selected>Selecciona un producto del catálogo.</p><label>Unidades individuales solicitadas</label><input data-oc-units type="number" min="1" step="1" value="1"><label>Costo por unidad individual</label><input data-oc-cost type="number" min="0" step="0.01" value="0"><button type="button" class="btn bad full" data-oc-remove>Quitar producto</button>';
-   const search=row.querySelector('[data-oc-search]'),results=row.querySelector('[data-oc-results]');
-   // Conserva también los productos consultados directamente en Supabase, aunque no estén en P.
-   let productosEncontrados=[];
-   const pintarResultados=productos=>{
-    productosEncontrados=productos||[];
-    results.innerHTML=productosEncontrados.map(p=>'<button type="button" class="btn alt full" data-oc-pick="'+p.id+'" style="text-align:left;margin:3px 0">'+esc(p.nombre)+' · '+esc(p.codigo||'Sin código')+' · '+esc(p.laboratorio||'')+'</button>').join('')||(search.value.trim()?'<p class="mut sm">No se encontraron coincidencias.</p>':'<p class="mut sm">Escribe al menos parte del nombre o código.</p>');
-   };
-   const render=()=>{const q=search.value.trim();if(!q){productosEncontrados=[];results.innerHTML='<p class="mut sm">Escribe el nombre o código del producto para buscarlo.</p>';return}const found=P.filter(p=>coincideProducto(p,q)).slice(0,12);pintarResultados(found)};
-   let lookupSeq=0;
-   async function buscarEnCatalogo(){
-    const q=search.value.trim(),seq=++lookupSeq;
-    row.querySelector('[data-oc-product]').value='';
-    row.querySelector('[data-oc-selected]').textContent='Selecciona un producto del catálogo.';
-    render();
-    const digits=q.replace(/\D/g,'');
-    if(digits.length<8)return;
-    try{
-     const {data,error}=await sb.from('productos_app')
-      .select('id,codigo,nombre,laboratorio,linea,precio_compra,precio_venta,fraccionable,unidades_por_caja,unidades_por_venta')
-      .eq('codigo',digits).limit(12);
-     if(error)throw error;
-     if(seq!==lookupSeq||search.value.trim()!==q)return;
-     const merged=[...(data||[]),...P.filter(p=>String(p.codigo||'').replace(/\D/g,'')===digits)]
-      .filter((p,i,a)=>a.findIndex(x=>String(x.id)===String(p.id))===i);
-     if(merged.length){
-      pintarResultados(merged);
-     }else{
-      productosEncontrados=[];
-      results.innerHTML='<p class="mut sm">No se encontró ese código en el catálogo. Comprueba que esté registrado.</p>';
-     }
-    }catch(err){console.error('Búsqueda de código en compras:',err);if(seq===lookupSeq)results.innerHTML='<p class="mut sm">No se pudo consultar el catálogo. Revisa la conexión e intenta de nuevo.</p>'}
-   }
-   search.addEventListener('input',()=>{row.querySelector('[data-oc-product]').value='';row.querySelector('[data-oc-selected]').textContent='Selecciona un producto del catálogo.';render();if(search.value.replace(/\D/g,'').length>=8)buscarEnCatalogo()});
-   search.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();buscarEnCatalogo()}});
+<script src="modules/ordenes-compra.js"></script>
 
-   results.addEventListener('click',e=>{const btn=e.target.closest('[data-oc-pick]');if(!btn)return;const p=[...P,...productosEncontrados].find(x=>String(x.id)===btn.dataset.ocPick);if(!p)return;
-    row.querySelector('[data-oc-product]').value=p.id;search.value=p.nombre;row.querySelector('[data-oc-selected]').textContent='Seleccionado: '+p.nombre+' · '+(p.codigo||'Sin código');productosEncontrados=[];results.innerHTML='';
-   });
-   row.querySelector('[data-oc-remove]').onclick=()=>row.remove();render();lines.appendChild(row);
-  }
-  addLine();$('#oc-add-line').onclick=addLine;$('#oc-cancel').onclick=cerrar;
-  $('#oc-save').onclick=async()=>{
-   const rows=[...lines.querySelectorAll('.oc-line')];
-   const items=rows.map(row=>({producto_id:row.querySelector('[data-oc-product]').value,unidades_solicitadas:Number(row.querySelector('[data-oc-units]').value),costo_unitario_base:Number(row.querySelector('[data-oc-cost]').value)}));
-   if(!items.length||items.some(x=>!x.producto_id||!Number.isInteger(x.unidades_solicitadas)||x.unidades_solicitadas<=0||!Number.isFinite(x.costo_unitario_base)||x.costo_unitario_base<0))throw new Error('Revisa productos, unidades y costos de todas las líneas.');
-   const ids=items.map(x=>x.producto_id);if(new Set(ids).size!==ids.length)throw new Error('No repitas el mismo producto en la orden; combina sus unidades en una sola línea.');
-   const {data,error}=await sb.rpc('crear_orden_compra',{p_proveedor_id:$('#oc-provider').value,p_items:items,p_documento:$('#oc-doc').value,p_notas:null});
-   if(error)throw error;if(!data)throw new Error('Supabase no confirmó la creación de la orden.');
-   cerrar();await cargarOrdenes();alert('Orden creada como borrador.');
-  };
- }
- async function aprobar(id){const {error}=await sb.rpc('aprobar_orden_compra',{p_orden_id:id});if(error)throw error;await cargarOrdenes()}
- async function recibir(id){
-  const operationId=crypto.randomUUID();
-  const {data:items,error}=await sb.from('ordenes_compra_items').select('id,producto_id,unidades_solicitadas,unidades_recibidas,costo_unitario_base,productos(nombre,codigo)').eq('orden_id',id);
-  if(error)throw error;
-  const pendiente=(items||[]).filter(x=>x.unidades_solicitadas>x.unidades_recibidas);
-  if(!pendiente.length)throw new Error('Esta orden ya está recibida completamente.');
-  modal('<h2>Recepción física</h2><p class="mut sm">Registra solo lo que llegó. Los costos pueden variar frente a la orden.</p><label>Factura / documento proveedor</label><input id="oc-receipt-doc" maxlength="100"><label>Filtrar productos de esta orden por nombre o código</label><input id="oc-receipt-search" type="search" placeholder="Buscar en los productos pendientes…" autocomplete="off"><p class="mut sm">El filtro solo oculta líneas; no elimina cantidades ni productos de la recepción.</p><div id="oc-receipt-lines">'+pendiente.map(x=>'<div class="item oc-receipt-line" data-oc-filter="'+esc([x.productos?.nombre,x.productos?.codigo].join(' '))+'"><b>'+esc(x.productos?.nombre||'Producto')+'</b><p class="mut sm">Código: '+esc(x.productos?.codigo||'Sin código')+' · Pendiente: '+(x.unidades_solicitadas-x.unidades_recibidas)+' unidades</p><label>Unidades recibidas ahora</label><input type="number" min="0" max="'+(x.unidades_solicitadas-x.unidades_recibidas)+'" step="1" value="'+(x.unidades_solicitadas-x.unidades_recibidas)+'" data-oc-qty="'+x.id+'"><label>Costo real por unidad</label><input type="number" min="0" step="0.01" value="'+x.costo_unitario_base+'" data-oc-unitcost="'+x.id+'"></div>').join('')+'</div><div class="acts"><button class="btn full" id="oc-save-receipt">Confirmar recepción</button><button class="btn alt full" id="oc-cancel">Cancelar</button></div>');
-  $('#oc-cancel').onclick=cerrar;
-  $('#oc-receipt-search').addEventListener('input',e=>{const normalizarFiltro=valor=>String(valor||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().trim();const q=normalizarFiltro(e.target.value);document.querySelectorAll('#oc-receipt-lines .oc-receipt-line').forEach(el=>{el.hidden=!normalizarFiltro(el.dataset.ocFilter).includes(q)})});
-  $('#oc-save-receipt').onclick=async()=>{
-   const lines=pendiente.map(x=>({orden_item_id:x.id,unidades:Number($('[data-oc-qty="'+x.id+'"]').value),costo_unitario_base:Number($('[data-oc-unitcost="'+x.id+'"]').value)})).filter(x=>x.unidades>0);
-   if(!lines.length||lines.some(x=>!Number.isInteger(x.unidades)||x.unidades<0||!Number.isFinite(x.costo_unitario_base)||x.costo_unitario_base<0))throw new Error('Ingresa al menos una línea con cantidades y costos válidos.');
-   if(lines.some(x=>x.costo_unitario_base===0)&&!confirm('Hay productos con costo $0. Si no es una muestra gratuita, corrige el costo antes de continuar. ¿Confirmas que realmente tienen costo cero?'))return;
-   const save=$('#oc-save-receipt');if(save.disabled)return;save.disabled=true;save.textContent='Registrando…';
-   try{const {error}=await sb.rpc('registrar_recepcion_compra',{p_orden_id:id,p_documento_proveedor:$('#oc-receipt-doc').value,p_items:lines,p_operacion_id:operationId,p_notas:null});
-    if(error)throw error;cerrar();await cargarOrdenes();await invCargarDatos();alert('Recepción registrada. Kardex y costos actualizados.');
-   }catch(err){save.disabled=false;save.textContent='Reintentar recepción';alert(err.message||'No se pudo confirmar la recepción. Puedes reintentar sin duplicar el movimiento.');}
-  };
- }
- document.addEventListener('click',async e=>{
-  const b=e.target.closest('button');if(!b)return;
-  try{
-   if(b.id==='oc-new')await nuevaOrden();
-   if(b.dataset.ocApprove)await aprobar(b.dataset.ocApprove);
-   if(b.dataset.ocReceive)await recibir(b.dataset.ocReceive);
-  }catch(err){console.error(err);alert(err.message||'Error en compras');}
- });
- document.addEventListener('click',e=>{const b=e.target.closest('[data-home="neg"]');if(b)setTimeout(()=>{cargarOrdenes().catch(err=>console.error(err));cargarProveedores().catch(()=>{})},50)});
- document.addEventListener('click',e=>{if(e.target.closest('#more-menu [data-v="neg"]'))setTimeout(()=>{cargarOrdenes().catch(err=>console.error(err));cargarProveedores().catch(()=>{})},50)});
-})();
-</script>
-
+<script src="modules/core.js"></script>
+<script src="modules/cotizaciones.js"></script>
 <script src="modules/pedidos.js"></script>
+<script src="modules/historial-ventas.js"></script>
+<script src="modules/historial-precios.js"></script>
 </body>
 </html>
