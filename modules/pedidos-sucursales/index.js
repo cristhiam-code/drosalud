@@ -6,7 +6,7 @@
 
   const state = {
     context: null, mode: 'inicio', suggested: [], negatives: [], configuration: null,
-    orders: [], loading: false, initialized: false
+    orders: [], loading: false, initialized: false, pendingOperation: null
   };
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
@@ -114,10 +114,21 @@
     }
   }
 
+  function operationIdFor(tipo, payload) {
+    const signature = tipo + ':' + JSON.stringify(payload);
+    if (!state.pendingOperation || state.pendingOperation.signature !== signature) {
+      const id = window.crypto?.randomUUID
+        ? window.crypto.randomUUID()
+        : 'ps-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+      state.pendingOperation = { signature, id };
+    }
+    return state.pendingOperation.id;
+  }
+
   async function sendSuggested() {
     const items = window.PedidosSucursalesSugerido.collect(root, state.suggested);
     if (!items.length) throw new Error('Ajusta al menos una cantidad mayor que cero.');
-    await window.PedidosSucursalesAPI.crear('sugerido', items);
+    const operacionId = operationIdFor('sugerido', items);\n    await window.PedidosSucursalesAPI.crear('sugerido', items, null, operacionId);\n    state.pendingOperation = null;
     state.mode = 'historial';
     await loadOrders('historial');
     render();
@@ -128,7 +139,7 @@
     const items = window.PedidosSucursalesUrgente.collect(root, state.negatives);
     const reason = window.PedidosSucursalesUrgente.reason(root);
     if (!reason) throw new Error('Escribe el motivo de la urgencia.');
-    await window.PedidosSucursalesAPI.crear('urgente', items, reason);
+    const operacionId = operationIdFor('urgente', { items, reason });\n    await window.PedidosSucursalesAPI.crear('urgente', items, reason, operacionId);\n    state.pendingOperation = null;
     state.mode = 'historial';
     await loadOrders('historial');
     render();
