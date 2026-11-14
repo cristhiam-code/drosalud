@@ -1,0 +1,10 @@
+
+revoke all on public.sucursales,public.bodegas,public.usuarios_sucursales,public.sucursal_dias_pedido,
+ public.inventario_sucursal_movimientos,public.pedidos_sucursal,public.pedidos_sucursal_items,
+ public.despachos_sucursal,public.despachos_sucursal_items,public.inventario_sucursal_saldos
+from anon,authenticated;
+
+grant select on public.sucursales,public.bodegas,public.usuarios_sucursales,public.sucursal_dias_pedido,
+ public.inventario_sucursal_movimientos,public.pedidos_sucursal,public.pedidos_sucursal_items,
+ public.despachos_sucursal,public.despachos_sucursal_items,public.inventario_sucursal_saldos
+to authenticated;
