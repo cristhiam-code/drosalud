@@ -6,7 +6,7 @@
   }[c]));
   const fmt = value => (Number(value) || 0).toLocaleString('es-CO');
   const status = value => ({
-    pendiente_autorizacion:'Pendiente de revisión', aprobado:'Aprobado',
+    pendiente_autorizacion:'Pendiente', en_revision:'En revisión', aprobado:'Aprobado',
     rechazado:'Rechazado', en_preparacion:'En preparación',
     despachado:'Despachado', parcial:'Recibido parcialmente',
     recibido:'Recibido', cancelado:'Cancelado'
@@ -15,7 +15,7 @@
   window.PedidosSucursalesAutorizados = Object.freeze({
     render(orders, isAdmin) {
       const visible = orders.filter(order => isAdmin
-        ? ['pendiente_autorizacion','aprobado','en_preparacion'].includes(order.estado)
+        ? ['pendiente_autorizacion','en_revision','aprobado','en_preparacion'].includes(order.estado)
         : ['aprobado','en_preparacion','despachado','parcial'].includes(order.estado));
       return `
         <section class="ps-panel">
@@ -33,7 +33,7 @@
                   ${(order.items || []).map(item => `
                     <div class="ps-order-line"><span>${esc(item.producto_nombre)}</span>
                       <small>Solicitado: ${fmt(item.cantidad_solicitada)} · Autorizado: ${fmt(item.cantidad_autorizada)}</small>
-                      ${isAdmin && order.estado === 'pendiente_autorizacion' ? `
+                      ${isAdmin && order.estado === 'en_revision' ? `
                         <label class="ps-quantity">Cantidad a autorizar
                           <input type="number" min="0" max="${fmt(item.cantidad_solicitada)}" step="1"
                             data-ps-authorize-qty="${esc(item.id)}" value="${fmt(item.cantidad_autorizada == null ? item.cantidad_solicitada : item.cantidad_autorizada)}">
@@ -42,6 +42,8 @@
                 </div>
                 ${order.motivo_rechazo ? '<p class="ps-warning">Motivo: ' + esc(order.motivo_rechazo) + '</p>' : ''}
                 ${isAdmin && order.estado === 'pendiente_autorizacion' ? `
+                  <div class="ps-actions"><button class="ps-button" type="button" data-ps-action="iniciar-revision" data-pedido-id="${esc(order.id)}">Iniciar revisión</button></div>` : ''}
+                ${isAdmin && order.estado === 'en_revision' ? `
                   <div class="ps-actions">
                     <button class="ps-button" type="button" data-ps-action="autorizar" data-pedido-id="${esc(order.id)}">Autorizar pedido</button>
                     <button class="ps-button ps-button-danger" type="button" data-ps-action="rechazar" data-pedido-id="${esc(order.id)}">Rechazar</button>
