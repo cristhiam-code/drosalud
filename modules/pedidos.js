@@ -54,13 +54,13 @@
   async function loadSuggested() {
     const now = new Date();
     const since = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const receipts = await getAll(() => window.sb.from('recibos_app')
+    const receipts = await getAll(() => sb.from('recibos_app')
       .select('id').eq('anulado', false).gte('creado_en', since)
       .lte('creado_en', now.toISOString()).order('creado_en').order('id'));
     const sold = {};
     for (let offset = 0; offset < receipts.length; offset += 100) {
       const ids = receipts.slice(offset, offset + 100).map(row => row.id);
-      const lines = await getAll(() => window.sb.from('recibo_items_app')
+      const lines = await getAll(() => sb.from('recibo_items_app')
         .select('producto_id,cantidad,unidades_por_presentacion')
         .in('recibo_id', ids).order('id'));
       lines.forEach(line => {
@@ -71,9 +71,9 @@
     }
 
     const [balances, orders, orderItems] = await Promise.all([
-      getAll(() => window.sb.from('inventario_saldos').select('producto_id,saldo_unidades').order('producto_id')),
-      getAll(() => window.sb.from('ordenes_compra').select('id,estado').order('creado_en')),
-      getAll(() => window.sb.from('ordenes_compra_items').select('orden_id,producto_id,unidades_solicitadas,unidades_recibidas').order('creado_en'))
+      getAll(() => sb.from('inventario_saldos').select('producto_id,saldo_unidades').order('producto_id')),
+      getAll(() => sb.from('ordenes_compra').select('id,estado').order('creado_en')),
+      getAll(() => sb.from('ordenes_compra_items').select('orden_id,producto_id,unidades_solicitadas,unidades_recibidas').order('creado_en'))
     ]);
     const activeOrders = new Set(orders.filter(order => ['aprobada','parcial'].includes(order.estado)).map(order => order.id));
     const stock = {};
@@ -101,12 +101,12 @@
   }
 
   async function loadData() {
-    const { data: auth, error: authError } = await window.sb.auth.getUser();
+    const { data: auth, error: authError } = await sb.auth.getUser();
     if (authError) throw authError;
     if (!auth?.user) throw new Error('Inicia sesión nuevamente.');
     state.user = auth.user;
 
-    const { data: profile, error: profileError } = await window.sb.from('usuarios_drosalud')
+    const { data: profile, error: profileError } = await sb.from('usuarios_drosalud')
       .select('rol,activo').eq('user_id', auth.user.id).maybeSingle();
     if (profileError) throw profileError;
     if (!profile || profile.activo !== true || !['admin','vendedor'].includes(profile.rol)) {
@@ -115,12 +115,12 @@
     state.role = profile.rol;
 
     const [products, providers, pedidos] = await Promise.all([
-      getAll(() => window.sb.from('productos_app')
+      getAll(() => sb.from('productos_app')
         .select('id,codigo,nombre,laboratorio,precio_compra,unidades_por_caja,unidades_por_venta')
         .order('nombre').order('id')),
-      getAll(() => window.sb.from('proveedores').select('id,nombre,activo')
+      getAll(() => sb.from('proveedores').select('id,nombre,activo')
         .eq('activo', true).order('nombre')),
-      getAll(() => window.sb.from('pedidos_resumen').select('*').order('creado_en', { ascending:false }))
+      getAll(() => sb.from('pedidos_resumen').select('*').order('creado_en', { ascending:false }))
     ]);
     state.products = products || [];
     state.providers = providers || [];
@@ -128,14 +128,14 @@
 
     const ids = state.pedidos.map(row => row.id);
     if (ids.length) {
-      state.items = await getAll(() => window.sb.from('pedidos_items')
+      state.items = await getAll(() => sb.from('pedidos_items')
         .select('*').in('pedido_id', ids).order('creado_en'));
     } else state.items = [];
 
     const [orders, orderItems] = await Promise.all([
-      getAll(() => window.sb.from('ordenes_compra').select('id,numero,pedido_id,proveedor_id,estado,creado_en')
+      getAll(() => sb.from('ordenes_compra').select('id,numero,pedido_id,proveedor_id,estado,creado_en')
         .order('creado_en', { ascending:false })),
-      getAll(() => window.sb.from('ordenes_compra_items')
+      getAll(() => sb.from('ordenes_compra_items')
         .select('id,orden_id,pedido_item_id,producto_id,unidades_solicitadas,unidades_recibidas,costo_unitario_base')
         .order('creado_en'))
     ]);
@@ -468,7 +468,7 @@
 
   async function savePedido(items, tipo, notas, existingId = null) {
     if (!items.length) throw new Error('Agrega al menos un producto con cantidad mayor que cero.');
-    const { data, error } = await window.sb.rpc('guardar_pedido', {
+    const { data, error } = await sb.rpc('guardar_pedido', {
       p_pedido_id: existingId,
       p_tipo: tipo,
       p_notas: notas || null,
@@ -481,7 +481,7 @@
   async function saveSuggested(send) {
     const items = readSuggestedItems();
     const id = await savePedido(items,'sugerido','Propuesta automática de rotación · cobertura de 7 días');
-    if (send) await window.sb.rpc('enviar_pedido',{p_pedido_id:id}).then(({error}) => { if(error) throw error; });
+    if (send) await sb.rpc('enviar_pedido',{p_pedido_id:id}).then(({error}) => { if(error) throw error; });
     state.mode = 'seguimiento';
     await reload();
     message(send ? 'Pedido sugerido enviado a autorización.' : 'Pedido sugerido guardado como borrador.');
@@ -500,7 +500,7 @@
     }));
     const id = await savePedido(items,tipo,notas,state.editing?.id || null);
     if (send) {
-      const {error} = await window.sb.rpc('enviar_pedido',{p_pedido_id:id});
+      const {error} = await sb.rpc('enviar_pedido',{p_pedido_id:id});
       if (error) throw error;
     }
     state.editing = null;
@@ -532,7 +532,7 @@
         producto_id:product?.id || item.producto_id || null
       };
     });
-    const {error} = await window.sb.rpc('autorizar_pedido',{
+    const {error} = await sb.rpc('autorizar_pedido',{
       p_pedido_id:pedidoId,p_items:items
     });
     if (error) throw error;
@@ -544,7 +544,7 @@
     const reason = window.prompt('Motivo del rechazo:');
     if (reason === null) return;
     if (!reason.trim()) throw new Error('Escribe el motivo del rechazo.');
-    const {error} = await window.sb.rpc('rechazar_pedido',{
+    const {error} = await sb.rpc('rechazar_pedido',{
       p_pedido_id:pedidoId,p_motivo:reason.trim()
     });
     if (error) throw error;
@@ -571,7 +571,7 @@
     if (!assignments.length) throw new Error('No hay cantidades pendientes para asignar.');
     const operationId = state.operationIds[pedidoId] || crypto.randomUUID();
     state.operationIds[pedidoId] = operationId;
-    const {data,error} = await window.sb.rpc('generar_ordenes_compra_pedido',{
+    const {data,error} = await sb.rpc('generar_ordenes_compra_pedido',{
       p_pedido_id:pedidoId,p_asignaciones:assignments,p_operacion_id:operationId
     });
     if (error) throw error;
@@ -699,7 +699,7 @@
       } else if (action === 'edit') {
         editPedido(button.dataset.pedidoId);
       } else if (action === 'send') {
-        const {error} = await window.sb.rpc('enviar_pedido',{p_pedido_id:button.dataset.pedidoId});
+        const {error} = await sb.rpc('enviar_pedido',{p_pedido_id:button.dataset.pedidoId});
         if (error) throw error;
         await reload(); message('Pedido enviado a autorización.');
       } else if (action === 'authorize') {
@@ -743,7 +743,7 @@
     state.loading = true;
     root.innerHTML = '<div class="pedidos-loading">Cargando pedidos y calculando reposición…</div>';
     try {
-      if (!window.sb) throw new Error('No se encontró la conexión con Supabase.');
+      if (!sb) throw new Error('No se encontró la conexión con Supabase.');
       await loadData();
       render();
     } catch (error) {
