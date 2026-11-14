@@ -16,6 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="modules/pedidos.css">
+<link rel="stylesheet" href="modules/recepcion-mercancia.css">
 <style>
 :root{--bg:#F4F8FF;--card:#FFFFFF;--ink:#17365C;--mut:#718096;--line:#DCE7F1;--pri:#0756B5;--pri-ink:#FFFFFF;--soft:#E7F2FC;--gain:#22B573;--bad:#C62828;--secondary:#08A9D6;--accent:#22B573;--nav-bg:#FFFFFF;--nav-ink:#17365C;--hover:#E7F2FC;--selected:#D8EAFE;--focus:#08A9D6;--warning:#D97706;--success:#22B573;color-scheme:light;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -556,12 +557,7 @@ nav button{font-size:.78rem}
  <div id="pedidos-app"><p class="mut sm">Abriendo módulo de pedidos…</p></div>
 </section>
 <section id="v-recepcion" hidden>
- <h2>Recepción de mercancía</h2><p class="mut sm">Registra únicamente productos que ya llegaron físicamente a Bodega.</p>
- <label for="inv-prod-search">Buscar producto por nombre o código</label><input id="inv-prod-search" type="search" placeholder="Escribe nombre o código…" autocomplete="off"><div id="inv-prod-results" role="listbox"></div><p class="mut sm" id="inv-prod-selected">Selecciona un producto del catálogo.</p><select id="inv-prod" hidden><option value="">Seleccionar producto</option></select>
- <label for="inv-unidades">Unidades individuales recibidas</label><input id="inv-unidades" type="number" min="1" step="1" inputmode="numeric" placeholder="Ej. 30">
- <label for="inv-notas">Nota (opcional)</label><input id="inv-notas" maxlength="500" placeholder="Proveedor, factura o referencia">
- <button class="btn full" id="inv-recibir" type="button">Registrar recepción física</button>
- <p class="mut sm" id="recep-status" aria-live="polite">Marcar una compra como comprada no modifica las existencias.</p>
+ <div id="recepcion-mercancia-app"><p class="mut sm">Abriendo recepción de mercancía…</p></div>
 </section>
 <section id="v-cli" hidden>
  <div class="seg"><button data-cv="todos" aria-pressed="true">Todos</button><button data-cv="ret" aria-pressed="false">Para retomar</button></div>
@@ -959,9 +955,8 @@ async function loadPedidos(){
  }
 }
 async function loadRecepcion(){
- $('#recep-status').textContent='Cargando catálogo…';
- try{await invCargarDatos();$('#recep-status').textContent='Selecciona el producto y registra solo las unidades que llegaron físicamente.'}
- catch(e){console.error(e);$('#recep-status').textContent='No se pudo cargar el catálogo: '+(e.message||'')}
+ if(!window.DrosaludRecepcionMercancia){$('#recepcion-mercancia-app').textContent='No se pudo cargar el módulo de recepción. Actualiza la página e inténtalo de nuevo.';return}
+ await window.DrosaludRecepcionMercancia.load();
 }
 async function invRegistrarRecepcion(){
  const id=$('#inv-prod').value,u=Number($('#inv-unidades').value),nota=$('#inv-notas').value.trim();
@@ -990,7 +985,7 @@ vistaInventario.addEventListener('change',e=>{
 });
 $('#inv-q').addEventListener('input',()=>{invRenderLabs();invRenderInforme()});
 document.querySelector('#v-pedidos').addEventListener('click',e=>{if(e.target.closest('#inv-print'))invImprimirPedido()});
-document.querySelector('#v-recepcion').addEventListener('click',e=>{if(e.target.closest('#inv-recibir'))invRegistrarRecepcion()});
+
 
 let syncChannel=null,syncTimer=null,realtimeRequested=false;
 function syncStatus(message){const el=$('#sync-state');if(el)el.textContent=message}
@@ -1670,5 +1665,6 @@ showLogin();
 </script>
 
 <script src="modules/pedidos.js"></script>
+<script src="modules/recepcion-mercancia.js"></script>
 </body>
 </html>
