@@ -14,7 +14,7 @@ No se ejecutaron escrituras, migraciones, cambios de permisos ni modificaciones 
 
 ### Historial de migraciones
 
-- Producción tiene **32 versiones** registradas.
+- Producción tiene **33 versiones** registradas.
 - Última versión: `20261112223131_compras_rls_rpc`.
 - El repositorio no contiene el SQL original de varias migraciones históricas. Entre las ausentes comprobadas están:
 
@@ -81,7 +81,7 @@ Las funciones de recepción y las de creación/aprobación de órdenes son `SECU
 
 ## 2. Diferencias reales entre producción y QA
 
-QA tiene **45 versiones** de migración, frente a las 32 de producción. Incluye migraciones de reconstrucción/semilla del entorno de pruebas, correcciones QA y Pedidos. Por eso los historiales no son comparables como si fueran dos copias idénticas.
+En la inspección inicial QA tenía **45 versiones** de migración, frente a las 33 de producción. Después se aplicaron cuatro migraciones adicionales de alineación/prueba, por lo que QA quedó con 49. Incluye migraciones de reconstrucción/semilla del entorno de pruebas, correcciones QA y Pedidos. Por eso los historiales no son comparables como si fueran dos copias idénticas.
 
 ### Diferencias de esquema vinculadas a Pedidos
 
@@ -271,3 +271,28 @@ Esta alineación cubre los objetos de POS, Compras, Recepción, productos e inve
 - Vistas de aplicación y visibilidad de costos/ganancias: QA alineado con producción.
 - Pedidos: sigue siendo la extensión exclusiva de QA.
 - Producción: sin escrituras, sin migraciones, sin cambios de datos ni despliegues.
+
+
+## 8. Migración candidata de transición productiva probada en QA
+
+Se detectó y corrigió un problema de trazabilidad: `20261114182004_pedidos_release_consolidated_20261114.sql` ya había sido aplicada en QA, por lo que se restauró en GitHub exactamente el contenido original aplicado (no se deja una migración histórica editada después de su ejecución).
+
+A partir de ese contenido se generó una migración de avance independiente:
+`20261114184200_pedidos_production_transition.sql`
+
+Esta versión:
+- Crea/asegura el esquema, constraints, índices, políticas, vista y RPC de Pedidos.
+- Mantiene los permisos nuevos de autorización/rechazo/generación desde Pedidos solo para administrador.
+- No reemplaza `crear_orden_compra` ni `aprobar_orden_compra`; conserva las definiciones productivas existentes.
+- No reemplaza `registrar_recepcion_compra`.
+- Es idempotente respecto a los objetos Pedidos ya creados en QA.
+
+Se aplicó esta migración en QA y quedó registrada como `20261114184200`. Prueba transaccional posterior:
+- Vendedor: pudo crear y aprobar una orden independiente.
+- Vendedor: pudo crear y enviar un Pedido.
+- Vendedor: no pudo autorizar el Pedido.
+- El bloque revirtió todas las operaciones de prueba.
+
+Verificación posterior: las huellas de las tres funciones productivas de Compras siguen coincidiendo entre producción y QA. Producción conserva 33 migraciones, con última versión `20261112223131`; QA tiene 49. No se ejecutó ninguna migración ni escritura en producción.
+
+**La migración `20261114184200` es la candidata de transición para producción, no una autorización de despliegue.** Su ejecución productiva queda pendiente de aprobación explícita, respaldo y última revisión del historial.
