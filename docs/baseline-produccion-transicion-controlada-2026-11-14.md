@@ -213,3 +213,61 @@ En la rama `release/qa-candidate-2026-11-14`:
 - La autorización/rechazo de Pedidos y la generación de órdenes desde Pedidos siguen siendo operaciones exclusivas del administrador.
 
 Estos cambios preservan el flujo de Compras existente y separan sus permisos de las nuevas reglas del módulo Pedidos. No se desplegó a producción.
+
+
+## 7. Segunda pasada de alineación de esquema y vistas en QA
+
+La comparación de catálogos completos detectó diferencias adicionales que se corrigieron únicamente en QA.
+
+### Reglas de la tabla productos
+
+Antes, QA permitía NULL en `precio_compra`, `actualizado_en`, `fraccionable`, `unidades_por_caja` y `unidades_por_venta`, y además tenía default `0` para `precio_compra`. Producción exige esos campos NOT NULL y no asigna default a `precio_compra`.
+
+Se comprobó que las 1.198 filas de productos QA tenían cero NULL en esos cinco campos. Se aplicó:
+`20261114183958_qa_align_shared_inventory_schema_with_production`
+
+La migración quitó el default de `precio_compra`, aplicó NOT NULL y agregó los índices operativos de producción que faltaban en QA:
+- `idx_movimientos_proveedor`
+- `idx_ordenes_compra_proveedor_estado`
+- `idx_recepciones_compra_items_producto`
+
+Los índices equivalentes de QA con nombres distintos se conservaron; también se conservó el índice adicional QA para operaciones de ajuste de inventario. No se eliminaron índices de pruebas ni se tocaron datos.
+
+### Vistas de aplicación y visibilidad del negocio
+
+La comparación de todas las vistas encontró cuatro diferencias importantes: QA ocultaba `precio_compra`, `costo_real_unitario`, `ganancia` y `costo_mensajero` a vendedores, mientras producción los entrega a todo usuario activo del equipo. Esto no reflejaba el comportamiento real ni la decisión operativa de Drosalud.
+
+Se restauraron en QA las definiciones SQL productivas exactas de:
+- `cotizacion_venta_items_app`
+- `cotizaciones_venta_app`
+- `recibo_items_app`
+- `recibos_app`
+
+Migración aplicada:
+`20261114184103_qa_restore_production_app_views_business_visibility`
+
+Las cuatro vistas siguen configuradas con `security_invoker=true`. La comparación de todas las vistas ahora muestra que las seis vistas existentes en producción coinciden con QA en definición y opciones; QA conserva únicamente la vista nueva `pedidos_resumen`. `productos_app` e `inventario_saldos` ya coincidían.
+
+### Resultado de alineación
+
+En los objetos compartidos revisados:
+- Las columnas de `productos` ya coinciden en tipo, nulabilidad y default; el orden físico de columnas no es funcionalmente relevante.
+- Las columnas adicionales de QA quedan limitadas a los enlaces de Pedidos en órdenes/cotizaciones.
+- Los constraints y políticas adicionales de QA corresponden a Pedidos.
+- Los índices productivos revisados están presentes en QA; QA conserva índices adicionales propios de Pedidos y de pruebas de ajustes.
+- Los triggers de las tablas compartidas revisadas coinciden.
+- Las tres funciones RPC de Compras restauradas tienen definiciones y permisos idénticos a producción.
+- Las vistas de aplicación existentes en producción ya coinciden con QA.
+
+Los datos siguen separados: QA tiene 1.198 productos de prueba frente a 1.189 productos productivos. No se copiaron filas entre entornos.
+
+Esta alineación cubre los objetos de POS, Compras, Recepción, productos e inventario consultados en esta auditoría; no significa que los historiales de migraciones sean idénticos ni que toda la base esté certificada como idéntica.
+
+## Estado actualizado
+
+- Baseline productivo de solo lectura: documentado.
+- RPC de Compras: QA restaurado a la definición productiva y verificado por huella.
+- Reglas de columnas e índices operativos: QA alineado con producción en los objetos revisados.
+- Vistas de aplicación y visibilidad de costos/ganancias: QA alineado con producción.
+- Pedidos: sigue siendo la extensión exclusiva de QA.
+- Producción: sin escrituras, sin migraciones, sin cambios de datos ni despliegues.
