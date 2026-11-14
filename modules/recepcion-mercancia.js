@@ -27,15 +27,23 @@
     el.classList.toggle('rm-error', !!error);
   }
 
-  function exportCsv() {
+  function exportExcel() {
+    if (typeof XLSX === 'undefined' || !XLSX.utils?.aoa_to_sheet) {
+      status('No está disponible la librería de Excel. Recarga la página e inténtalo de nuevo.', true);
+      return;
+    }
+    const safe = value => {
+      const text = String(value ?? '');
+      return /^[=+@\-\t\r]/.test(text) ? "'" + text : text;
+    };
     const rows = [
       ['N° Remisión/Factura','Fecha','Proveedor','Cantidad de Productos','Valor Total','Estado'],
       ...[
         ...pending.map(order => [
-          order.documento_proveedor || 'Pendiente de documento',
+          order.documento_proveedor || ('Orden #' + order.numero + ' · pendiente de remisión'),
           order.creado_en, order.proveedor?.nombre || 'Proveedor',
-          (order.items || []).filter(x => x.unidades_solicitadas > x.unidades_recibidas).length,
-          (order.items || []).reduce((sum, x) => sum + Math.max(0, x.unidades_solicitadas - x.unidades_recibidas) * Number(x.costo_unitario_base || 0), 0),
+          (order.items || []).filter(x => Number(x.unidades_solicitadas) > Number(x.unidades_recibidas)).length,
+          (order.items || []).reduce((sum, x) => sum + Math.max(0, Number(x.unidades_solicitadas) - Number(x.unidades_recibidas)) * Number(x.costo_unitario_base || 0), 0),
           'Pendiente por cargar'
         ]),
         ...loaded.map(receipt => [
@@ -45,17 +53,13 @@
           (receipt.items || []).reduce((sum, x) => sum + Number(x.unidades || 0) * Number(x.costo_unitario_base || 0), 0),
           'Cargado al inventario'
         ])
-      ]
+      ].map(row => row.map(safe))
     ];
-    const csv = '\uFEFF' + rows.map(row => row.map(value => {
-      let v = value ?? '';
-      if (typeof v === 'string' && /^[=+@\-\t\r]/.test(v)) v = "'" + v;
-      return '"' + String(v).replace(/"/g, '""') + '"';
-    }).join(';')).join('\r\n');
-    const url = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}));
-    const a = document.createElement('a');
-    a.href = url; a.download = 'remisiones-compra-drosalud.csv'; a.click();
-    URL.revokeObjectURL(url);
+    const workbook = XLSX.utils.book_new();
+    const sheet = XLSX.utils.aoa_to_sheet(rows);
+    sheet['!cols'] = [{wch:26},{wch:14},{wch:28},{wch:22},{wch:18},{wch:24}];
+    XLSX.utils.book_append_sheet(workbook, sheet, 'Remisiones');
+    XLSX.writeFile(workbook, 'remisiones-compra-drosalud.xlsx');
   }
 
   async function fetchData() {
@@ -118,7 +122,7 @@
             <h2>Recepción de mercancía / Remisiones de compra</h2>
             <p>Verifica lo recibido del proveedor antes de cargarlo al inventario.</p>
           </div>
-          <button class="btn alt" type="button" data-rm-export>⇩ Exportar a Excel</button>
+          <button class="btn alt" type="button" data-rm-export><span aria-hidden="true">▦</span> Exportar a Excel</button>
         </header>
         <p class="mut sm" data-rm-count></p>
         <p class="mut sm" data-rm-status role="status"></p>
@@ -236,7 +240,7 @@
 
   root.addEventListener('click', event => {
     const exportButton = event.target.closest('[data-rm-export]');
-    if (exportButton) return exportCsv();
+    if (exportButton) return exportExcel();
     const openButton = event.target.closest('[data-rm-open]');
     if (openButton) {
       const order = pending.find(item => item.id === openButton.dataset.rmOpen);
