@@ -1131,7 +1131,7 @@ showLogin();
 (async()=>{try{const{data,error}=await sb.auth.getSession();if(error)throw error;if(data.session)await start()}catch(e){console.error('No se pudo comprobar la sesión al iniciar:',e);showLogin()}})();
 </script>
 
-<script src="modules/caja.js"></script>
+
 <script src="modules/compras.js"></script>
 
 <script src="modules/ordenes-compra.js"></script>
