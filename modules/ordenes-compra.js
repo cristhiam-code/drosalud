@@ -9,7 +9,7 @@
   const box=$('#oc-list');if(!box)return;
   box.innerHTML=ordenes.length?ordenes.map(o=>{
    const p=(window.__ocProviders||[]).find(x=>x.id===o.proveedor_id);
-   return '<article class="item"><div class="top"><b>Orden #'+o.numero+'</b><span>'+esc(o.estado)+'</span></div><p class="sm">'+esc(p?.nombre||'Proveedor')+' · '+esc(o.documento_proveedor||'Sin documento')+'</p><div class="acts">'+(o.estado==='borrador'&&window.__drosaludRole==='admin'?'<button class="btn alt full" data-oc-approve="'+o.id+'">Aprobar orden</button>':'')+(o.estado==='aprobada'||o.estado==='parcial'?'<button class="btn full" data-oc-receive="'+o.id+'">Registrar recepción</button>':'')+'</div></article>';
+   return '<article class="item"><div class="top"><b>Orden #'+o.numero+'</b><span>'+esc(o.estado)+'</span></div><p class="sm">'+esc(p?.nombre||'Proveedor')+' · '+esc(o.documento_proveedor||'Sin documento')+'</p><div class="acts">'+(o.estado==='borrador'?'<button class="btn alt full" data-oc-approve="'+o.id+'">Aprobar orden</button>':'')+(o.estado==='aprobada'||o.estado==='parcial'?'<button class="btn full" data-oc-receive="'+o.id+'">Registrar recepción</button>':'')+'</div></article>';
   }).join(''):'<p class="mut sm">Todavía no hay órdenes de compra.</p>';
  }
  async function cargarProveedores(){const {data,error}=await sb.from('proveedores').select('id,nombre,activo').eq('activo',true).order('nombre');if(error)throw error;window.__ocProviders=data||[];return data||[]}
@@ -22,7 +22,6 @@
    return !n||normalizarBusqueda([p.nombre,p.laboratorio,p.codigo].join(' ')).includes(n)||(dig.length>=4&&codigo.includes(dig));
   }
  async function nuevaOrden(){
-  if(window.__drosaludRole!=='admin')throw new Error('Solo el administrador puede crear órdenes de compra.');
   const providers=await cargarProveedores();
   if(!providers.length)throw new Error('Primero registra un proveedor activo.');
   if(!P.length)throw new Error('No se pudo cargar el catálogo.');
@@ -82,7 +81,7 @@
    cerrar();await cargarOrdenes();alert('Orden creada como borrador.');
   };
  }
- async function aprobar(id){if(window.__drosaludRole!=='admin')throw new Error('Solo el administrador puede aprobar órdenes de compra.');const {error}=await sb.rpc('aprobar_orden_compra',{p_orden_id:id});if(error)throw error;await cargarOrdenes()}
+ async function aprobar(id){const {error}=await sb.rpc('aprobar_orden_compra',{p_orden_id:id});if(error)throw error;await cargarOrdenes()}
  async function recibir(id){
   const operationId=crypto.randomUUID();
   const {data:items,error}=await sb.from('ordenes_compra_items').select('id,producto_id,unidades_solicitadas,unidades_recibidas,costo_unitario_base,productos(nombre,codigo)').eq('orden_id',id);
