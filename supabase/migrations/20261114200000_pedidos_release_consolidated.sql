@@ -2,8 +2,6 @@
 -- Se puede aplicar sobre QA (donde los objetos ya existen) y producción (donde faltan).
 -- No escribe pedidos, órdenes, recepciones, inventario ni movimientos.
 -- Debe ejecutarse después de las migraciones de Compras existentes.
-begin;
-
 -- Módulo PEDIDOS: solicitudes internas, autorización y generación atómica de órdenes.
 -- Ejecutar primero en drosalud-pruebas. No modifica saldos ni movimientos de inventario.
 
@@ -833,6 +831,3 @@ $function$;
 
 revoke all on function public.generar_ordenes_compra_pedido(uuid,jsonb,uuid) from public, anon, authenticated;
 grant execute on function public.generar_ordenes_compra_pedido(uuid,jsonb,uuid) to authenticated;
-
-
-commit;
