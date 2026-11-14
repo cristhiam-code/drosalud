@@ -254,42 +254,62 @@
       `<option value="${esc(product.nombre)}" label="${esc([product.codigo,product.laboratorio].filter(Boolean).join(' · '))}"></option>`
       + (product.codigo ? `<option value="${esc(product.codigo)}" label="${esc(product.nombre)}"></option>` : '')
     ).join('');
-    const lines = state.formItems.map((item,index) => `
-      <article class="pedidos-form-line">
+    const formatBoxes = value => Number(value || 0).toLocaleString('es-CO',{maximumFractionDigits:2});
+    const lines = state.formItems.map((item,index) => {
+      if (urgentMode) {
+        const product = state.products.find(row => row.id === item.producto_id);
+        const packageUnits = Math.max(1,Number(product?.unidades_por_caja) || 1);
+        return `<tr>
+          <td><strong>${esc(product?.codigo || '—')}</strong></td>
+          <td>${esc(product?.nombre || item.producto_nombre)}</td>
+          <td>${units(packageUnits)}</td>
+          <td>${formatBoxes(Number(item.cantidad_solicitada) / packageUnits)}</td>
+          <td><button type="button" class="pedidos-remove" data-action="remove-line" data-index="${index}" aria-label="Quitar producto">×</button></td>
+        </tr>`;
+      }
+      return `<article class="pedidos-form-line">
         <div><b>${esc(item.producto_nombre)}</b><small>${item.producto_id ? 'Producto del catálogo' : 'Producto por vincular al catálogo'}</small></div>
         <span>${units(item.cantidad_solicitada)} unidades</span>
         <button type="button" class="pedidos-remove" data-action="remove-line" data-index="${index}" aria-label="Quitar producto">×</button>
-      </article>`).join('');
+      </article>`;
+    }).join('');
     const modeLabel = state.editing ? (state.editing.tipo === 'sugerido' ? 'Pedido sugerido' : state.editing.tipo === 'urgente' ? 'Pedido urgente' : 'Pedido extraordinario')
       : state.mode === 'urgente' ? 'Pedido urgente' : 'Pedido extraordinario';
     return `
       <section class="pedidos-panel">
         <div class="pedidos-section-title"><div><h3>${modeLabel}</h3>
-          <p>${state.editing ? 'Edita el borrador y guarda los cambios.' : state.mode === 'urgente' ? 'Registra un agotado o una solicitud inmediata de un cliente.' : 'Solicita cantidades adicionales o incorpora productos.'}</p></div>
+          <p>${urgentMode ? 'Selecciona únicamente productos con inventario negativo y define cuántas cajas necesitas.' : state.editing ? 'Edita el borrador y guarda los cambios.' : 'Solicita cantidades adicionales o incorpora productos.'}</p></div>
           ${editing ? '<span class="pedidos-tag">Editando borrador</span>' : ''}</div>
         <button type="button" class="pedidos-back-link" data-action="back-home">‹ Volver a pedidos</button>
         <div class="pedidos-form-grid">
           <div class="pedidos-field pedidos-field-wide">
             <label for="ped-product-name">${urgentMode ? 'Producto con inventario negativo' : 'Producto del catálogo o nombre libre'}</label>
-            <input id="ped-product-name" list="ped-product-options" placeholder="${urgentMode ? 'Busca un producto con saldo menor a cero' : 'Busca por nombre o escribe el producto'}">
+            <input id="ped-product-name" list="ped-product-options" placeholder="${urgentMode ? 'Busca por código o nombre' : 'Busca por nombre o escribe el producto'}">
             <datalist id="ped-product-options">${options}</datalist>
-            <small>${urgentMode ? 'Solo se permiten productos cuyo inventario actual sea negativo.' : 'Si no está en el catálogo, puedes escribirlo. Para generar una orden deberá vincularse después.'}</small>
+            <small>${urgentMode ? 'La lista solo incluye productos cuyo saldo actual es menor que cero.' : 'Si no está en el catálogo, puedes escribirlo. Para generar una orden deberá vincularse después.'}</small>
           </div>
           <div class="pedidos-field">
-            <label for="ped-product-qty">Cantidad solicitada (unidades)</label>
+            <label for="ped-product-qty">${urgentMode ? 'Cajas a solicitar' : 'Cantidad solicitada (unidades)'}</label>
             <input id="ped-product-qty" type="number" min="1" step="1" value="1" inputmode="numeric">
-          </div>
-          <div class="pedidos-field pedidos-field-wide">
-            <label for="ped-product-reason">Motivo / justificación</label>
-            <input id="ped-product-reason" maxlength="500" placeholder="Ej. Cliente lo solicitó / producto agotado">
           </div>
         </div>
         <button type="button" class="btn alt" data-action="add-line">Agregar producto al pedido</button>
-        <div class="pedidos-form-lines">${lines || '<p class="pedidos-empty">Agrega al menos un producto.</p>'}</div>
-        <div class="pedidos-field">
-          <label for="ped-notes">Notas generales (opcional)</label>
-          <textarea id="ped-notes" rows="2" maxlength="1000">${esc(state.editing?.notas || '')}</textarea>
-        </div>
+        ${urgentMode ? `
+          <div class="pedidos-urgent-table-wrap">
+            <table class="pedidos-urgent-table">
+              <thead><tr><th>Producto</th><th>Descripción</th><th>Cant Empaq</th><th>Cajas</th><th aria-label="Quitar"></th></tr></thead>
+              <tbody>${lines || '<tr><td colspan="5" class="pedidos-empty">Agrega al menos un producto.</td></tr>'}</tbody>
+            </table>
+          </div>` : `
+          <div class="pedidos-form-lines">${lines || '<p class="pedidos-empty">Agrega al menos un producto.</p>'}</div>
+          <div class="pedidos-field">
+            <label for="ped-product-reason">Motivo / justificación</label>
+            <input id="ped-product-reason" maxlength="500" placeholder="Ej. Nueva referencia / oportunidad comercial">
+          </div>
+          <div class="pedidos-field">
+            <label for="ped-notes">Notas generales (opcional)</label>
+            <textarea id="ped-notes" rows="2" maxlength="1000">${esc(state.editing?.notas || '')}</textarea>
+          </div>`}
         <div class="pedidos-actions">
           <button type="button" class="btn alt" data-action="save-draft">Guardar borrador</button>
           <button type="button" class="btn" data-action="save-send">Guardar y enviar a autorización</button>
@@ -516,13 +536,14 @@
 
   async function saveManual(send) {
     const tipo = state.editing?.tipo || state.mode;
-    const notas = root.querySelector('#ped-notes')?.value.trim() || '';
+    const urgente = tipo === 'urgente';
+    const notas = urgente ? '' : (root.querySelector('#ped-notes')?.value.trim() || '');
     const items = state.formItems.map(item => ({
       ...(item.id ? {id:item.id} : {}),
       producto_id:item.producto_id || null,
       producto_nombre:item.producto_nombre,
       cantidad_solicitada:item.cantidad_solicitada,
-      justificacion:item.justificacion || null,
+      justificacion:tipo === 'urgente' ? null : (item.justificacion || null),
       costo_estimado:item.costo_estimado ?? null
     }));
     const id = await savePedido(items,tipo,notas,state.editing?.id || null);
@@ -716,23 +737,25 @@
       } else if (action === 'add-line') {
         const nameInput = root.querySelector('#ped-product-name');
         const quantity = Number(root.querySelector('#ped-product-qty')?.value);
-        const reason = root.querySelector('#ped-product-reason')?.value.trim() || '';
+        const reason = urgentMode ? '' : (root.querySelector('#ped-product-reason')?.value.trim() || '');
         const name = nameInput?.value.trim() || '';
         if (!name) throw new Error('Escribe o selecciona un producto.');
-        if (!Number.isInteger(quantity) || quantity <= 0) throw new Error('La cantidad debe ser un entero mayor que cero.');
+        if (!Number.isInteger(quantity) || quantity <= 0) throw new Error(urgentMode ? 'La cantidad de cajas debe ser un entero mayor que cero.' : 'La cantidad debe ser un entero mayor que cero.');
         const product = resolveProduct(name);
         const urgentMode = state.mode === 'urgente' || state.editing?.tipo === 'urgente';
         if (urgentMode && (!product || !state.negativeProducts.some(row => row.id === product.id))) {
           throw new Error('El pedido urgente solo admite productos con inventario negativo. Actualiza los datos e inténtalo de nuevo.');
         }
         const productName = product?.nombre || name;
+        const packageUnits = urgentMode ? Math.max(1,Number(product?.unidades_por_caja) || 1) : 1;
+        const requestedUnits = urgentMode ? quantity * packageUnits : quantity;
         const existing = state.formItems.find(item => product
           ? item.producto_id === product.id
           : !item.producto_id && norm(item.producto_nombre) === norm(productName));
-        if (existing) existing.cantidad_solicitada += quantity;
+        if (existing) existing.cantidad_solicitada += requestedUnits;
         else state.formItems.push({
           producto_id:product?.id || null,producto_nombre:productName,
-          cantidad_solicitada:quantity,justificacion:reason,costo_estimado:null
+          cantidad_solicitada:requestedUnits,justificacion:reason || null,costo_estimado:null
         });
         renderPanel();
         message(product ? 'Producto agregado desde el catálogo.' : 'Producto agregado como texto; deberá vincularse al catálogo para generar una orden.');
