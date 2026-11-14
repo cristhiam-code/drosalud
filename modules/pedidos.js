@@ -484,9 +484,21 @@
     if (send) {
       const {error} = await sb.rpc('enviar_pedido',{p_pedido_id:id});
       if (error) {
+        try {
+          await loadData();
+          const current = state.pedidos.find(pedido => pedido.id === id);
+          if (current && current.estado !== 'borrador') {
+            state.mode = 'seguimiento';
+            await reload();
+            message('Pedido sugerido enviado a autorización.');
+            return;
+          }
+        } catch (reloadError) {
+          console.warn('No se pudo verificar el estado del pedido sugerido:', reloadError);
+        }
         state.mode = 'seguimiento';
         await reload();
-        message('El borrador quedó guardado, pero no se pudo enviar. Puedes reintentar desde Seguimiento.', true);
+        message('El borrador quedó guardado, pero no se pudo confirmar el envío. Verifica su estado en Seguimiento antes de reintentar.', true);
         return;
       }
     }
@@ -510,8 +522,22 @@
     if (send) {
       const {error} = await sb.rpc('enviar_pedido',{p_pedido_id:id});
       if (error) {
+        try {
+          await loadData();
+          const current = state.pedidos.find(pedido => pedido.id === id);
+          if (current && current.estado !== 'borrador') {
+            state.editing = null;
+            state.formItems = [];
+            state.mode = 'seguimiento';
+            render();
+            message('Pedido enviado a autorización.');
+            return;
+          }
+        } catch (reloadError) {
+          console.warn('No se pudo verificar el estado del pedido:', reloadError);
+        }
         state.editing = {id,tipo};
-        message('El borrador quedó guardado, pero no se pudo enviar. Reintenta el envío sin crear otro pedido.', true);
+        message('El borrador quedó guardado, pero no se pudo confirmar el envío. Verifica su estado en Seguimiento antes de reintentar.', true);
         return;
       }
     }
