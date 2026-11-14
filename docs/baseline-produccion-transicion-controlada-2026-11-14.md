@@ -178,3 +178,38 @@ Solo con aprobación explícita:
 - Cambios en producción: **ninguno**.
 - Migración lista para producción: **pendiente de ajuste y regresión**.
 - Publicación: **no autorizada ni ejecutada**.
+
+
+## 5. Alineación aplicada en QA después del baseline
+
+Para evitar que el entorno de pruebas cambie el comportamiento de Compras que hoy existe en producción, se aplicó únicamente en QA la migración:
+
+`20261114183822_qa_restore_production_purchase_rpc_behavior`
+
+Archivo versionado:
+`supabase/migrations/20261114183822_qa_restore_production_purchase_rpc_behavior.sql`
+
+La migración restaura en QA las definiciones productivas exactas de:
+- `crear_orden_compra`
+- `aprobar_orden_compra`
+- `registrar_recepcion_compra`
+
+Verificación posterior: las tres funciones tienen la misma huella MD5 de `pg_get_functiondef` en ambos proyectos y conservan los mismos permisos (`authenticated` sí; `anon` y `PUBLIC` no).
+
+Prueba transaccional QA (revertida al finalizar):
+- Un usuario simulado como vendedor pudo crear y aprobar una orden independiente, igual que permite producción.
+- Ese vendedor pudo crear y enviar un Pedido.
+- El mismo vendedor recibió denegación al intentar autorizar el Pedido; esa acción continúa reservada al administrador.
+- La prueba se ejecutó dentro de un bloque transaccional que revirtió la orden, el pedido y el cambio temporal de rol.
+
+Después de la prueba, QA mantuvo sus conteos previos: 0 pedidos, 2 órdenes, 1 recepción y 11 movimientos de inventario. Producción no recibió cambios.
+
+## 6. Ajustes en el código candidato para conservar Compras
+
+En la rama `release/qa-candidate-2026-11-14`:
+- Se retiró la restricción visual `data-admin-only` del botón de creación de órdenes independientes.
+- Se retiraron los bloqueos de rol de la creación y aprobación de órdenes independientes en el código activo de `index.html` y en la copia de `modules/ordenes-compra.js`.
+- La migración consolidada de Pedidos ya no reemplaza las funciones productivas `crear_orden_compra` ni `aprobar_orden_compra`; conserva sus permisos actuales.
+- La autorización/rechazo de Pedidos y la generación de órdenes desde Pedidos siguen siendo operaciones exclusivas del administrador.
+
+Estos cambios preservan el flujo de Compras existente y separan sus permisos de las nuevas reglas del módulo Pedidos. No se desplegó a producción.
