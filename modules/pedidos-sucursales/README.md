@@ -27,7 +27,7 @@ Este módulo NO reutiliza ni modifica `modules/pedidos.js`. Ese archivo sigue ge
 ## Reglas no negociables
 
 - Las reglas de día habilitado, inventario negativo, permisos, autorización, despacho y recepción se validan en PostgreSQL; la interfaz solo guía al usuario.
-- Una solicitud tiene un único registro y cambia de estado. Las pantallas consultan el mismo pedido; no duplican registros.
+- Una solicitud tiene un único registro y cambia de estado: Pendiente → En revisión → Aprobado o Rechazado → En preparación → Despachado → Recibido (o Parcial). Las pantallas consultan el mismo pedido; no duplican registros.
 - El despacho descuenta del inventario de la bodega central. La recepción acredita únicamente las unidades confirmadas por la sucursal.
 - Los movimientos deben ser idempotentes y auditables.
 - No se altera el módulo de compras a proveedores, Ventas ni Caja.
