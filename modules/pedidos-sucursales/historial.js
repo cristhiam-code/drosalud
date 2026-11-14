@@ -6,7 +6,7 @@
   }[c]));
   const fmt = value => (Number(value) || 0).toLocaleString('es-CO');
   const status = value => ({
-    pendiente_autorizacion:'Pendiente', aprobado:'Aprobado', rechazado:'Rechazado',
+    pendiente_autorizacion:'Pendiente', en_revision:'En revisión', aprobado:'Aprobado', rechazado:'Rechazado',
     en_preparacion:'En preparación', despachado:'Despachado',
     parcial:'Recibido parcialmente', recibido:'Recibido', cancelado:'Cancelado'
   }[value] || value || '—');
