@@ -16,6 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="modules/pedidos.css">
+<link rel="stylesheet" href="modules/pedidos-sucursales/styles.css">
 <style>
 :root{--bg:#F4F8FF;--card:#FFFFFF;--ink:#17365C;--mut:#718096;--line:#DCE7F1;--pri:#0756B5;--pri-ink:#FFFFFF;--soft:#E7F2FC;--gain:#22B573;--bad:#C62828;--secondary:#08A9D6;--accent:#22B573;--nav-bg:#FFFFFF;--nav-ink:#17365C;--hover:#E7F2FC;--selected:#D8EAFE;--focus:#08A9D6;--warning:#D97706;--success:#22B573;color-scheme:light;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -463,7 +464,8 @@ nav button{font-size:.78rem}
   <div class="home-grid">
    <button class="home-tile" data-home="venta"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/ventas.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Facturación POS</strong><small>Crear recibo y registrar venta</small></button>
    <button class="home-tile" data-home="inventario"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/inventario.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Generar Kardex</strong><small>Consultar e imprimir existencias</small></button>
-   <button class="home-tile" data-home="pedidos"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/pedidos.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Pedidos</strong><small>Preparar pedido según rotación</small></button>
+   <button class="home-tile" data-home="pedidos"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/pedidos.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Compras a proveedores</strong><small>Gestionar compras y órdenes de compra</small></button>
+   <button class="home-tile" data-home="pedidos-sucursales"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/pedidos.svg" alt="" aria-hidden="true" width="96" height="96" loading="lazy" decoding="async"></span><strong>Pedidos de sucursales</strong><small>Abastecimiento y traslados entre bodegas</small></button>
    <button class="home-tile" data-home="recepcion"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/recepcion.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Recepción</strong><small>Registrar mercancía recibida</small></button>
    <button class="home-tile" data-home="cat"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/productos.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Productos</strong><small>Consultar y administrar catálogo</small></button>
    <button class="home-tile" data-home="cli"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/clientes.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Clientes</strong><small>Consultar y retomar clientes</small></button>
@@ -553,7 +555,10 @@ nav button{font-size:.78rem}
  <p class="mut sm" id="inv-status" aria-live="polite"></p>
 </section>
 <section id="v-pedidos" hidden>
- <div id="pedidos-app"><p class="mut sm">Abriendo módulo de pedidos…</p></div>
+ <div id="pedidos-app"><p class="mut sm">Abriendo módulo de compras a proveedores…</p></div>
+</section>
+<section id="v-pedidos-sucursales" hidden>
+ <div id="pedidos-sucursales-app"><p class="mut sm">Abriendo módulo de pedidos de sucursales…</p></div>
 </section>
 <section id="v-recepcion" hidden>
  <h2>Recepción de mercancía</h2><p class="mut sm">Registra únicamente productos que ya llegaron físicamente a Bodega.</p>
@@ -1040,7 +1045,7 @@ $('#mfa-no').onclick=async()=>{try{await sb.auth.mfa.unenroll({factorId:data.id}
 $('#mfa-ok').onclick=()=>go(async()=>{const code=$('#mfa-code').value.replace(/\s/g,''),m=$('#mfa-msg');m.textContent='';if(!/^\d{6}$/.test(code)){m.textContent='Escribe los 6 dígitos del código.';return}const{error:ev}=await sb.auth.mfa.challengeAndVerify({factorId:data.id,code});if(ev){m.textContent='Código incorrecto o vencido. Revisa tu app e intenta de nuevo.';return}closeM();toast('Verificación en dos pasos activada');mfaEstado()})}
 async function mfaDesactivar(){const{data:l,error:e0}=await sb.auth.mfa.listFactors();if(e0)throw e0;const f=(l.totp||[])[0];if(!f){mfaEstado();return}if(!confirm('¿Desactivar la verificación en dos pasos? Tu cuenta quedará protegida solo con la contraseña.'))return;const{error}=await sb.auth.mfa.unenroll({factorId:f.id});if(error){toast(/aal2|assurance|verif/i.test(String(error.message))?'Para desactivarla debes haber entrado con tu código.':'No se pudo desactivar. Intenta de nuevo.');return}toast('Verificación en dos pasos desactivada');mfaEstado()}
 function showLogin(){$('#spl').hidden=true;$('#app').hidden=true;$('#rsx').hidden=true;$('#mfa').hidden=true;$('#lg').hidden=false;try{const e=localStorage.getItem('lastEmail');if(e&&!$('#em').value){$('#em').value=e;$('#pw').focus()}}catch(x){}}
-const TT={venta:'Recibo',cat:'Catálogo',cli:'Clientes',his:'Historial',cot:'Cotizaciones',aju:'Ajustes',caja:'Caja',cajahistorial:'Historial de cierres',ayuda:'Ayuda y sistema',inventario:'Generar Kardex',pedidos:'Pedidos',recepcion:'Recepción'}
+const TT={venta:'Recibo',cat:'Catálogo',cli:'Clientes',his:'Historial',cot:'Cotizaciones',aju:'Ajustes',caja:'Caja',cajahistorial:'Historial de cierres',ayuda:'Ayuda y sistema',inventario:'Generar Kardex',pedidos:'Compras a proveedores','pedidos-sucursales':'Pedidos de Sucursales',recepcion:'Recepción'}
 /*CAJA-INICIO*/
 let CJ={fecha:null,res:null,gastos:[]},savingCaja=false;
 const hoyCO=()=>new Date().toLocaleDateString('en-CA',{timeZone:'America/Bogota'});
@@ -1101,8 +1106,8 @@ function cajaClics(e){const t=e.target.closest('button');if(!t)return;if(t.datas
 function renderVentaDateTime(){const f=$('#venta-fecha'),h=$('#venta-hora');if(!f||!h)return;const now=new Date(),tz='America/Bogota';f.textContent=new Intl.DateTimeFormat('es-CO',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:tz}).format(now);h.textContent=new Intl.DateTimeFormat('es-CO',{hour:'2-digit',minute:'2-digit',hour12:true,timeZone:tz}).format(now)}
 setInterval(renderVentaDateTime,60000);
 function renderHomeDate(){const el=$('#home-date');if(!el)return;const mobile=window.matchMedia('(max-width: 620px)').matches;const opts=mobile?{weekday:'short',day:'numeric',month:'short',timeZone:'America/Bogota'}:{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'America/Bogota'};const s=new Intl.DateTimeFormat('es-CO',opts).format(new Date());el.textContent=s.charAt(0).toLocaleUpperCase('es-CO')+s.slice(1)}
-function showHome(){cajaBadge();renderHomeDate();$('#back-home').hidden=true;$('#home').hidden=false;['venta','cat','cli','his','cot','aju','neg','caja','cajahistorial','ayuda','inventario','pedidos','recepcion'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=true});$('#more-menu').hidden=true;$('#ttl').textContent='Drosalud';window.scrollTo(0,0)}
- function show(v){$('#back-home').hidden=false;$('#home').hidden=true;['venta','cat','cli','his','cot','aju','neg','caja','cajahistorial','ayuda','inventario','pedidos','recepcion'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=k!==v});$('#more-menu').hidden=true;$('#nav [data-v="mas"]').setAttribute('aria-expanded','false');document.querySelectorAll('#nav button').forEach(b=>{if(b.dataset.v!=='mas')b.setAttribute('aria-current',String(b.dataset.v===v));else b.setAttribute('aria-current',String(!['venta','cat','cli'].includes(v)))});$('#ttl').textContent=TT[v]||'Negocio';if(v==='venta')renderVentaDateTime();if(v==='aju')fillAju();if(v==='caja')go(loadCaja);if(v==='cajahistorial')go(loadHistorialCierres);if(v==='ayuda'){go(loadAyudaEstado);$('#ayuda-version').textContent='v'+VERSION}if(v==='his')go(loadHis);if(v==='cli')loadCST().catch(()=>{});if(v==='cot')go(loadCotizaciones);if(v==='inventario')go(loadInventario);if(v==='pedidos')go(loadPedidos);if(v==='recepcion')go(loadRecepcion);window.scrollTo(0,0)}
+function showHome(){cajaBadge();renderHomeDate();$('#back-home').hidden=true;$('#home').hidden=false;['venta','cat','cli','his','cot','aju','neg','caja','cajahistorial','ayuda','inventario','pedidos','pedidos-sucursales','recepcion'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=true});$('#more-menu').hidden=true;$('#ttl').textContent='Drosalud';window.scrollTo(0,0)}
+ function show(v){$('#back-home').hidden=false;$('#home').hidden=true;['venta','cat','cli','his','cot','aju','neg','caja','cajahistorial','ayuda','inventario','pedidos','pedidos-sucursales','recepcion'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=k!==v});$('#more-menu').hidden=true;$('#nav [data-v="mas"]').setAttribute('aria-expanded','false');document.querySelectorAll('#nav button').forEach(b=>{if(b.dataset.v!=='mas')b.setAttribute('aria-current',String(b.dataset.v===v));else b.setAttribute('aria-current',String(!['venta','cat','cli'].includes(v)))});$('#ttl').textContent=TT[v]||'Negocio';if(v==='venta')renderVentaDateTime();if(v==='aju')fillAju();if(v==='caja')go(loadCaja);if(v==='cajahistorial')go(loadHistorialCierres);if(v==='ayuda'){go(loadAyudaEstado);$('#ayuda-version').textContent='v'+VERSION}if(v==='his')go(loadHis);if(v==='cli')loadCST().catch(()=>{});if(v==='cot')go(loadCotizaciones);if(v==='inventario')go(loadInventario);if(v==='pedidos')go(loadPedidos);if(v==='pedidos-sucursales')window.PedidosSucursalesApp?.open();if(v==='recepcion')go(loadRecepcion);window.scrollTo(0,0)}
 function rRes(){const q=$('#q').value.trim(),b=$('#res');if(!q){b.innerHTML='';return}const a=find(q,20);b.innerHTML=a.length?a.map(p=>`<button class="row" data-add="${p.id}"><span class="nm">${esc(p.nombre)}<small>${esc(p.laboratorio||'')}</small></span><span class="pr">${pv(p)==null?'Precio pendiente':money(pv(p))}<small>compra ${money(p.precio_compra)}</small></span></button>`).join(''):'<p class="mut">No hay resultados. Agrégalo en Catálogo.</p>'}
 function calc(){const st=cart.reduce((s,i)=>s+i.p*i.q,0),g=cart.reduce((s,i)=>s+(i.p-(i.c||0))*i.q,0),ds=Math.max(0,+$('#dsc').value||0),dm=Math.max(0,+$('#dom').value||0),mens=Math.max(0,+$('#mens').value||0);return{st,ds,dm,mens,total:Math.max(0,st-ds+dm),gan:g==null?null:g-ds+dm-mens}}
 function rCart(){const b=$('#cart');b.innerHTML=cart.length?cart.map((i,k)=>`<div class="item"><div class="top"><span>${esc(i.n)}</span><button class="rm" data-rm="${k}" aria-label="Quitar">✕</button></div><div class="ctl"><div class="step"><button data-dec="${k}" aria-label="Menos">−</button><span>${i.q} ${i.q===1?'unidad':'unidades'}</span><button data-inc="${k}" aria-label="Más">+</button></div><label class="pp">$<input type="number" inputmode="numeric" data-pr="${k}" value="${i.p}" aria-label="Precio de venta por unidad"></label><span class="lt">${money(i.p*i.q)}</span></div><small class="mut">${esc(etiquetaCarrito(i))}· Compra ${money(i.c)} c/u${` · ganas ${money((i.p-i.c)*i.q)}${warnM(i.p,i.c)}`}</small></div>`).join(''):'<p class="mut">Busca un producto y tócalo para agregarlo.</p>';const k=calc(),n=cart.reduce((s,i)=>s+i.q,0);$('#tot').textContent=money(k.total);$('#gn').textContent=cart.length?'Ganancia estimada (productos + domicilio − mensajero − descuento): '+money(k.gan):'';const e=$('#bg');e.hidden=!n;e.textContent=n;rVue(k)}
@@ -1670,5 +1675,13 @@ showLogin();
 </script>
 
 <script src="modules/pedidos.js"></script>
+<script src="modules/pedidos-sucursales/api.js"></script>
+<script src="modules/pedidos-sucursales/pedido-sugerido.js"></script>
+<script src="modules/pedidos-sucursales/pedido-urgente.js"></script>
+<script src="modules/pedidos-sucursales/pedidos-autorizados.js"></script>
+<script src="modules/pedidos-sucursales/historial.js"></script>
+<script src="modules/pedidos-sucursales/despachos.js"></script>
+<script src="modules/pedidos-sucursales/configuracion.js"></script>
+<script src="modules/pedidos-sucursales/index.js"></script>
 </body>
 </html>
