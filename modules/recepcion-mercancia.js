@@ -193,6 +193,7 @@
         });
         if (error) throw error;
         overlay.remove();
+        busy = false;
         await load();
         window.invCargarDatos?.();
         status('Recepción confirmada. El Kardex y el inventario ya reflejan las unidades recibidas.');
