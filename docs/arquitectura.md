@@ -87,3 +87,30 @@ Crear o autorizar un pedido y crear una orden no debe aumentar existencias. El i
 Hacer un mapa de dependencias del bloque principal que permanece en `index.html`. La primera extracción futura debe elegirse por bajo acoplamiento y pruebas disponibles; no se debe decidir solo por el tamaño del bloque.
 
 Hasta completar ese mapa, mantener el código legado donde está es más seguro que moverlo a ciegas.
+
+## 9. Dependencias compartidas observadas
+
+La lectura estática de los módulos muestra que la separación de archivos todavía convive con dependencias globales. Esta tabla registra referencias encontradas en el código; no significa que todas sean errores, pero sí que deben considerarse antes de modificar contratos.
+
+| Módulo | Dependencias compartidas encontradas |
+| --- | --- |
+| Inventario | `sb`, `CO`, `toast`, `DrosaludPedidos`. |
+| Caja | `sb`, `CO`, `toast`, `go`. |
+| Compras | `sb`, `CO`, `show`. |
+| Órdenes de compra | `sb`, `P`, `invCargarDatos`, `window.__drosaludRole`, `window.__ocProviders`. |
+| Core | Recibe referencias del código legado: `sb`, `CO`, `go`. |
+| Cotizaciones | `DrosaludCore`. |
+| Pedidos | `sb`, `P`, `C`, `CO`. |
+| Historial de ventas | `H`, `sb`, `toast`, `go`. |
+| Historial de precios | `sb`, `P`. |
+
+### Implicaciones para la siguiente extracción
+
+- `sb` es el cliente compartido de Supabase.
+- `P`, `C`, `H` y `CO` son datos que el código legado mantiene en variables globales.
+- `show`, `go` y `toast` son funciones globales usadas por más de un área.
+- Órdenes de compra necesita conocer el rol y actualizar inventario después de una recepción.
+- Pedidos consulta datos compartidos del catálogo, clientes y cotizaciones.
+
+Por este acoplamiento, no se debe cambiar todavía el modo de carga a `type="module"`, renombrar variables globales ni convertir los scripts a ES Modules como una sola operación. Primero se deben definir contratos explícitos y migrar una dependencia a la vez.
+
