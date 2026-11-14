@@ -669,7 +669,7 @@ create unique index if not exists ordenes_compra_pedido_operacion_proveedor_uidx
 
 drop function if exists public.generar_ordenes_compra_pedido(uuid,jsonb);
 
-create function public.generar_ordenes_compra_pedido(
+create or replace function public.generar_ordenes_compra_pedido(
   p_pedido_id uuid,
   p_asignaciones jsonb,
   p_operacion_id uuid
