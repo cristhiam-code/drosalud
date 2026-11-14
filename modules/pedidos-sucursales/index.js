@@ -148,6 +148,13 @@
     message('Pedido urgente enviado correctamente.');
   }
 
+  async function startReview(orderId) {
+    await window.PedidosSucursalesAPI.iniciarRevision(orderId);
+    await loadOrders('autorizados');
+    render();
+    message('Pedido marcado En revisión. Ahora puedes ajustar cantidades y autorizarlo o rechazarlo.');
+  }
+
   async function authorize(orderId) {
     const order = state.orders.find(row => row.id === orderId);
     if (!order) throw new Error('No se encontró el pedido que intentas autorizar.');
@@ -197,6 +204,7 @@
       else if (action === 'actualizar-historial') { await loadOrders('historial'); render(); }
       else if (action === 'enviar-sugerido') await sendSuggested();
       else if (action === 'enviar-urgente') await sendUrgent();
+      else if (action === 'iniciar-revision') await startReview(button.dataset.pedidoId);
       else if (action === 'autorizar') await authorize(button.dataset.pedidoId);
       else if (action === 'rechazar') await reject(button.dataset.pedidoId);
       else if (action === 'despachar') await dispatch(button.dataset.pedidoId);
