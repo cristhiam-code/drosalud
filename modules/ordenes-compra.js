@@ -15,10 +15,10 @@
  async function cargarProveedores(){const {data,error}=await sb.from('proveedores').select('id,nombre,activo').eq('activo',true).order('nombre');if(error)throw error;window.__ocProviders=data||[];return data||[]}
  function modal(html){$('#modal').hidden=false;$('#sheet').innerHTML=html}
  function cerrar(){ $('#modal').hidden=true}
-  function normalizarBusqueda(v){return String(v||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().trim()}
+  function normalizarBusqueda(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim()}
   function coincideProducto(p,q){
-   const n=normalizarBusqueda(q),codigo=String(p.codigo||'').toLowerCase().replace(/\\D/g,'');
-   const dig=n.replace(/\\D/g,'');
+   const n=normalizarBusqueda(q),codigo=String(p.codigo||'').toLowerCase().replace(/\D/g,'');
+   const dig=n.replace(/\D/g,'');
    return !n||normalizarBusqueda([p.nombre,p.laboratorio,p.codigo].join(' ')).includes(n)||(dig.length>=4&&codigo.includes(dig));
   }
  async function nuevaOrden(){
@@ -90,7 +90,7 @@
   if(!pendiente.length)throw new Error('Esta orden ya está recibida completamente.');
   modal('<h2>Recepción física</h2><p class="mut sm">Registra solo lo que llegó. Los costos pueden variar frente a la orden.</p><label>Factura / documento proveedor</label><input id="oc-receipt-doc" maxlength="100"><label>Filtrar productos de esta orden por nombre o código</label><input id="oc-receipt-search" type="search" placeholder="Buscar en los productos pendientes…" autocomplete="off"><p class="mut sm">El filtro solo oculta líneas; no elimina cantidades ni productos de la recepción.</p><div id="oc-receipt-lines">'+pendiente.map(x=>'<div class="item oc-receipt-line" data-oc-filter="'+esc([x.productos?.nombre,x.productos?.codigo].join(' '))+'"><b>'+esc(x.productos?.nombre||'Producto')+'</b><p class="mut sm">Código: '+esc(x.productos?.codigo||'Sin código')+' · Pendiente: '+(x.unidades_solicitadas-x.unidades_recibidas)+' unidades</p><label>Unidades recibidas ahora</label><input type="number" min="0" max="'+(x.unidades_solicitadas-x.unidades_recibidas)+'" step="1" value="'+(x.unidades_solicitadas-x.unidades_recibidas)+'" data-oc-qty="'+x.id+'"><label>Costo real por unidad</label><input type="number" min="0" step="0.01" value="'+x.costo_unitario_base+'" data-oc-unitcost="'+x.id+'"></div>').join('')+'</div><div class="acts"><button class="btn full" id="oc-save-receipt">Confirmar recepción</button><button class="btn alt full" id="oc-cancel">Cancelar</button></div>');
   $('#oc-cancel').onclick=cerrar;
-  $('#oc-receipt-search').addEventListener('input',e=>{const normalizarFiltro=valor=>String(valor||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().trim();const q=normalizarFiltro(e.target.value);document.querySelectorAll('#oc-receipt-lines .oc-receipt-line').forEach(el=>{el.hidden=!normalizarFiltro(el.dataset.ocFilter).includes(q)})});
+  $('#oc-receipt-search').addEventListener('input',e=>{const normalizarFiltro=valor=>String(valor||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();const q=normalizarFiltro(e.target.value);document.querySelectorAll('#oc-receipt-lines .oc-receipt-line').forEach(el=>{el.hidden=!normalizarFiltro(el.dataset.ocFilter).includes(q)})});
   $('#oc-save-receipt').onclick=async()=>{
    const lines=pendiente.map(x=>({orden_item_id:x.id,unidades:Number($('[data-oc-qty="'+x.id+'"]').value),costo_unitario_base:Number($('[data-oc-unitcost="'+x.id+'"]').value)})).filter(x=>x.unidades>0);
    if(!lines.length||lines.some(x=>!Number.isInteger(x.unidades)||x.unidades<0||!Number.isFinite(x.costo_unitario_base)||x.costo_unitario_base<0))throw new Error('Ingresa al menos una línea con cantidades y costos válidos.');
