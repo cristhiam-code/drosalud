@@ -150,27 +150,14 @@
   }
 
   async function dispatch(orderId) {
-    const order = state.orders.find(row => row.id === orderId);
-    if (!order) throw new Error('No se encontró el pedido.');
-    const items = (order.items || []).filter(item =>
-      Number(item.cantidad_autorizada) > Number(item.cantidad_despachada || 0)
-    ).map(item => ({
-      pedido_item_id: item.id,
-      unidades_despachadas: Number(item.cantidad_autorizada) - Number(item.cantidad_despachada || 0)
-    }));
-    if (!items.length) throw new Error('No hay unidades autorizadas pendientes de despacho.');
-    await window.PedidosSucursalesAPI.despachar(orderId, items);
+    await window.PedidosSucursalesDespachos.despachar(orderId, state.orders);
     await loadOrders('autorizados');
     render();
     message('Despacho registrado. La sucursal ya puede confirmar la recepción.');
   }
 
   async function receive(dispatchId) {
-    const order = state.orders.find(row => (row.despachos || []).some(d => d.id === dispatchId));
-    const dispatchRow = order?.despachos?.find(d => d.id === dispatchId);
-    if (!dispatchRow) throw new Error('No se encontró el despacho.');
-    const items = window.PedidosSucursalesHistorial.receiptItems(root, dispatchRow);
-    await window.PedidosSucursalesAPI.confirmarRecepcion(dispatchId, items);
+    await window.PedidosSucursalesDespachos.confirmarRecepcion(dispatchId, state.orders, root);
     await loadOrders('historial');
     render();
     message('Recepción confirmada. Las cantidades recibidas se registraron en el inventario de la sucursal.');
