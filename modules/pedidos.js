@@ -481,7 +481,15 @@
   async function saveSuggested(send) {
     const items = readSuggestedItems();
     const id = await savePedido(items,'sugerido','Propuesta automática de rotación · cobertura de 7 días');
-    if (send) await sb.rpc('enviar_pedido',{p_pedido_id:id}).then(({error}) => { if(error) throw error; });
+    if (send) {
+      const {error} = await sb.rpc('enviar_pedido',{p_pedido_id:id});
+      if (error) {
+        state.mode = 'seguimiento';
+        await reload();
+        message('El borrador quedó guardado, pero no se pudo enviar. Puedes reintentar desde Seguimiento.', true);
+        return;
+      }
+    }
     state.mode = 'seguimiento';
     await reload();
     message(send ? 'Pedido sugerido enviado a autorización.' : 'Pedido sugerido guardado como borrador.');
@@ -501,7 +509,11 @@
     const id = await savePedido(items,tipo,notas,state.editing?.id || null);
     if (send) {
       const {error} = await sb.rpc('enviar_pedido',{p_pedido_id:id});
-      if (error) throw error;
+      if (error) {
+        state.editing = {id,tipo};
+        message('El borrador quedó guardado, pero no se pudo enviar. Reintenta el envío sin crear otro pedido.', true);
+        return;
+      }
     }
     state.editing = null;
     state.formItems = [];
