@@ -736,13 +736,13 @@
         await saveSuggested(true);
       } else if (action === 'add-line') {
         const nameInput = root.querySelector('#ped-product-name');
+        const urgentMode = state.mode === 'urgente' || state.editing?.tipo === 'urgente';
         const quantity = Number(root.querySelector('#ped-product-qty')?.value);
         const reason = urgentMode ? '' : (root.querySelector('#ped-product-reason')?.value.trim() || '');
         const name = nameInput?.value.trim() || '';
         if (!name) throw new Error('Escribe o selecciona un producto.');
         if (!Number.isInteger(quantity) || quantity <= 0) throw new Error(urgentMode ? 'La cantidad de cajas debe ser un entero mayor que cero.' : 'La cantidad debe ser un entero mayor que cero.');
         const product = resolveProduct(name);
-        const urgentMode = state.mode === 'urgente' || state.editing?.tipo === 'urgente';
         if (urgentMode && (!product || !state.negativeProducts.some(row => row.id === product.id))) {
           throw new Error('El pedido urgente solo admite productos con inventario negativo. Actualiza los datos e inténtalo de nuevo.');
         }
