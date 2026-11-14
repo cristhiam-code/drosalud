@@ -1,55 +1,89 @@
 # Arquitectura actual de Drosalud
 
-## Objetivo
-Drosalud debe poder abrirse, comprenderse, corregirse y mantenerse desde un editor convencional como Visual Studio Code. No debe depender de una conversación ni de una persona que recuerde cómo se construyó.
+**Rama documentada:** `feature/modulo-pedidos`  
+**Alcance:** documentación del frontend existente. Este archivo no define cambios de base de datos ni autoriza despliegues.
 
-## Estructura real en esta etapa
+## 1. Punto de entrada
 
-```text
-drosalud/
-├── index.html
-├── modules/
-│   ├── pedidos.js
-│   └── pedidos.css
-├── supabase/
-│   └── migrations/
-│       ├── 20261112210000_create_pedidos_module.sql
-│       ├── 20261112220000_link_products_on_pedido_authorization.sql
-│       └── 20261112223000_add_order_generation_idempotency.sql
-└── docs/
-    ├── arquitectura.md
-    └── modulo-pedidos.md
-```
+`index.html` sigue siendo el documento principal de la aplicación. En esta rama tiene aproximadamente 1.146 líneas y conserva la estructura HTML de las pantallas, parte de los estilos y una cantidad importante de JavaScript legado.
 
-### Responsabilidades
-- **index.html:** carcasa principal de la aplicación, inicio de sesión, navegación y módulos históricos que todavía no se han extraído.
-- **modules/pedidos.js:** lógica del módulo PEDIDOS. Consulta los datos, calcula el pedido sugerido, guarda borradores, envía solicitudes, autoriza y genera órdenes.
-- **modules/pedidos.css:** estilos exclusivos de PEDIDOS.
-- **supabase/migrations/:** cambios versionados del esquema, seguridad, vistas y funciones SQL.
-- **docs/:** reglas de negocio y decisiones de arquitectura.
+No es todavía una aplicación completamente modular. La extracción del frontend se está haciendo gradualmente para reducir el riesgo de romper operaciones existentes.
 
-## Integración del módulo PEDIDOS
-La aplicación comparte el cliente de Supabase mediante `window.sb`. El módulo expone `window.DrosaludPedidos.load()`, invocado por la navegación existente al abrir PEDIDOS. La lógica de PEDIDOS no se mezcla con la lógica del POS.
+## 2. Archivos JavaScript cargados desde index.html
 
-Esta integración es intencional y pequeña. No significa que todos los módulos antiguos ya estén separados.
+En el orden actual, el documento carga:
 
-## Flujo de abastecimiento
-Ventas → análisis de rotación y existencias → pedido sugerido / urgente / extraordinario → autorización administrativa → una o varias órdenes por proveedor → recepción física → inventario y Kardex → informes.
+1. `supabase.js`, `base.js` y bibliotecas auxiliares (`xlsx.mini.min.js`, `html5-qrcode.min.js`, `qrcode.js`).
+2. `modules/inventario.js`.
+3. `modules/caja.js`.
+4. `modules/compras.js`.
+5. `modules/ordenes-compra.js`.
+6. `modules/core.js`.
+7. `modules/cotizaciones.js`.
+8. `modules/pedidos.js`.
+9. `modules/historial-ventas.js`.
+10. `modules/historial-precios.js`.
 
-La autorización de un pedido y la generación de órdenes no cambian el inventario. Solo la recepción física válida registra movimientos.
+También se carga `modules/pedidos.css`.
 
-## Seguridad y ambientes
-- Los cambios se desarrollan en ramas de trabajo.
-- Los previews de Vercel se utilizan para pruebas contra `drosalud-pruebas`.
-- `main` y el dominio de producción no se modifican durante el desarrollo de un módulo.
-- Los permisos se validan en las funciones SQL; ocultar botones en el frontend no sustituye la seguridad del servidor.
+La carga de `modules/caja.js` aparece una sola vez en el HTML revisado.
 
-## Cómo abrirlo en Visual Studio Code
-1. Clona el repositorio `cristhiam-code/drosalud`.
-2. Abre la carpeta del proyecto en Visual Studio Code.
-3. Para revisar PEDIDOS, abre `modules/pedidos.js` y `modules/pedidos.css`.
-4. Para revisar la estructura de base de datos, abre la migración dentro de `supabase/migrations/`.
-5. Trabaja en una rama y prueba en el preview antes de integrar cambios.
+## 3. Responsabilidad de los módulos extraídos
 
-## Estrategia de evolución
-La extracción del resto del frontend será gradual, módulo por módulo. No se hará una conversión masiva del archivo principal: cada separación deberá conservar las funciones existentes y pasar pruebas antes de continuar.
+| Archivo | Responsabilidad observada |
+| --- | --- |
+| `modules/inventario.js` | Funciones del módulo de inventario. |
+| `modules/caja.js` | Funciones del módulo de caja. |
+| `modules/compras.js` | Gestión de proveedores, compras pendientes y cotizaciones a proveedores. |
+| `modules/ordenes-compra.js` | Creación, aprobación y recepción de órdenes de compra. |
+| `modules/core.js` | Puente explícito de funciones compartidas entre módulos y código legado. |
+| `modules/cotizaciones.js` | Integración del módulo de cotizaciones de venta. |
+| `modules/pedidos.js` | Flujo de pedidos internos: sugeridos, urgentes, extraordinarios y su gestión. |
+| `modules/historial-ventas.js` | Funciones del historial de ventas. |
+| `modules/historial-precios.js` | Funciones del historial de precios. |
+| `modules/pedidos.css` | Estilos del módulo Pedidos. |
+
+La presencia de un archivo separado no significa que todas sus dependencias estén aisladas. Algunos módulos todavía usan variables o funciones compartidas que se originan en el código de `index.html`.
+
+## 4. Código que todavía permanece dentro de index.html
+
+La revisión identificó tres bloques grandes de JavaScript inline, además de la estructura HTML y CSS:
+
+- **Bloque inicial:** crea el cliente de Supabase, define utilidades y estado global, gestiona el rol de usuario, ajustes, paleta y funciones relacionadas con cotizaciones.
+- **Bloque de sincronización y arranque:** gestiona Realtime, carga de datos, sesión, MFA, inicio de la aplicación y utilidades compartidas.
+- **Bloque principal legado:** conserva navegación, pantallas y lógica del POS, incluida parte del flujo de ventas y carrito.
+
+Por tanto, `index.html` continúa siendo un archivo con responsabilidades mezcladas. No debe intentarse extraer un bloque completo sin mapear antes sus funciones, variables globales, eventos y dependencias.
+
+## 5. Comunicación entre módulos
+
+El HTML carga los módulos como scripts clásicos, no como módulos ES con `import/export`.
+
+El archivo `modules/core.js` publica `window.DrosaludCore` y expone un conjunto limitado de funciones compartidas. En el código revisado, el contrato contiene utilidades y operaciones que necesita Cotizaciones.
+
+También hay funciones y datos globales heredados, por ejemplo el cliente de Supabase y datos de catálogo. Esta dependencia debe reducirse gradualmente, no cambiarse de golpe.
+
+## 6. Flujo funcional de abastecimiento
+
+El flujo de negocio previsto es:
+
+Ventas y existencias → análisis de necesidades → pedido sugerido, urgente o extraordinario → autorización administrativa → órdenes separadas por proveedor → recepción física → actualización de inventario y Kardex.
+
+Crear o autorizar un pedido y crear una orden no debe aumentar existencias. El inventario se actualiza cuando se registra una recepción física válida mediante el proceso correspondiente.
+
+## 7. Reglas para continuar la refactorización
+
+1. Trabajar únicamente en ramas de desarrollo, por ahora `feature/modulo-pedidos`.
+2. No modificar `main` ni desplegar a producción como parte de esta etapa.
+3. No ejecutar migraciones SQL ni modificar datos reales como consecuencia de una tarea de organización del frontend.
+4. Antes de extraer código, identificar las funciones, variables globales, selectores HTML, listeners y módulos que dependen de él.
+5. Extraer una responsabilidad por cambio pequeño; no mover simultáneamente varios módulos.
+6. Después de cada extracción, comprobar carga de la aplicación y probar los procesos afectados en Preview.
+7. No cambiar la interfaz ni el comportamiento funcional durante una extracción cuyo objetivo sea únicamente reorganizar código.
+8. Mantener este documento sincronizado con la estructura real del repositorio.
+
+## 8. Próximo paso técnico
+
+Hacer un mapa de dependencias del bloque principal que permanece en `index.html`. La primera extracción futura debe elegirse por bajo acoplamiento y pruebas disponibles; no se debe decidir solo por el tamaño del bloque.
+
+Hasta completar ese mapa, mantener el código legado donde está es más seguro que moverlo a ciegas.
