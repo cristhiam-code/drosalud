@@ -552,7 +552,7 @@ nav button{font-size:.78rem}
   <label class="inv-choice"><input type="radio" name="inv-formato" value="excel"><svg class="excel-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 2h9l5 5v11H3z"/><path fill="#fff" d="M12 2v5h5"/><path fill="none" stroke="#fff" stroke-width="1.5" d="m5.5 10 4 5m0-5-4 5"/></svg> Excel (.xlsx)</label>
   
   <button class="btn full" id="inv-generar" type="button">Generar informe de Kardex</button>
-  <p class="mut sm">La tira POS se enviará a impresión desde esta ventana. PDF se abre en el diálogo de impresión para guardar como PDF. Excel descarga un archivo CSV compatible con Excel.</p>
+  <p class="mut sm">La tira POS se enviará a impresión desde esta ventana. PDF se abre en el diálogo de impresión para guardar como PDF. Excel descarga un libro .xlsx.</p>
  </div>
  <div class="item"><h3>Informe de Kardex</h3><div id="inv-kardex-list"><p class="mut">No se está generando ningún Kardex y no hay impresiones pendientes.</p></div><button class="btn alt full" id="inv-print-kardex" type="button" hidden>Imprimir Kardex</button></div>
  <p class="mut sm" id="inv-status" aria-live="polite"></p>
@@ -830,7 +830,7 @@ function invGenerarKardex(){
  if(formato==='pantalla')return;
  if(formato==='excel'){
   if(typeof XLSX==='undefined'||!XLSX.utils?.aoa_to_sheet){toast('No está disponible la librería de Excel. Recarga la página e inténtalo de nuevo.');return}
-  const safe=value=>{const text=String(value??'');return /^[=+@\\-\\t\\r]/.test(text)?"'"+text:value};
+  const safe=value=>typeof value==='string'&&/^[=+@\\-\\t\\r]/.test(value)?"'"+value:value;
   const data=[['Laboratorio','Producto','Cantidad (cajas)','Unidades sueltas'],...rows.map(p=>{const v=invPartes(invSaldo(p),p.unidades_por_caja);return[p.laboratorio||'Sin laboratorio',p.nombre,v.cajas,v.sueltas]})].map(row=>row.map(safe));
   const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(data);
   ws['!cols']=[{wch:28},{wch:48},{wch:18},{wch:18}];
@@ -1027,7 +1027,7 @@ $('#mfa-no').onclick=async()=>{try{await sb.auth.mfa.unenroll({factorId:data.id}
 $('#mfa-ok').onclick=()=>go(async()=>{const code=$('#mfa-code').value.replace(/\s/g,''),m=$('#mfa-msg');m.textContent='';if(!/^\d{6}$/.test(code)){m.textContent='Escribe los 6 dígitos del código.';return}const{error:ev}=await sb.auth.mfa.challengeAndVerify({factorId:data.id,code});if(ev){m.textContent='Código incorrecto o vencido. Revisa tu app e intenta de nuevo.';return}closeM();toast('Verificación en dos pasos activada');mfaEstado()})}
 async function mfaDesactivar(){const{data:l,error:e0}=await sb.auth.mfa.listFactors();if(e0)throw e0;const f=(l.totp||[])[0];if(!f){mfaEstado();return}if(!confirm('¿Desactivar la verificación en dos pasos? Tu cuenta quedará protegida solo con la contraseña.'))return;const{error}=await sb.auth.mfa.unenroll({factorId:f.id});if(error){toast(/aal2|assurance|verif/i.test(String(error.message))?'Para desactivarla debes haber entrado con tu código.':'No se pudo desactivar. Intenta de nuevo.');return}toast('Verificación en dos pasos desactivada');mfaEstado()}
 function showLogin(){$('#spl').hidden=true;$('#app').hidden=true;$('#rsx').hidden=true;$('#mfa').hidden=true;$('#lg').hidden=false;try{const e=localStorage.getItem('lastEmail');if(e&&!$('#em').value){$('#em').value=e;$('#pw').focus()}}catch(x){}}
-const TT={venta:'Recibo',cat:'Catálogo',cli:'Clientes',his:'Historial',cot:'Cotizaciones',aju:'Ajustes',caja:'Caja',cajahistorial:'Historial de cierres',ayuda:'Ayuda y sistema',inventario:'Generar Kardex',pedidos:'Pedidos',recepcion:'Recepción'}
+const TT={venta:'Recibo',cat:'Catálogo',cli:'Clientes',his:'Historial',cot:'Cotizaciones',aju:'Ajustes',neg:'Compras y proveedores',caja:'Caja',cajahistorial:'Historial de cierres',ayuda:'Ayuda y sistema',inventario:'Generar Kardex',pedidos:'Pedidos',recepcion:'Recepción'}
 /*CAJA-INICIO*/
 let CJ={fecha:null,res:null,gastos:[]},savingCaja=false;
 const hoyCO=()=>new Date().toLocaleDateString('en-CA',{timeZone:'America/Bogota'});
