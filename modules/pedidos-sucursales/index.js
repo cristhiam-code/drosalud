@@ -5,7 +5,7 @@
   if (!root) return;
 
   const state = {
-    context: null, mode: 'inicio', suggested: [], negatives: [],
+    context: null, mode: 'inicio', suggested: [], negatives: [], configuration: null,
     orders: [], loading: false, initialized: false
   };
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({
@@ -29,6 +29,7 @@
             <h2>Pedidos de Sucursales</h2>
             <p>${esc(context.sucursal_nombre || 'Gestión central')}</p></div>
           <span class="ps-role">${context.es_admin ? 'Administración central' : 'Sucursal'}</span>
+          ${context.es_admin ? '<button class="ps-button ps-button-light" type="button" data-ps-mode="config">Configurar sucursales</button>' : ''}
         </header>
         <p class="ps-message" data-ps-message role="status" hidden></p>
         <div data-ps-content></div>
@@ -65,6 +66,7 @@
     if (state.mode === 'urgente') return back + window.PedidosSucursalesUrgente.render(state.negatives);
     if (state.mode === 'autorizados') return back + window.PedidosSucursalesAutorizados.render(state.orders, !!state.context?.es_admin);
     if (state.mode === 'historial') return back + window.PedidosSucursalesHistorial.render(state.orders);
+    if (state.mode === 'config') return back + window.PedidosSucursalesConfiguracion.render(state.configuration || {});
     return home();
   }
 
@@ -89,6 +91,9 @@
   async function loadOrders(filter) {
     state.orders = await window.PedidosSucursalesAPI.pedidos(filter || 'historial');
   }
+  async function loadConfiguration() {
+    state.configuration = await window.PedidosSucursalesAPI.configuracion();
+  }
 
   async function openMode(mode) {
     state.mode = mode;
@@ -100,6 +105,7 @@
       if (mode === 'urgente') await loadNegatives();
       if (mode === 'autorizados') await loadOrders('autorizados');
       if (mode === 'historial') await loadOrders('historial');
+      if (mode === 'config' && state.context?.es_admin) await loadConfiguration();
     } catch (error) {
       message(error?.message || 'No se pudo cargar la sección.', true);
     } finally {
@@ -182,6 +188,21 @@
       else if (action === 'rechazar') await reject(button.dataset.pedidoId);
       else if (action === 'despachar') await dispatch(button.dataset.pedidoId);
       else if (action === 'confirmar-recepcion') await receive(button.dataset.despachoId);
+      else if (action === 'crear-sucursal') {
+        const values = window.PedidosSucursalesConfiguracion.newBranch(root);
+        await window.PedidosSucursalesAPI.crearSucursal(values.codigo, values.nombre);
+        await loadConfiguration(); render(); message('Sucursal y bodega creadas. Ahora asigna un usuario y configura sus días de pedido.');
+      } else if (action === 'guardar-dias') {
+        const id = button.dataset.sucursalId;
+        await window.PedidosSucursalesAPI.configurarDias(id, window.PedidosSucursalesConfiguracion.selectedDays(root, id));
+        await loadConfiguration(); render(); message('Días de pedido actualizados.');
+      } else if (action === 'asignar-usuario') {
+        const id = button.dataset.sucursalId;
+        const userId = window.PedidosSucursalesConfiguracion.selectedUser(root, id);
+        if (!userId) throw new Error('Selecciona un usuario activo.');
+        await window.PedidosSucursalesAPI.asignarUsuario(userId, id);
+        await loadConfiguration(); render(); message('Usuario asignado a la sucursal.');
+      }
     } catch (error) {
       console.error('PEDIDOS DE SUCURSALES:', error);
       message(error?.message || 'No se pudo completar la operación.', true);
