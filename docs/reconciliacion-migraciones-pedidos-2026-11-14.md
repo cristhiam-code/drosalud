@@ -16,7 +16,7 @@ Los tres archivos originales de Pedidos se renombraron para coincidir con las ve
 
 Así QA reconoce esos tres archivos como ya aplicados y producción, cuyo último registro actual es `20261112223131`, los ejecutaría cronológicamente después de Compras. La migración consolidada posterior queda en `20261114182004_pedidos_release_consolidated_20261114.sql`.
 
-**Bloqueo independiente de historial:** producción tiene 32 versiones registradas. Comprobé que varias migraciones de ese historial —incluidas las de seguridad/caja y las tres de Compras `20261112214210`, `20261112223125` y `20261112223131`— no tienen su SQL original en este repositorio. Por ello no autorizo un `supabase db push` ni una reparación masiva del historial: primero hay que recuperar o documentar el baseline real de producción. La publicación de Pedidos debe hacerse con el SQL revisado y una migración explícita, después de aprobación.
+**Bloqueo independiente de historial:** producción tiene 33 versiones registradas. Comprobé que varias migraciones de ese historial —incluidas las de seguridad/caja y las tres de Compras `20261112214210`, `20261112223125` y `20261112223131`— no tienen su SQL original en este repositorio. Por ello no autorizo un `supabase db push` ni una reparación masiva del historial: primero hay que recuperar o documentar el baseline real de producción. La publicación de Pedidos debe hacerse con el SQL revisado y una migración explícita, después de aprobación.
 
 ## Ruta segura de publicación
 
@@ -70,3 +70,10 @@ Se realizó una inspección de solo lectura directamente en producción y QA. El
 También se confirmó que `registrar_recepcion_compra` tiene la misma firma y flujo general en ambos entornos, pero definiciones SQL distintas; se debe conservar la productiva hasta cerrar una comparación funcional y pruebas de regresión.
 
 No se ejecutó ninguna escritura ni migración en producción. No usar `supabase db push` ni desplegar el SQL consolidado sin los ajustes indicados.
+
+
+## Nueva migración de transición validada en QA
+
+La migración histórica `20261114182004` se restauró en el repositorio al contenido exacto que ya estaba aplicado en QA. Para producción se preparó una migración de avance independiente: `20261114184200_pedidos_production_transition.sql`. Esta versión conserva las funciones productivas de órdenes independientes y recepción; agrega Pedidos y mantiene solo sus operaciones propias de autorización/generación reservadas al administrador. Se aplicó en QA y se probó transaccionalmente. Detalles y diferencias de esquema/vistas en `baseline-produccion-transicion-controlada-2026-11-14.md`.
+
+El historial productivo comprobado tiene 33 versiones (última `20261112223131`); QA tiene 49 después de las migraciones de alineación. No ejecutar `db push`: los historiales siguen siendo distintos y faltan fuentes históricas. No se modificó producción.
