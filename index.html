@@ -1089,7 +1089,7 @@ if(id==='out'||id==='out-top')return go(async()=>{await detenerRealtime();const{
 $('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeM()});
 $('#back-home').addEventListener('click',showHome);
  $('#home').addEventListener('click',e=>{const b=e.target.closest('[data-home]');if(!b)return;const v=b.dataset.home;if(v==='neg'){const target=document.querySelector('#more-menu [data-v="neg"]');if(target)target.click();return}show(v)});
-$('#v-caja').addEventListener('click',cajaClics);
+$('#v-caja').addEventListener('click',e=>cajaClics(e));
 $('#cj-history-toggle').addEventListener('click',()=>show('cajahistorial'));
 $('#v-cajahistorial').addEventListener('click',e=>{if(e.target.closest('[data-cj-back]')){show('caja');return}if(e.target.closest('#cj-history-retry'))return loadHistorialCierres();const b=e.target.closest('[data-cj-history-date]');if(b){const f=b.dataset.cjHistoryDate;$('#cj-f').value=f;show('caja')}});
 $('#v-caja').addEventListener('input',e=>{if(e.target.id==='cj-base'||e.target.id==='cj-cont')cajaCalc()});
