@@ -613,8 +613,8 @@
       p_pedido_id:pedidoId,p_asignaciones:assignments,p_operacion_id:operationId
     });
     if (error) throw error;
-    delete state.operationIds[pedidoId];
     await reload();
+    delete state.operationIds[pedidoId];
     const count = Array.isArray(data?.ordenes) ? data.ordenes.length : 0;
     message(count + (count === 1 ? ' orden de compra generada.' : ' órdenes de compra generadas.'));
   }
