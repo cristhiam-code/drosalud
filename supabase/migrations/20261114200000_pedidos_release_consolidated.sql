@@ -58,9 +58,19 @@ create index if not exists ordenes_compra_items_pedido_item_idx on public.ordene
 -- Las nuevas pueden vincularse a una línea de pedido, nunca a ambas.
 alter table public.cotizaciones_proveedor
   alter column compra_id drop not null,
-  add column if not exists pedido_item_id uuid references public.pedidos_items(id) on delete restrict,
-  add constraint cotizaciones_proveedor_origen_check
-    check ((compra_id is not null) <> (pedido_item_id is not null));
+  add column if not exists pedido_item_id uuid references public.pedidos_items(id) on delete restrict;
+do $
+begin
+  if not exists (
+    select 1 from pg_constraint
+     where conname = 'cotizaciones_proveedor_origen_check'
+       and conrelid = 'public.cotizaciones_proveedor'::regclass
+  ) then
+    alter table public.cotizaciones_proveedor
+      add constraint cotizaciones_proveedor_origen_check
+      check ((compra_id is not null) <> (pedido_item_id is not null));
+  end if;
+end $;
 create index if not exists cotizaciones_proveedor_pedido_item_idx
   on public.cotizaciones_proveedor(pedido_item_id);
 
