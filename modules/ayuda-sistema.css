@@ -1,0 +1,20 @@
+/* Centro de ayuda: lectura organizada y sin ruido visual. */
+#v-ayuda{display:grid;gap:12px}
+#v-ayuda .help-card{padding:16px;background:var(--card);border:1px solid var(--line);border-radius:14px}
+#v-ayuda .help-card h2{margin:0 0 10px;font-size:1rem}
+#v-ayuda details{padding:11px 0;border-top:1px solid var(--line)}
+#v-ayuda details:first-of-type{border-top:0}
+#v-ayuda summary{cursor:pointer;font-weight:700;font-size:.88rem;color:var(--ink)}
+#v-ayuda .help-detail{padding:7px 2px 0;color:var(--mut);font-size:.83rem;line-height:1.5}
+#v-ayuda .help-detail p{margin:6px 0}
+#v-ayuda .help-detail ol{padding-left:20px;margin:7px 0}
+#v-ayuda .help-detail li{margin:4px 0}
+#v-ayuda .help-status{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.84rem}
+#v-ayuda .help-status strong{overflow-wrap:anywhere;text-align:right}
+#v-ayuda .help-performance{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:11px;background:var(--bg);font-size:.83rem}
+#v-ayuda .help-performance dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:0}
+#v-ayuda .help-performance dl div{padding:9px;background:var(--card);border-radius:8px}
+#v-ayuda .help-performance dt{color:var(--mut);font-size:.73rem}
+#v-ayuda .help-performance dd{margin:3px 0 0;font-weight:800;font-variant-numeric:tabular-nums}
+#v-ayuda .help-performance p{margin:10px 0 0}
+@media(max-width:420px){#v-ayuda .help-performance dl{grid-template-columns:1fr}}
