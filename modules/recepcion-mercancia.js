@@ -122,7 +122,7 @@
             <h2>Recepción de mercancía / Remisiones de compra</h2>
             <p>Verifica lo recibido del proveedor antes de cargarlo al inventario.</p>
           </div>
-          <button class="btn alt" type="button" data-rm-export><span aria-hidden="true">▦</span> Exportar a Excel</button>
+          <button class="btn alt" type="button" data-rm-export><svg class="excel-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 2h9l5 5v11H3z"/><path fill="#fff" d="M12 2v5h5"/><path fill="none" stroke="#fff" stroke-width="1.5" d="m5.5 10 4 5m0-5-4 5"/></svg> Exportar a Excel</button>
         </header>
         <p class="mut sm" data-rm-count></p>
         <p class="mut sm" data-rm-status role="status"></p>
