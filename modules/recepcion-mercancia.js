@@ -119,8 +119,8 @@
       <section class="rm-module">
         <header class="rm-heading">
           <div><span class="rm-kicker">INVENTARIO · COMPRAS</span>
-            <h2>Recepción de mercancía / Remisiones de compra</h2>
-            <p>Verifica lo recibido del proveedor antes de cargarlo al inventario.</p>
+            <h2>Remisiones</h2>
+            <p>Registra facturas y remisiones, compara lo solicitado con lo recibido y confirma el ingreso al inventario.</p>
           </div>
           <button class="btn alt" type="button" data-rm-export><svg class="excel-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 2h9l5 5v11H3z"/><path fill="#fff" d="M12 2v5h5"/><path fill="none" stroke="#fff" stroke-width="1.5" d="m5.5 10 4 5m0-5-4 5"/></svg> Exportar a Excel</button>
         </header>
@@ -147,7 +147,7 @@
     root.insertAdjacentHTML('beforeend', `
       <div class="rm-overlay" data-rm-overlay>
         <section class="rm-dialog" role="dialog" aria-modal="true" aria-labelledby="rm-dialog-title">
-          <h2 id="rm-dialog-title">Verificar remisión del proveedor</h2>
+          <h2 id="rm-dialog-title">Registrar remisión del proveedor</h2>
           <p class="mut sm">Proveedor: <strong>${esc(order.proveedor?.nombre || '—')}</strong> · Orden #${order.numero}</p>
           <label>N° Remisión / Factura del proveedor</label>
           <input data-rm-document maxlength="120" placeholder="Número del documento" required>
@@ -167,7 +167,7 @@
           <label>Observaciones (opcional)</label>
           <textarea data-rm-notes maxlength="500" rows="2"></textarea>
           <div class="rm-actions">
-            <button class="btn full" type="button" data-rm-confirm>Confirmar ingreso al inventario</button>
+            <button class="btn full" type="button" data-rm-confirm>Confirmar recepción e ingreso al inventario</button>
             <button class="btn alt full" type="button" data-rm-close>Cancelar</button>
           </div>
         </section>
