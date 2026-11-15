@@ -16,6 +16,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="modules/pedidos.css">
+<link rel="stylesheet" href="modules/recepcion-mercancia.css">
+<link rel="stylesheet" href="modules/ayuda-sistema.css">
+<link rel="stylesheet" href="modules/gestion-negocio.css">
+<link rel="stylesheet" href="modules/exportaciones.css">
 <style>
 :root{--bg:#F4F8FF;--card:#FFFFFF;--ink:#17365C;--mut:#718096;--line:#DCE7F1;--pri:#0756B5;--pri-ink:#FFFFFF;--soft:#E7F2FC;--gain:#22B573;--bad:#C62828;--secondary:#08A9D6;--accent:#22B573;--nav-bg:#FFFFFF;--nav-ink:#17365C;--hover:#E7F2FC;--selected:#D8EAFE;--focus:#08A9D6;--warning:#D97706;--success:#22B573;color-scheme:light;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -252,6 +256,7 @@ nav button[aria-current="true"]{color:var(--pri);font-weight:800;box-shadow:inse
 #home .home-tile .home-icon .home-illustration{display:block;width:100%;height:100%;object-fit:contain}
 #home .home-tile[data-home="venta"] .home-icon{width:82px;height:82px}
 @media(max-width:620px){#home .home-tile .home-icon{width:68px;height:68px;padding:3px}#home .home-tile[data-home="venta"] .home-icon{width:72px;height:72px}}
+
 </style>
 <style>
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:24px}
@@ -469,7 +474,7 @@ nav button{font-size:.78rem}
    <button class="home-tile" data-home="cli"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/clientes.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Clientes</strong><small>Consultar y retomar clientes</small></button>
    <button class="home-tile" data-home="his"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/historial.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Historial</strong><small>Ventas y reportes</small></button>
    <button class="home-tile" data-home="cot"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/cotizaciones.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Cotizaciones</strong><small>Consultar y enviar cotizaciones</small></button>
-   <button class="home-tile" data-home="neg"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/negocio.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Gestión del negocio</strong><small>Medicamentos por conseguir y proveedores</small></button>
+   <button class="home-tile" data-home="neg"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/negocio.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Compras y proveedores</strong><small>Solicitudes, cotizaciones y proveedores</small></button>
    <button class="home-tile" data-home="caja"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/caja.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Caja</strong><small id="caja-sub">Cierre de jornada</small></button>
    <button class="home-tile" data-home="aju"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/ajustes.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Ajustes</strong><small>Configurar Drosalud</small></button>
    <button class="home-tile" data-home="ayuda"><span class="home-icon" aria-hidden="true"><img class="home-illustration" src="assets/icons/ayuda.svg" alt="" aria-hidden="true" width="96" height="96" loading="eager" decoding="async"></span><strong>Ayuda y sistema</strong><small>Guía, conexión y herramientas</small></button>
@@ -544,10 +549,10 @@ nav button{font-size:.78rem}
   <label class="inv-choice"><input type="radio" name="inv-formato" value="pantalla" checked> En pantalla</label>
   <label class="inv-choice"><input type="radio" name="inv-formato" value="pos"> Impresora POS · Tira para la caja</label>
   <label class="inv-choice"><input type="radio" name="inv-formato" value="pdf"> Formato PDF</label>
-  <label class="inv-choice"><input type="radio" name="inv-formato" value="excel"> Excel</label>
+  <label class="inv-choice"><input type="radio" name="inv-formato" value="excel"><svg class="excel-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 2h9l5 5v11H3z"/><path fill="#fff" d="M12 2v5h5"/><path fill="none" stroke="#fff" stroke-width="1.5" d="m5.5 10 4 5m0-5-4 5"/></svg> Excel (.xlsx)</label>
   
   <button class="btn full" id="inv-generar" type="button">Generar informe de Kardex</button>
-  <p class="mut sm">La tira POS se enviará a impresión desde esta ventana. PDF se abre en el diálogo de impresión para guardar como PDF. Excel descarga un archivo CSV compatible con Excel.</p>
+  <p class="mut sm">La tira POS se enviará a impresión desde esta ventana. PDF se abre en el diálogo de impresión para guardar como PDF. Excel descarga un libro .xlsx.</p>
  </div>
  <div class="item"><h3>Informe de Kardex</h3><div id="inv-kardex-list"><p class="mut">No se está generando ningún Kardex y no hay impresiones pendientes.</p></div><button class="btn alt full" id="inv-print-kardex" type="button" hidden>Imprimir Kardex</button></div>
  <p class="mut sm" id="inv-status" aria-live="polite"></p>
@@ -556,12 +561,7 @@ nav button{font-size:.78rem}
  <div id="pedidos-app"><p class="mut sm">Abriendo módulo de pedidos…</p></div>
 </section>
 <section id="v-recepcion" hidden>
- <h2>Recepción de mercancía</h2><p class="mut sm">Registra únicamente productos que ya llegaron físicamente a Bodega.</p>
- <label for="inv-prod-search">Buscar producto por nombre o código</label><input id="inv-prod-search" type="search" placeholder="Escribe nombre o código…" autocomplete="off"><div id="inv-prod-results" role="listbox"></div><p class="mut sm" id="inv-prod-selected">Selecciona un producto del catálogo.</p><select id="inv-prod" hidden><option value="">Seleccionar producto</option></select>
- <label for="inv-unidades">Unidades individuales recibidas</label><input id="inv-unidades" type="number" min="1" step="1" inputmode="numeric" placeholder="Ej. 30">
- <label for="inv-notas">Nota (opcional)</label><input id="inv-notas" maxlength="500" placeholder="Proveedor, factura o referencia">
- <button class="btn full" id="inv-recibir" type="button">Registrar recepción física</button>
- <p class="mut sm" id="recep-status" aria-live="polite">Marcar una compra como comprada no modifica las existencias.</p>
+ <div id="recepcion-mercancia-app"><p class="mut sm">Abriendo recepción de mercancía…</p></div>
 </section>
 <section id="v-cli" hidden>
  <div class="seg"><button data-cv="todos" aria-pressed="true">Todos</button><button data-cv="ret" aria-pressed="false">Para retomar</button></div>
@@ -589,7 +589,7 @@ nav button{font-size:.78rem}
  <p class="mut sm" id="hn"></p>
  <div id="hrec"><div id="hl"></div><button class="btn alt full" id="hmore" hidden>Mostrar más</button></div>
  <div id="hres" hidden></div>
- <button class="btn alt full" id="xlsH" style="margin-top:12px">Descargar este período en Excel</button>
+ <button class="btn alt full" id="xlsH" style="margin-top:12px"><svg class="excel-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 2h9l5 5v11H3z"/><path fill="#fff" d="M12 2v5h5"/><path fill="none" stroke="#fff" stroke-width="1.5" d="m5.5 10 4 5m0-5-4 5"/></svg> Descargar este período en Excel</button>
 </section>
 <section id="v-cot" hidden>
  <p class="mut sm">Cotizaciones guardadas en la nube. Puedes abrirlas para volver a enviarlas.</p>
@@ -599,22 +599,16 @@ nav button{font-size:.78rem}
 <section id="v-neg" hidden>
  <div class="sum" id="neg-kpi"></div>
  <div class="seg"><button data-neg-tab="pend" aria-pressed="true">Por conseguir</button><button data-neg-tab="prov" aria-pressed="false">Proveedores</button></div>
- <div class="item" id="oc-panel">
-  <h2>Compras formales</h2>
-  <p class="mut sm">Crea órdenes a proveedores, apruébalas y registra únicamente las unidades que llegaron físicamente. Cada recepción actualiza Kardex y costo.</p>
-  <button class="btn full" id="oc-new">＋ Crear orden de compra</button>
-  <div id="oc-list"><p class="mut sm">Cargando órdenes…</p></div>
- </div>
  <div id="neg-pend">
   <button class="btn full" id="neg-new-buy">＋ Registrar medicamento por conseguir</button>
-  <p class="mut sm">Registra solicitudes de clientes y compras posteriores. No maneja existencias.</p>
+  <p class="mut sm">Anota medicamentos que un cliente pidió y aún no has conseguido. Este registro no modifica las existencias.</p>
   <div id="neg-buy-list"></div>
  </div>
  <div id="neg-prov" hidden>
   <button class="btn full" id="neg-new-provider">＋ Agregar proveedor</button>
   <div id="neg-provider-list"></div>
  </div>
- <p class="mut sm">Los datos de este módulo se guardan en Supabase y están separados por tu usuario.</p>
+ <p class="mut sm">Los datos de solicitudes, cotizaciones y proveedores se guardan asociados a tu usuario. Para reponer existencias usa Pedidos y luego Recepción.</p>
 </section>
 <section id="v-caja" hidden>
  <label for="cj-f">Fecha de la jornada</label>
@@ -630,34 +624,24 @@ nav button{font-size:.78rem}
  <div id="cj-history"></div>
 </section>
 <section id="v-ayuda" hidden>
- <p class="mut sm">Recursos para utilizar, consultar y mantener Drosalud.</p>
- <div class="help-card">
-  <h2>Herramientas del sistema</h2>
-  <button class="btn alt full" id="rf" type="button">↻ Sincronizar datos</button>
-  <p class="mut sm" id="sync-state" role="status" aria-live="polite">Tiempo real desactivado. Pulsa para sincronizar y activar las actualizaciones automáticas durante esta sesión.</p>
-  <p class="mut sm">Consulta los datos guardados y activa la recepción de cambios mientras mantengas la sesión abierta.</p>
-  <button class="btn alt full" id="xlsT" type="button">Descargar respaldo en Excel</button>
-  <p class="mut sm">Descarga una copia de los datos incluidos en el respaldo de Drosalud.</p>
- </div>
- <div class="help-card">
-  <h2>Estado del sistema</h2>
-  <div class="help-status"><span>Conexión a internet</span><strong id="ayuda-online">Comprobando…</strong></div>
-  <div class="help-status"><span>Sesión de usuario</span><strong id="ayuda-session">Comprobando…</strong></div>
-  <button class="btn alt full" id="ayuda-check" type="button" style="margin-top:12px">Comprobar estado</button>
- </div>
- <div class="help-card">
-  <h2>Guía de uso</h2>
-  <details><summary>Ventas y recibos</summary><p class="mut sm">Busca los productos, agrégalos al recibo, verifica cantidades, precios y forma de pago. Antes de crear el recibo, revisa el total.</p></details>
-  <details><summary>Catálogo y clientes</summary><p class="mut sm">En Catálogo puedes consultar y administrar productos. En Clientes puedes consultar, registrar y dar seguimiento a tus clientes.</p></details>
-  <details><summary>Caja e historial de cierres</summary><p class="mut sm">Caja permite consultar la jornada, registrar gastos y realizar el cierre. El historial muestra los cierres guardados y las modificaciones anteriores.</p></details>
-  <details><summary>Cotizaciones y gestión del negocio</summary><p class="mut sm">Las cotizaciones permiten preparar ofertas sin crear un recibo. Gestión del negocio reúne los medicamentos por conseguir y los proveedores.</p></details>
-  <details><summary>Ajustes</summary><p class="mut sm">Aquí se configuran precios, apariencia, datos del negocio, recibos, vendedor y medios de pago.</p></details>
- </div>
- <div class="help-card">
-  <h2>Acerca de Drosalud</h2>
-  <div class="help-status"><span>Versión instalada</span><strong id="ayuda-version"></strong></div>
-  <p class="mut sm">Drosalud · Sistema de gestión para droguerías.</p>
- </div>
+ <div class="help-intro"><h2>Centro de ayuda</h2><p>Guía para conocer Drosalud, entender cada módulo y consultar el estado de la aplicación.</p></div>
+ <section class="help-card"><h2>1. Guía de uso por módulo</h2><p class="mut sm">Abre cada apartado para conocer su propósito, cómo se utiliza y qué resultado produce.</p>
+ <details><summary>Facturación POS · Registrar una venta</summary><div class="help-detail"><p><b>Para qué sirve:</b> registrar ventas y generar recibos.</p><ol><li>Identifica al cliente si corresponde y selecciona el vendedor.</li><li>Busca productos por nombre o código y agrégalos al recibo.</li><li>Revisa cantidades, precios, descuentos, domicilio y forma de pago.</li><li>Verifica el total y guarda la venta.</li></ol><p><b>Resultado:</b> queda el recibo y se actualizan ventas e inventario.</p></div></details>
+ <details><summary>Productos · Catálogo</summary><div class="help-detail"><p><b>Para qué sirve:</b> consultar y mantener los productos que se pueden vender.</p><ol><li>Busca por código, nombre o laboratorio.</li><li>Revisa presentación, precios y unidades por empaque.</li><li>Conserva la trazabilidad de cada presentación mediante su código de producto.</li></ol><p><b>Resultado:</b> catálogo disponible para ventas, pedidos e informes.</p></div></details>
+ <details><summary>Clientes · Registro y seguimiento</summary><div class="help-detail"><p><b>Para qué sirve:</b> consultar, registrar y actualizar clientes.</p><ol><li>Busca por nombre, teléfono o documento.</li><li>Registra un cliente nuevo o actualiza sus datos.</li><li>Consulta clientes que puedes retomar.</li></ol><p><b>Resultado:</b> datos disponibles para futuras ventas y seguimiento.</p></div></details>
+ <details><summary>Pedidos · Qué comprar</summary><div class="help-detail"><p><b>Para qué sirve:</b> organizar las necesidades de compra antes de contactar proveedores.</p><ol><li><b>Pedido sugerido:</b> calcula reposición con ventas de los últimos 7 días, existencias y unidades pendientes por recibir.</li><li><b>Pedido urgente:</b> permite pedir en cajas únicamente productos con inventario negativo.</li><li><b>Pedido extraordinario:</b> permite solicitar productos nuevos o cantidades adicionales.</li><li>Guarda el borrador o envía a autorización. El administrador revisa antes de generar órdenes.</li></ol><p><b>Resultado:</b> solicitud trazable; todavía no aumenta inventario.</p></div></details>
+ <details><summary>Recepción · Ingresar mercancía</summary><div class="help-detail"><p><b>Para qué sirve:</b> registrar lo que realmente llegó del proveedor.</p><ol><li>Abre una orden aprobada o parcialmente recibida.</li><li>Escribe factura o remisión.</li><li>Compara cantidades con la mercancía física.</li><li>Registra el costo real por unidad y confirma.</li></ol><p><b>Resultado:</b> actualiza inventario y Kardex. No confirmes mercancía que no hayas recibido.</p></div></details>
+ <details><summary>Kardex · Existencias y movimientos</summary><div class="help-detail"><p><b>Para qué sirve:</b> consultar saldos y movimientos de inventario.</p><ol><li>Selecciona laboratorios y filtros.</li><li>Elige todos los saldos, negativos, en cero o diferentes de cero.</li><li>Genera el informe en pantalla, PDF, tira POS o Excel.</li></ol><p><b>Resultado:</b> identifica productos disponibles, agotados o negativos.</p></div></details>
+ <details><summary>Historial · Ventas y reportes</summary><div class="help-detail"><p><b>Para qué sirve:</b> consultar recibos, anulaciones y resúmenes por período.</p><ol><li>Selecciona el período.</li><li>Busca recibos y revisa totales o detalle de productos.</li><li>Descarga el período en Excel.</li></ol><p><b>Resultado:</b> información histórica para revisar y analizar ventas.</p></div></details>
+ <details><summary>Cotizaciones · Ofertas a clientes</summary><div class="help-detail"><p><b>Para qué sirve:</b> preparar ofertas sin registrar una venta.</p><ol><li>Selecciona productos y cantidades.</li><li>Revisa precios y vigencia.</li><li>Guarda o comparte la cotización.</li></ol><p><b>Resultado:</b> propuesta sin descontar inventario ni crear recibo.</p></div></details>
+ <details><summary>Compras y proveedores · Solicitudes pendientes</summary><div class="help-detail"><p><b>Para qué sirve:</b> registrar medicamentos pedidos por clientes que aún no has conseguido, mantener proveedores y comparar cotizaciones.</p><ol><li>En Por conseguir, registra el producto solicitado y su estado.</li><li>En Proveedores, crea o actualiza contactos.</li><li>Desde una solicitud, registra cotizaciones para comparar precios y disponibilidad.</li></ol><p><b>Importante:</b> es un registro de seguimiento; no reemplaza Pedidos ni Recepción y no modifica existencias.</p></div></details>
+ <details><summary>Caja · Control de jornada</summary><div class="help-detail"><p><b>Para qué sirve:</b> revisar caja, registrar gastos y cerrar la jornada.</p><ol><li>Consulta el resumen.</li><li>Registra gastos.</li><li>Verifica valores y realiza el cierre.</li><li>Consulta cierres anteriores en Historial de cierres.</li></ol><p><b>Resultado:</b> cierre guardado y trazable.</p></div></details>
+ <details><summary>Ajustes · Configuración</summary><div class="help-detail"><p><b>Para qué sirve:</b> configurar datos del negocio, precios, apariencia, recibos, vendedor y medios de pago.</p><ol><li>Entra a la sección que quieres modificar.</li><li>Revisa la vista previa cuando esté disponible.</li><li>Guarda y confirma el mensaje de éxito.</li></ol><p><b>Resultado:</b> configuración guardada.</p></div></details>
+ </section>
+ <section class="help-card"><h2>2. Herramientas del sistema</h2><button class="btn alt full" id="rf" type="button">↻ Sincronizar datos</button><p class="mut sm" id="sync-state" role="status" aria-live="polite">Tiempo real desactivado. Pulsa para sincronizar y activar actualizaciones automáticas durante esta sesión.</p><p class="mut sm">Consulta los datos guardados y recibe cambios mientras mantengas la sesión abierta.</p><button class="btn alt full" id="xlsT" type="button"><svg class="excel-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 2h9l5 5v11H3z"/><path fill="#fff" d="M12 2v5h5"/><path fill="none" stroke="#fff" stroke-width="1.5" d="m5.5 10 4 5m0-5-4 5"/></svg> Descargar respaldo completo en Excel</button><p class="mut sm">Descarga un archivo .xlsx con los datos incluidos en el respaldo.</p></section>
+ <section class="help-card"><h2>3. Estado del sistema</h2><div class="help-status"><span>Conexión de red</span><strong id="ayuda-online">Comprobando…</strong></div><div class="help-status"><span>Sesión de usuario</span><strong id="ayuda-session">Comprobando…</strong></div><div class="help-status"><span>Base de datos</span><strong id="ayuda-db">Comprobando…</strong></div><button class="btn alt full" id="ayuda-check" type="button">Comprobar conexión, base de datos y sesión</button></section>
+ <section class="help-card"><h2>4. Rendimiento de carga</h2><p class="mut sm">Tiempos registrados por el navegador al abrir esta página. No es una prueba de velocidad contratada ni mide ancho de banda.</p><button class="btn alt full" id="ayuda-performance" type="button">Consultar mediciones de carga</button><div id="ayuda-performance-results" class="help-performance" role="status" aria-live="polite">Aún no se han consultado las mediciones de esta carga.</div></section>
+ <section class="help-card"><h2>5. Información de Drosalud</h2><div class="help-status"><span>Versión instalada</span><strong id="ayuda-version">—</strong></div><div class="help-status"><span>Entorno activo</span><strong id="ayuda-entorno">—</strong></div><p class="mut sm">Drosalud gestiona ventas, catálogo, caja, compras y recepción de mercancía para una droguería. Está configurado para una sola sucursal y un único inventario. El flujo de abastecimiento es: Pedidos → autorización → órdenes por proveedor → Recepción física → actualización de inventario y Kardex. La fecha exacta de despliegue no se muestra porque esta versión estática no recibe ese dato de Vercel.</p></section>
 </section>
 <section id="v-aju" hidden>
  <div id="aju-menu">
@@ -749,7 +733,7 @@ nav button{font-size:.78rem}
  <button data-v="his">Historial</button>
  <button data-v="cot">Cotizaciones</button>
  <button data-v="aju">Ajustes</button>
- <button data-v="neg">Negocio</button>
+ <button data-v="neg">Compras</button>
 </div>
 <nav id="nav" aria-label="Navegación principal">
  <button data-v="venta" aria-current="true">Recibo<span class="bdg" id="bg" hidden></span></button>
@@ -772,7 +756,8 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;',
 const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 const money=n=>'$'+Math.round(n).toLocaleString('es-CO');
 const DEF={m:25,r:100,biz:'DROGUERIA DROSALUD.SAS',nit:'900.109.443-0',ciu:'Cúcuta',tel:'3112581564',dir:'',msg:'Gracias por su compra',nota:'Resolución de facturación electrónica N° 1845101586525 de 2025-11-12. Vigencia 24 meses.',sHora:true,sCed:true,sTel:true,sPago:true,big:false,sLogo:true,mMin:10,colorPri:'#0756B5',colorBg:'#F4F8FF',colorCard:'#FFFFFF',colorInk:'#17365C',colorSecondary:'#08A9D6',colorAccent:'#22B573',colorMuted:'#718096',colorBorder:'#DCE7F1',colorSoft:'#E7F2FC',colorNavBg:'#FFFFFF',colorNavInk:'#17365C',colorHover:'#E7F2FC',colorSelected:'#D8EAFE',colorFocus:'#08A9D6',colorSuccess:'#22B573',colorWarning:'#D97706',colorError:'#C62828',cotDias:3,cotNota:'Precios sujetos a cambio y disponibilidad.',respDias:30,breb:'3112581564',pagoTitular:'',pagoCot:true,pagoRec:'siempre',qrTexto:'',qrImg:'',vendedorDef:'',msgRetomar:'Hola {nombre}, ¿cómo estás? Te escribimos de Drosalud. Hace un tiempo no sabemos de ti, ¿te ayudamos con algo? Tu salud, nuestra prioridad.'};
-const VERSION='2026-11-10.2-compras-integradas';
+const VERSION='2026-11-14.1-pedidos-ayuda';
+window.DrosaludRuntimeInfo={version:VERSION,environment:esPreviewKardex?'Pruebas':'Producción'};
 let P=[],C=[],H=[],CO=[],cart=[],savingVenta=false,savingCotizacion=false,savingAjustes=false,cfg={...DEF},draft=null,usuarioDrosalud=null,rolDrosalud=null;
 // Control de interfaz por rol. La autorización definitiva debe aplicarse también en RLS.
 async function cargarRolDrosalud(){const{data,error}=await sb.auth.getUser();if(error)throw error;if(!data.user)throw new Error('Inicia sesión nuevamente.');const{data:perfil,error:ep}=await sb.from('usuarios_drosalud').select('rol,activo').eq('user_id',data.user.id).maybeSingle();if(ep)throw ep;if(!perfil||perfil.activo!==true||!['admin','vendedor'].includes(perfil.rol))throw new Error('Tu usuario no tiene un rol activo en Drosalud. Solicita al administrador que lo habilite.');usuarioDrosalud=data.user;rolDrosalud=perfil.rol;window.__drosaludRole=perfil.rol;return perfil.rol}
@@ -844,11 +829,14 @@ function invGenerarKardex(){
  const formato=document.querySelector('input[name="inv-formato"]:checked')?.value||'pantalla';
  if(formato==='pantalla')return;
  if(formato==='excel'){
-  const data=[['Laboratorio','Producto','Cantidad','Unidades'],...rows.map(p=>{const v=invPartes(invSaldo(p),p.unidades_por_caja);return[p.laboratorio||'Sin laboratorio',p.nombre,v.cajas,v.sueltas]})];
-  const csv='\uFEFF'+data.map(r=>r.map(x=>{let v=x??'';if(typeof v==='string'&&(['=','+','@','-'].includes(v[0])||v.charCodeAt(0)===9||v.charCodeAt(0)===13))v="'"+v;return '"'+String(v).replace(/"/g,'""')+'"'}).join(';')).join('\r\n');
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='kardex-drosalud.csv';a.click();URL.revokeObjectURL(url);return;
- }
- invImprimirKardex(formato==='pos');
+  if(typeof XLSX==='undefined'||!XLSX.utils?.aoa_to_sheet){toast('No está disponible la librería de Excel. Recarga la página e inténtalo de nuevo.');return}
+  const safe=value=>typeof value==='string'&&/^[=+@\\-\\t\\r]/.test(value)?"'"+value:value;
+  const data=[['Laboratorio','Producto','Cantidad (cajas)','Unidades sueltas'],...rows.map(p=>{const v=invPartes(invSaldo(p),p.unidades_por_caja);return[p.laboratorio||'Sin laboratorio',p.nombre,v.cajas,v.sueltas]})].map(row=>row.map(safe));
+  const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(data);
+  ws['!cols']=[{wch:28},{wch:48},{wch:18},{wch:18}];
+  XLSX.utils.book_append_sheet(wb,ws,'Kardex');
+  XLSX.writeFile(wb,'kardex-drosalud.xlsx');return;
+ } invImprimirKardex(formato==='pos');
 }
 async function invLeerTodo(construir){
  const salida=[];let desde=0,lote=[];
@@ -959,9 +947,8 @@ async function loadPedidos(){
  }
 }
 async function loadRecepcion(){
- $('#recep-status').textContent='Cargando catálogo…';
- try{await invCargarDatos();$('#recep-status').textContent='Selecciona el producto y registra solo las unidades que llegaron físicamente.'}
- catch(e){console.error(e);$('#recep-status').textContent='No se pudo cargar el catálogo: '+(e.message||'')}
+ if(!window.DrosaludRecepcionMercancia){$('#recepcion-mercancia-app').textContent='No se pudo cargar el módulo de recepción. Actualiza la página e inténtalo de nuevo.';return}
+ await window.DrosaludRecepcionMercancia.load();
 }
 async function invRegistrarRecepcion(){
  const id=$('#inv-prod').value,u=Number($('#inv-unidades').value),nota=$('#inv-notas').value.trim();
@@ -990,7 +977,7 @@ vistaInventario.addEventListener('change',e=>{
 });
 $('#inv-q').addEventListener('input',()=>{invRenderLabs();invRenderInforme()});
 document.querySelector('#v-pedidos').addEventListener('click',e=>{if(e.target.closest('#inv-print'))invImprimirPedido()});
-document.querySelector('#v-recepcion').addEventListener('click',e=>{if(e.target.closest('#inv-recibir'))invRegistrarRecepcion()});
+
 
 let syncChannel=null,syncTimer=null,realtimeRequested=false;
 function syncStatus(message){const el=$('#sync-state');if(el)el.textContent=message}
@@ -1019,7 +1006,7 @@ async function detenerRealtime(){
 }
 async function loadAllSafe(enableRealtime=false){if(enableRealtime){realtimeRequested=true;syncStatus('Consultando datos guardados y preparando tiempo real…')}const btn=$('#rf');const label=btn?(btn.dataset.originalText||btn.textContent||'↻ Sincronizar datos'):'↻ Sincronizar datos';if(btn){btn.dataset.originalText=label;btn.disabled=true;btn.setAttribute('aria-busy','true');btn.textContent='Sincronizando…'}
 try{await loadAll();$('#net').hidden=true;if(realtimeRequested)iniciarRealtime();toast('Datos sincronizados')}catch(e){console.error(e);const msg=msgErr(e);$('#net').hidden=false;$('#net').innerHTML='<span>'+esc(msg)+'</span><button id="retry">Reintentar</button>';toast(msg)}finally{if(btn){btn.disabled=false;btn.removeAttribute('aria-busy');btn.textContent=label}}}
-async function loadAyudaEstado(){const online=$('#ayuda-online'),session=$('#ayuda-session');if(online)online.textContent=navigator.onLine?'Conectado':'Sin conexión';if(session)session.textContent='Comprobando…';try{const{data,error}=await sb.auth.getSession();if(error)throw error;if(session)session.textContent=data.session?'Sesión activa':'Sesión no disponible'}catch(e){if(session)session.textContent='No se pudo comprobar'}}
+async function loadAyudaEstado(){const online=$('#ayuda-online'),session=$('#ayuda-session'),database=$('#ayuda-db');if(online)online.textContent=navigator.onLine?'Conectado':'Sin conexión';if(session)session.textContent='Comprobando…';if(database)database.textContent='Comprobando…';try{const{data,error}=await sb.auth.getSession();if(error)throw error;if(session)session.textContent=data.session?'Sesión activa':'Sesión no disponible';const result=await sb.from('ajustes').select('id').eq('id',1).maybeSingle();if(result.error)throw result.error;if(database)database.textContent=result.data?'Conectada':'Conectada · falta configuración'}catch(e){if(session&&session.textContent==='Comprobando…')session.textContent='No se pudo comprobar';if(database)database.textContent='No responde';console.warn('Estado del sistema:',e)}}
 let lastVer=0;async function checkVer(){lastVer=Date.now();try{const t=await(await fetch('index.html',{cache:'no-store'})).text(),m=t.match(/const VERSION='([^']+)'/);if(m&&m[1]!==VERSION){$('#upd').hidden=false;$('#upd').innerHTML='<span>Hay una versión nueva de la app</span><button id="upb">Actualizar</button>'}}catch(e){}}
 async function actualizar(){try{const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(e){}location.reload()}
 async function copy(t){try{await navigator.clipboard.writeText(t);toast('Copiado')}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}a.remove();toast(ok?'Copiado':'No se pudo copiar')}}
@@ -1040,7 +1027,7 @@ $('#mfa-no').onclick=async()=>{try{await sb.auth.mfa.unenroll({factorId:data.id}
 $('#mfa-ok').onclick=()=>go(async()=>{const code=$('#mfa-code').value.replace(/\s/g,''),m=$('#mfa-msg');m.textContent='';if(!/^\d{6}$/.test(code)){m.textContent='Escribe los 6 dígitos del código.';return}const{error:ev}=await sb.auth.mfa.challengeAndVerify({factorId:data.id,code});if(ev){m.textContent='Código incorrecto o vencido. Revisa tu app e intenta de nuevo.';return}closeM();toast('Verificación en dos pasos activada');mfaEstado()})}
 async function mfaDesactivar(){const{data:l,error:e0}=await sb.auth.mfa.listFactors();if(e0)throw e0;const f=(l.totp||[])[0];if(!f){mfaEstado();return}if(!confirm('¿Desactivar la verificación en dos pasos? Tu cuenta quedará protegida solo con la contraseña.'))return;const{error}=await sb.auth.mfa.unenroll({factorId:f.id});if(error){toast(/aal2|assurance|verif/i.test(String(error.message))?'Para desactivarla debes haber entrado con tu código.':'No se pudo desactivar. Intenta de nuevo.');return}toast('Verificación en dos pasos desactivada');mfaEstado()}
 function showLogin(){$('#spl').hidden=true;$('#app').hidden=true;$('#rsx').hidden=true;$('#mfa').hidden=true;$('#lg').hidden=false;try{const e=localStorage.getItem('lastEmail');if(e&&!$('#em').value){$('#em').value=e;$('#pw').focus()}}catch(x){}}
-const TT={venta:'Recibo',cat:'Catálogo',cli:'Clientes',his:'Historial',cot:'Cotizaciones',aju:'Ajustes',caja:'Caja',cajahistorial:'Historial de cierres',ayuda:'Ayuda y sistema',inventario:'Generar Kardex',pedidos:'Pedidos',recepcion:'Recepción'}
+const TT={venta:'Recibo',cat:'Catálogo',cli:'Clientes',his:'Historial',cot:'Cotizaciones',aju:'Ajustes',neg:'Compras y proveedores',caja:'Caja',cajahistorial:'Historial de cierres',ayuda:'Ayuda y sistema',inventario:'Generar Kardex',pedidos:'Pedidos',recepcion:'Recepción'}
 /*CAJA-INICIO*/
 let CJ={fecha:null,res:null,gastos:[]},savingCaja=false;
 const hoyCO=()=>new Date().toLocaleDateString('en-CA',{timeZone:'America/Bogota'});
@@ -1102,7 +1089,7 @@ function renderVentaDateTime(){const f=$('#venta-fecha'),h=$('#venta-hora');if(!
 setInterval(renderVentaDateTime,60000);
 function renderHomeDate(){const el=$('#home-date');if(!el)return;const mobile=window.matchMedia('(max-width: 620px)').matches;const opts=mobile?{weekday:'short',day:'numeric',month:'short',timeZone:'America/Bogota'}:{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'America/Bogota'};const s=new Intl.DateTimeFormat('es-CO',opts).format(new Date());el.textContent=s.charAt(0).toLocaleUpperCase('es-CO')+s.slice(1)}
 function showHome(){cajaBadge();renderHomeDate();$('#back-home').hidden=true;$('#home').hidden=false;['venta','cat','cli','his','cot','aju','neg','caja','cajahistorial','ayuda','inventario','pedidos','recepcion'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=true});$('#more-menu').hidden=true;$('#ttl').textContent='Drosalud';window.scrollTo(0,0)}
- function show(v){$('#back-home').hidden=false;$('#home').hidden=true;['venta','cat','cli','his','cot','aju','neg','caja','cajahistorial','ayuda','inventario','pedidos','recepcion'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=k!==v});$('#more-menu').hidden=true;$('#nav [data-v="mas"]').setAttribute('aria-expanded','false');document.querySelectorAll('#nav button').forEach(b=>{if(b.dataset.v!=='mas')b.setAttribute('aria-current',String(b.dataset.v===v));else b.setAttribute('aria-current',String(!['venta','cat','cli'].includes(v)))});$('#ttl').textContent=TT[v]||'Negocio';if(v==='venta')renderVentaDateTime();if(v==='aju')fillAju();if(v==='caja')go(loadCaja);if(v==='cajahistorial')go(loadHistorialCierres);if(v==='ayuda'){go(loadAyudaEstado);$('#ayuda-version').textContent='v'+VERSION}if(v==='his')go(loadHis);if(v==='cli')loadCST().catch(()=>{});if(v==='cot')go(loadCotizaciones);if(v==='inventario')go(loadInventario);if(v==='pedidos')go(loadPedidos);if(v==='recepcion')go(loadRecepcion);window.scrollTo(0,0)}
+ function show(v){$('#back-home').hidden=false;$('#home').hidden=true;['venta','cat','cli','his','cot','aju','neg','caja','cajahistorial','ayuda','inventario','pedidos','recepcion'].forEach(k=>{const el=$('#v-'+k);if(el)el.hidden=k!==v});$('#more-menu').hidden=true;$('#nav [data-v="mas"]').setAttribute('aria-expanded','false');document.querySelectorAll('#nav button').forEach(b=>{if(b.dataset.v!=='mas')b.setAttribute('aria-current',String(b.dataset.v===v));else b.setAttribute('aria-current',String(!['venta','cat','cli'].includes(v)))});$('#ttl').textContent=TT[v]||'Negocio';if(v==='venta')renderVentaDateTime();if(v==='aju')fillAju();if(v==='caja')go(loadCaja);if(v==='cajahistorial')go(loadHistorialCierres);if(v==='ayuda'){go(loadAyudaEstado);$('#ayuda-version').textContent='v'+VERSION;$('#ayuda-entorno').textContent=esPreviewKardex?'Pruebas':'Producción'}if(v==='his')go(loadHis);if(v==='cli')loadCST().catch(()=>{});if(v==='cot')go(loadCotizaciones);if(v==='inventario')go(loadInventario);if(v==='pedidos')go(loadPedidos);if(v==='recepcion')go(loadRecepcion);window.scrollTo(0,0)}
 function rRes(){const q=$('#q').value.trim(),b=$('#res');if(!q){b.innerHTML='';return}const a=find(q,20);b.innerHTML=a.length?a.map(p=>`<button class="row" data-add="${p.id}"><span class="nm">${esc(p.nombre)}<small>${esc(p.laboratorio||'')}</small></span><span class="pr">${pv(p)==null?'Precio pendiente':money(pv(p))}<small>compra ${money(p.precio_compra)}</small></span></button>`).join(''):'<p class="mut">No hay resultados. Agrégalo en Catálogo.</p>'}
 function calc(){const st=cart.reduce((s,i)=>s+i.p*i.q,0),g=cart.reduce((s,i)=>s+(i.p-(i.c||0))*i.q,0),ds=Math.max(0,+$('#dsc').value||0),dm=Math.max(0,+$('#dom').value||0),mens=Math.max(0,+$('#mens').value||0);return{st,ds,dm,mens,total:Math.max(0,st-ds+dm),gan:g==null?null:g-ds+dm-mens}}
 function rCart(){const b=$('#cart');b.innerHTML=cart.length?cart.map((i,k)=>`<div class="item"><div class="top"><span>${esc(i.n)}</span><button class="rm" data-rm="${k}" aria-label="Quitar">✕</button></div><div class="ctl"><div class="step"><button data-dec="${k}" aria-label="Menos">−</button><span>${i.q} ${i.q===1?'unidad':'unidades'}</span><button data-inc="${k}" aria-label="Más">+</button></div><label class="pp">$<input type="number" inputmode="numeric" data-pr="${k}" value="${i.p}" aria-label="Precio de venta por unidad"></label><span class="lt">${money(i.p*i.q)}</span></div><small class="mut">${esc(etiquetaCarrito(i))}· Compra ${money(i.c)} c/u${` · ganas ${money((i.p-i.c)*i.q)}${warnM(i.p,i.c)}`}</small></div>`).join(''):'<p class="mut">Busca un producto y tócalo para agregarlo.</p>';const k=calc(),n=cart.reduce((s,i)=>s+i.q,0);$('#tot').textContent=money(k.total);$('#gn').textContent=cart.length?'Ganancia estimada (productos + domicilio − mensajero − descuento): '+money(k.gan):'';const e=$('#bg');e.hidden=!n;e.textContent=n;rVue(k)}
@@ -1214,7 +1201,7 @@ function setCV(v){cv=v;document.querySelectorAll('[data-cv]').forEach(b=>b.setAt
 function rRet(){const f=$('#rtf').value,L=[];C.forEach(c=>{const s=CST[c.id];if(!s||!s.u)return;if(contact[c.id]&&Date.now()-contact[c.id]<14*864e5)return;const d=dd(s.u),avg=s.n>=3?(new Date(s.u)-new Date(s.p))/864e5/(s.n-1):0;let mo=null;if(f==='toca'){if(avg>=1&&d>avg*1.2&&d>=5)mo='Suele comprar cada ~'+Math.round(avg)+' días y ya van '+d}else if(d>=+f)mo='Sin comprar hace '+d+' días';if(mo)L.push({c,s,d,mo})});L.sort((a,b)=>b.d-a.d);
 $('#rtc').textContent=L.length?L.length+(L.length>1?' clientes':' cliente')+' para escribirles':'';
 $('#rtl').innerHTML=L.length?L.slice(0,50).map(x=>{const c=x.c,nom=tcase(c.nombre),ph=waNum(c.telefono),msg=(cfg.msgRetomar||'').replace(/\{nombre\}/g,nom.split(' ')[0]);return `<div class="item"><div class="top"><span>${esc(nom)}</span><b>${money(x.s.t)}</b></div><small class="mut">${esc(x.mo)}<br>Última compra: ${esc(fd(x.s.u))} · ${x.s.n} compra${x.s.n>1?'s':''}</small><div class="ctl">${ph?`<a class="btn" style="flex:1" target="_blank" rel="noopener" href="https://wa.me/${ph}?text=${encodeURIComponent(msg)}">Escribir por WhatsApp</a>`:'<span class="mut sm" style="flex:1">Sin teléfono</span>'}<button class="btn alt" data-cok="${c.id}">Ya le escribí</button></div></div>`}).join(''):'<p class="mut">Por ahora no hay clientes para retomar con este filtro.</p>'}
-function rBk(){const b=$('#bkb');if(!b)return;const ref=cfg.ultimoRespaldo||cfg.primerUso;if(!ref){b.hidden=true;return}const d=dd(ref);let sn=0;try{sn=+localStorage.getItem('bkSnooze')||0}catch(e){}b.hidden=!(d>=(+cfg.respDias||30)&&Date.now()>sn);if(!b.hidden)b.innerHTML='<span>'+(cfg.ultimoRespaldo?'Hace '+d+' días no descargas tu respaldo':'Aún no has descargado tu respaldo')+'</span><button id="bkd">Descargar</button><button id="bkl">Luego</button>'}
+function rBk(){const b=$('#bkb');if(!b)return;const ref=cfg.ultimoRespaldo||cfg.primerUso;if(!ref){b.hidden=true;return}const d=dd(ref);let sn=0;try{sn=+localStorage.getItem('bkSnooze')||0}catch(e){}b.hidden=!(d>=(+cfg.respDias||30)&&Date.now()>sn);if(!b.hidden)b.innerHTML='<span>'+(cfg.ultimoRespaldo?'Hace '+d+' días no descargas tu respaldo':'Aún no has descargado tu respaldo')+'</span><button id="bkd"><svg class="excel-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 2h9l5 5v11H3z"/><path fill="#fff" d="M12 2v5h5"/><path fill="none" stroke="#fff" stroke-width="1.5" d="m5.5 10 4 5m0-5-4 5"/></svg> Descargar</button><button id="bkl">Luego</button>'}
 const buscarCodigo=c=>{c=String(c||'').trim();if(!c)return null;const z=s=>String(s||'').trim().replace(/^0+/,'');return P.find(p=>String(p.codigo||'').trim()===c)||P.find(p=>z(p.codigo)&&z(p.codigo)===z(c))||null};
 function unidadesPresentacion(i){return Math.max(1,Number(i.unidades_por_presentacion||i.unidadesPorPresentacion||1))}
 function nombreConPresentacion(i){const u=unidadesPresentacion(i),q=Number(i.cantidad??i.q)||0;if(u<=1||!i.presentacion)return i.nombre;return `${i.nombre} · ${q} unidades`}
@@ -1312,7 +1299,7 @@ if(scope==='todo'){add('Productos',P.map(p=>({'Código':p.codigo||'','Producto':
 add('Clientes',C.map(c=>({'Nombre':tcase(c.nombre),'Teléfono':c.telefono||'','Cédula o NIT':c.cedula||'','Dirección':c.direccion||''})),[28,14,14,30]);
 let hp=[];try{hp=await all('historial_precios','creado_en')}catch(e){}add('Historial de precios',hp.map(x=>({'Fecha':new Date(x.creado_en),'Producto':nm(x.producto_id),'Precio anterior':Number(x.precio_anterior),'Precio nuevo':Number(x.precio_nuevo),'Cambio %':Math.round((x.precio_nuevo-x.precio_anterior)/x.precio_anterior*1000)/10})),[17,46,14,14,10])}
 const day=t=>new Date(t).toISOString().slice(0,10),hoy=day(Date.now());let fn;if(scope==='todo')fn=`drosalud-respaldo-${hoy}.xlsx`;else{const[a,b]=rango();fn=`drosalud-ventas-${day(a)}-a-${day(new Date(Math.min(b.getTime()-864e5,Date.now())))}.xlsx`}
-XLSX.writeFile(wb,fn,{cellDates:true});if(scope==='todo'){try{await saveCfgDb({...cfg,ultimoRespaldo:new Date().toISOString()});rBk()}catch(e){}}toast('Excel descargado')}
+XLSX.writeFile(wb,fn,{cellDates:true});if(scope==='todo'){const fechaRespaldo=new Date().toISOString();try{await saveCfgDb({...cfg,ultimoRespaldo:fechaRespaldo});if(cfg.ultimoRespaldo!==fechaRespaldo)throw new Error('La base de datos no confirmó la fecha del respaldo.');rBk();const aviso=$('#bkt');if(aviso)aviso.textContent='Último respaldo: '+fd(fechaRespaldo);toast('Respaldo descargado y registrado correctamente')}catch(e){console.error('No se pudo registrar el respaldo descargado:',e);toast('El archivo se generó, pero no se pudo registrar el respaldo. Revisa tu conexión o permisos y vuelve a intentarlo.');return}}else{toast('Excel descargado')}}
 document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;const d=t.dataset,id=t.id;
 if(d.v==='mas'){const m=$('#more-menu'),open=m.hidden;m.hidden=!open;t.setAttribute('aria-expanded',String(open));return}
 if(d.v)return show(d.v);
@@ -1409,266 +1396,13 @@ showLogin();
 (async()=>{try{const{data,error}=await sb.auth.getSession();if(error)throw error;if(data.session)await start()}catch(e){console.error('No se pudo comprobar la sesión al iniciar:',e);showLogin()}})();
 </script>
 
-<script>
-(()=>{
- const $n=s=>document.querySelector(s), moneyN=n=>'$'+Math.round(Number(n)||0).toLocaleString('es-CO'); 
- let tab='pend',providers=[],buys=[],quotes=[];
- const escN=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- async function owner(){const {data,error}=await sb.auth.getUser();if(error)throw error;if(!data.user)throw new Error('Inicia sesión nuevamente.');return data.user.id}
- async function load(){
-  const uid=await owner();
-  const [p,b,q]=await Promise.all([
-   sb.from('proveedores').select('*').order('nombre'),
-   sb.from('compras_pendientes').select('*').eq('owner_id',uid).order('creado_en',{ascending:false}),
-   sb.from('cotizaciones_proveedor').select('*').eq('owner_id',uid).order('consultado_en',{ascending:false})
-  ]);
-  for(const x of [p,b,q])if(x.error)throw x.error;
-  providers=p.data||[];buys=b.data||[];quotes=q.data||[];
-  render();
- }
- function render(){
-  const open=buys.filter(x=>!['entregado','cancelado'].includes(x.estado));
-  $n('#neg-kpi').innerHTML='<div>Solicitudes abiertas<b>'+open.length+'</b></div><div>Compras registradas<b>'+buys.filter(x=>x.costo_real!=null).length+'</b></div>';
-  $n('#neg-provider-list').innerHTML=providers.length?providers.map(p=>'<div class="item"><div class="top"><span>'+escN(p.nombre)+'</span><span class="mut">'+(p.activo?'Activo':'Inactivo')+'</span></div><p class="sm mut">'+[p.contacto,p.telefono,p.whatsapp,p.email].filter(Boolean).map(escN).join(' · ')+'</p>'+(p.notas?'<p class="sm">'+escN(p.notas)+'</p>':'')+'<div class="acts"><button class="btn alt full" data-neg-edit-provider="'+p.id+'">Editar proveedor</button><button class="btn bad full" data-neg-delete-provider="'+p.id+'">Eliminar proveedor</button></div></div>').join(''):'<p class="mut">Todavía no tienes proveedores registrados.</p>';
-  $n('#neg-buy-list').innerHTML=buys.length?buys.map(b=>{
-   const p=providers.find(x=>x.id===b.proveedor_id),qs=quotes.filter(q=>q.compra_id===b.id);
-   return '<div class="item"><div class="top"><span>'+escN(b.producto_nombre)+'</span><span>'+escN(b.estado)+'</span></div><p class="sm mut">Cantidad: '+b.cantidad+' · '+(p?escN(p.nombre):'Sin proveedor asignado')+'</p><p class="sm">Costo estimado: '+(b.costo_estimado==null?'—':moneyN(b.costo_estimado))+' · Costo real: '+(b.costo_real==null?'Pendiente':moneyN(b.costo_real))+'</p><p class="sm mut">'+qs.length+' cotización(es)</p><div class="acts"><button class="btn alt full" data-neg-quote="'+b.id+'">Registrar cotización</button><button class="btn alt full" data-neg-edit-buy="'+b.id+'">Actualizar compra</button></div></div>'
-  }).join(''):'<p class="mut">No tienes medicamentos pendientes por conseguir.</p>';
- }
- function form(title,fields,values={}){return '<h2 style="margin-top:0">'+title+'</h2>'+fields.map(f=>'<label>'+f.label+'</label>'+ (f.type==='select'?'<select id="nf-'+f.key+'">'+f.options.map(o=>'<option value="'+escN(o.value)+'" '+(String(values[f.key]??f.default??'')===String(o.value)?'selected':'')+'>'+escN(o.label)+'</option>').join('')+'</select>':'<input id="nf-'+f.key+'" type="'+(f.type||'text')+'" value="'+escN(values[f.key]??'')+'" '+(f.required?'required':'')+' '+(f.min!==undefined?'min="'+f.min+'"':'')+'>')).join('')+'<div class="acts"><button class="btn full" id="neg-save">Guardar</button><button class="btn alt full" id="neg-cancel">Cancelar</button></div>'}
- function modal(content){$n('#modal').hidden=false;$n('#sheet').innerHTML=content;$n('#neg-cancel').onclick=()=>{$n('#modal').hidden=true};}
- async function saveProvider(id){
-  const uid=await owner(),v=k=>$n('#nf-'+k).value.trim();
-  const row={owner_id:uid,nombre:v('nombre'),contacto:v('contacto'),telefono:v('telefono'),whatsapp:v('whatsapp'),email:v('email'),notas:v('notas'),activo:v('activo')==='true'};
-  if(!row.nombre)throw new Error('Escribe el nombre del proveedor.');
-  const clean=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
-  const phone=s=>String(s||'').replace(/\D/g,'');
-  const duplicate=providers.find(p=>p.id!==id&&(
-   clean(p.nombre)===clean(row.nombre)||
-   (phone(row.telefono).length>=7&&phone(p.telefono)===phone(row.telefono))||
-   (phone(row.whatsapp).length>=7&&(phone(p.whatsapp)===phone(row.whatsapp)||phone(p.telefono)===phone(row.whatsapp)))||
-   (phone(row.telefono).length>=7&&phone(p.whatsapp)===phone(row.telefono))
-  ));
-  if(duplicate)throw new Error('Este proveedor ya está registrado ('+duplicate.nombre+'). Busca el registro existente y edítalo; no crees otro.');
-  const res=id?await sb.from('proveedores').update(row).eq('id',id).eq('owner_id',uid).select('id').maybeSingle():await sb.from('proveedores').insert(row).select('id').single();
-  if(res.error)throw res.error;if(id&&!res.data)throw new Error('El proveedor no se actualizó. No se encontró el registro o tu usuario no tiene permiso.');$n('#modal').hidden=true;await load();
- }
- async function deleteProvider(id){
-  const uid=await owner(),p=providers.find(x=>x.id===id);if(!p)return;
-  const hasBuys=buys.some(x=>x.proveedor_id===id),hasQuotes=quotes.some(x=>x.proveedor_id===id);
-  if(hasBuys||hasQuotes)throw new Error('No se puede eliminar '+p.nombre+' porque tiene compras o cotizaciones asociadas. Edítalo y cámbialo a Inactivo para conservar el historial.');
-  if(!confirm('¿Eliminar definitivamente al proveedor "'+p.nombre+'"? Esta acción no se puede deshacer.'))return;
-  const {error}=await sb.from('proveedores').delete().eq('id',id).eq('owner_id',uid);
-  if(error)throw error;
-  await load();
- }
- function providerForm(id){const p=providers.find(x=>x.id===id)||{};modal(form(id?'Editar proveedor':'Nuevo proveedor',[
-  {key:'nombre',label:'Nombre del proveedor',required:true},{key:'contacto',label:'Persona de contacto'},{key:'telefono',label:'Teléfono'},{key:'whatsapp',label:'WhatsApp'},{key:'email',label:'Correo',type:'email'},{key:'notas',label:'Notas'},
-  {key:'activo',label:'Estado',type:'select',default:'true',options:[{value:'true',label:'Activo'},{value:'false',label:'Inactivo'}]}
- ],p));$n('#neg-save').onclick=()=>run(()=>saveProvider(id));}
- async function saveBuy(id){
-  const uid=await owner(),v=k=>$n('#nf-'+k).value.trim(),n=k=>v(k)===''?null:Number(v(k));
-  const costoReal=n('costo_real'), reciboItemId=v('recibo_item_id')||null, reciboId=v('recibo_id')||null;
-  const anterior=buys.find(x=>x.id===id);
-  if(anterior?.recibo_item_id && anterior.costo_real!=null &&
-     (anterior.recibo_item_id!==reciboItemId || anterior.recibo_id!==reciboId || costoReal===null)){
-   throw new Error('Esta compra ya actualizó la ganancia de un recibo. Conserva el mismo recibo y la misma línea; no borres el costo real.');
-  }
-  const row={owner_id:uid,producto_nombre:v('producto_nombre'),cantidad:n('cantidad')||1,proveedor_id:v('proveedor_id')||null,costo_estimado:n('costo_estimado'),costo_real:reciboItemId?null:costoReal,estado:v('estado'),notas:v('notas'),recibo_id:reciboId,recibo_item_id:reciboItemId};
-  if(!row.producto_nombre)throw new Error('Escribe el medicamento.');
-  if(costoReal!==null&&reciboItemId){
-   const {error}=await sb.rpc('guardar_compra_con_costo_real',{
-    p_compra_id:id||null,p_producto_nombre:row.producto_nombre,p_cantidad:row.cantidad,
-    p_proveedor_id:row.proveedor_id,p_costo_estimado:row.costo_estimado,
-    p_estado:row.estado,p_notas:row.notas,p_recibo_id:reciboId,
-    p_recibo_item_id:reciboItemId,p_costo_real:costoReal
-   });
-   if(error)throw error;
-  }else{
-   const {error}=await sb.rpc('guardar_compra_pendiente',{
-    p_compra_id:id||null,p_producto_nombre:row.producto_nombre,p_cantidad:row.cantidad,
-    p_proveedor_id:row.proveedor_id,p_costo_estimado:row.costo_estimado,
-    p_estado:row.estado,p_notas:row.notas,p_recibo_id:row.recibo_id,
-    p_recibo_item_id:row.recibo_item_id,p_costo_real:row.costo_real,
-    p_actualizar_costo_real:true
-   });
-   if(error)throw error;
-  }
-  $n('#modal').hidden=true;await load();
- }
- async function buyForm(id){
-  const b=buys.find(x=>x.id===id)||{};
-  const {data:receipts,error}=await sb.from('recibos').select('id,numero,cliente_nombre,creado_en').order('creado_en',{ascending:false}).limit(100);
-  if(error)throw error;
-  const opts=[{value:'',label:'Sin vincular a un recibo'},...(receipts||[]).map(r=>({value:r.id,label:'Recibo '+r.numero+' · '+(r.cliente_nombre||'Sin cliente')+' · '+new Date(r.creado_en).toLocaleDateString('es-CO')}))];
-  modal(form(id?'Actualizar solicitud':'Medicamento por conseguir',[
-   {key:'producto_nombre',label:'Medicamento o producto',required:true},
-   {key:'cantidad',label:'Cantidad',type:'number',min:1},
-   {key:'proveedor_id',label:'Proveedor',type:'select',default:'',options:[{value:'',label:'Sin asignar'},...providers.map(p=>({value:p.id,label:p.nombre}))]},
-   {key:'costo_estimado',label:'Costo estimado por unidad',type:'number',min:0},
-   {key:'recibo_id',label:'Vincular con recibo (opcional)',type:'select',default:'',options:opts},
-   {key:'recibo_item_id',label:'Línea del recibo para actualizar costo',type:'select',default:'',options:[{value:'',label:'Selecciona primero un recibo'}]},
-   {key:'costo_real',label:'Costo real por unidad',type:'number',min:0},
-   {key:'estado',label:'Estado',type:'select',default:'pendiente',options:['pendiente','cotizando','comprado','entregado','cancelado'].map(x=>({value:x,label:x[0].toUpperCase()+x.slice(1)}))},
-   {key:'notas',label:'Notas'}
-  ],{cantidad:1,estado:'pendiente',...b}));
-  const receipt=$n('#nf-recibo_id'),item=$n('#nf-recibo_item_id');
-  async function itemsForReceipt(receiptId,selected){
-   item.innerHTML='<option value="">Cargando líneas…</option>';
-   if(!receiptId){item.innerHTML='<option value="">Selecciona primero un recibo</option>';return}
-   const {data,error}=await sb.from('recibo_items_app').select('id,nombre,cantidad,precio_venta').eq('recibo_id',receiptId).order('id');
-   if(error)throw error;
-   item.innerHTML='<option value="">No actualizar costo de una línea</option>'+(data||[]).map(x=>'<option value="'+x.id+'">'+escN(x.nombre)+' × '+x.cantidad+' · '+moneyN(x.precio_venta)+'</option>').join('');
-   if(selected)item.value=selected;
-  }
-  receipt.addEventListener('change',()=>run(()=>itemsForReceipt(receipt.value,'')));
-  if(b.recibo_id)await itemsForReceipt(b.recibo_id,b.recibo_item_id);
-  $n('#neg-save').onclick=()=>run(()=>saveBuy(id));
- }
- async function quoteForm(id){
-  const b=buys.find(x=>x.id===id);if(!b)return;
-  if(!providers.length){alert('Primero registra un proveedor.');return}
-  modal(form('Cotización para '+b.producto_nombre,[
-   {key:'proveedor_id',label:'Proveedor',type:'select',options:providers.map(p=>({value:p.id,label:p.nombre}))},
-   {key:'precio_unitario',label:'Precio por unidad',type:'number',min:0,required:true},
-   {key:'disponible',label:'Disponibilidad',type:'select',default:'true',options:[{value:'true',label:'Disponible'},{value:'false',label:'No disponible'}]},
-   {key:'notas',label:'Notas'}
-  ],{proveedor_id:providers[0].id,disponible:'true'}));
-  $n('#neg-save').onclick=()=>run(async()=>{const uid=await owner(),price=Number($n('#nf-precio_unitario').value);if(!(price>=0))throw new Error('Ingresa un precio válido.');const {error}=await sb.from('cotizaciones_proveedor').insert({owner_id:uid,compra_id:b.id,proveedor_id:$n('#nf-proveedor_id').value,precio_unitario:price,disponible:$n('#nf-disponible').value==='true',notas:$n('#nf-notas').value});if(error)throw error;$n('#modal').hidden=true;await load()});
- }
- async function run(fn){try{await fn()}catch(e){console.error(e);alert(e.message||'No se pudo guardar. Revisa la conexión y la migración SQL.')}} 
- function setTab(t){tab=t;$n('#neg-pend').hidden=t!=='pend';$n('#neg-prov').hidden=t!=='prov';document.querySelectorAll('[data-neg-tab]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.negTab===t)))}
- document.addEventListener('click',e=>{
-  const b=e.target.closest('button');if(!b)return;
-  if(b.dataset.v==='neg'){e.preventDefault();e.stopImmediatePropagation();show('neg');run(load);return}
-  if(b.dataset.negTab){setTab(b.dataset.negTab);return}
-  if(b.id==='neg-new-provider'){providerForm();return}
-  if(b.id==='neg-new-buy'){buyForm();return}
-  if(b.dataset.negEditProvider){providerForm(b.dataset.negEditProvider);return}
-  if(b.dataset.negDeleteProvider){run(()=>deleteProvider(b.dataset.negDeleteProvider));return}
-  if(b.dataset.negEditBuy){buyForm(b.dataset.negEditBuy);return}
-  if(b.dataset.negQuote){quoteForm(b.dataset.negQuote);return}
- },true);
-})();
-</script>
 
-<script>
-(()=>{
- const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- let ordenes=[];
- async function cargarOrdenes(){
-  const {data,error}=await sb.from('ordenes_compra').select('id,numero,proveedor_id,estado,documento_proveedor,creado_en').order('creado_en',{ascending:false}).limit(100);
-  if(error)throw error;ordenes=data||[];renderOrdenes();
- }
- function renderOrdenes(){
-  const box=$('#oc-list');if(!box)return;
-  box.innerHTML=ordenes.length?ordenes.map(o=>{
-   const p=(window.__ocProviders||[]).find(x=>x.id===o.proveedor_id);
-   return '<article class="item"><div class="top"><b>Orden #'+o.numero+'</b><span>'+esc(o.estado)+'</span></div><p class="sm">'+esc(p?.nombre||'Proveedor')+' · '+esc(o.documento_proveedor||'Sin documento')+'</p><div class="acts">'+(o.estado==='borrador'?'<button class="btn alt full" data-oc-approve="'+o.id+'">Aprobar orden</button>':'')+(o.estado==='aprobada'||o.estado==='parcial'?'<button class="btn full" data-oc-receive="'+o.id+'">Registrar recepción</button>':'')+'</div></article>';
-  }).join(''):'<p class="mut sm">Todavía no hay órdenes de compra.</p>';
- }
- async function cargarProveedores(){const {data,error}=await sb.from('proveedores').select('id,nombre,activo').eq('activo',true).order('nombre');if(error)throw error;window.__ocProviders=data||[];return data||[]}
- function modal(html){$('#modal').hidden=false;$('#sheet').innerHTML=html}
- function cerrar(){ $('#modal').hidden=true}
-  function normalizarBusqueda(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim()}
-  function coincideProducto(p,q){
-   const n=normalizarBusqueda(q),codigo=String(p.codigo||'').toLowerCase().replace(/\D/g,'');
-   const dig=n.replace(/\D/g,'');
-   return !n||normalizarBusqueda([p.nombre,p.laboratorio,p.codigo].join(' ')).includes(n)||(dig.length>=4&&codigo.includes(dig));
-  }
- async function nuevaOrden(){
-  const providers=await cargarProveedores();
-  if(!providers.length)throw new Error('Primero registra un proveedor activo.');
-  if(!P.length)throw new Error('No se pudo cargar el catálogo.');
-  modal('<h2>Crear orden de compra</h2><label>Proveedor</label><select id="oc-provider">'+providers.map(p=>'<option value="'+p.id+'">'+esc(p.nombre)+'</option>').join('')+'</select><label>Factura / documento proveedor (opcional)</label><input id="oc-doc" maxlength="100"><h3>Productos de la orden</h3><div id="oc-order-lines"></div><button type="button" class="btn alt full" id="oc-add-line">＋ Agregar producto</button><div class="acts"><button class="btn full" id="oc-save">Guardar borrador</button><button class="btn alt full" id="oc-cancel">Cancelar</button></div>');
-  const lines=$('#oc-order-lines');
-  function addLine(){
-   const row=document.createElement('div');row.className='item oc-line';
-   row.innerHTML='<label>Buscar producto por nombre o código</label><input type="search" data-oc-search placeholder="Escribe nombre o código…" autocomplete="off"><div data-oc-results class="oc-search-results" role="listbox"></div><input type="hidden" data-oc-product value=""><p class="mut sm" data-oc-selected>Selecciona un producto del catálogo.</p><label>Unidades individuales solicitadas</label><input data-oc-units type="number" min="1" step="1" value="1"><label>Costo por unidad individual</label><input data-oc-cost type="number" min="0" step="0.01" value="0"><button type="button" class="btn bad full" data-oc-remove>Quitar producto</button>';
-   const search=row.querySelector('[data-oc-search]'),results=row.querySelector('[data-oc-results]');
-   // Conserva también los productos consultados directamente en Supabase, aunque no estén en P.
-   let productosEncontrados=[];
-   const pintarResultados=productos=>{
-    productosEncontrados=productos||[];
-    results.innerHTML=productosEncontrados.map(p=>'<button type="button" class="btn alt full" data-oc-pick="'+p.id+'" style="text-align:left;margin:3px 0">'+esc(p.nombre)+' · '+esc(p.codigo||'Sin código')+' · '+esc(p.laboratorio||'')+'</button>').join('')||(search.value.trim()?'<p class="mut sm">No se encontraron coincidencias.</p>':'<p class="mut sm">Escribe al menos parte del nombre o código.</p>');
-   };
-   const render=()=>{const q=search.value.trim();if(!q){productosEncontrados=[];results.innerHTML='<p class="mut sm">Escribe el nombre o código del producto para buscarlo.</p>';return}const found=P.filter(p=>coincideProducto(p,q)).slice(0,12);pintarResultados(found)};
-   let lookupSeq=0;
-   async function buscarEnCatalogo(){
-    const q=search.value.trim(),seq=++lookupSeq;
-    row.querySelector('[data-oc-product]').value='';
-    row.querySelector('[data-oc-selected]').textContent='Selecciona un producto del catálogo.';
-    render();
-    const digits=q.replace(/\D/g,'');
-    if(digits.length<8)return;
-    try{
-     const {data,error}=await sb.from('productos_app')
-      .select('id,codigo,nombre,laboratorio,linea,precio_compra,precio_venta,fraccionable,unidades_por_caja,unidades_por_venta')
-      .eq('codigo',digits).limit(12);
-     if(error)throw error;
-     if(seq!==lookupSeq||search.value.trim()!==q)return;
-     const merged=[...(data||[]),...P.filter(p=>String(p.codigo||'').replace(/\D/g,'')===digits)]
-      .filter((p,i,a)=>a.findIndex(x=>String(x.id)===String(p.id))===i);
-     if(merged.length){
-      pintarResultados(merged);
-     }else{
-      productosEncontrados=[];
-      results.innerHTML='<p class="mut sm">No se encontró ese código en el catálogo. Comprueba que esté registrado.</p>';
-     }
-    }catch(err){console.error('Búsqueda de código en compras:',err);if(seq===lookupSeq)results.innerHTML='<p class="mut sm">No se pudo consultar el catálogo. Revisa la conexión e intenta de nuevo.</p>'}
-   }
-   search.addEventListener('input',()=>{row.querySelector('[data-oc-product]').value='';row.querySelector('[data-oc-selected]').textContent='Selecciona un producto del catálogo.';render();if(search.value.replace(/\D/g,'').length>=8)buscarEnCatalogo()});
-   search.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();buscarEnCatalogo()}});
 
-   results.addEventListener('click',e=>{const btn=e.target.closest('[data-oc-pick]');if(!btn)return;const p=[...P,...productosEncontrados].find(x=>String(x.id)===btn.dataset.ocPick);if(!p)return;
-    row.querySelector('[data-oc-product]').value=p.id;search.value=p.nombre;row.querySelector('[data-oc-selected]').textContent='Seleccionado: '+p.nombre+' · '+(p.codigo||'Sin código');productosEncontrados=[];results.innerHTML='';
-   });
-   row.querySelector('[data-oc-remove]').onclick=()=>row.remove();render();lines.appendChild(row);
-  }
-  addLine();$('#oc-add-line').onclick=addLine;$('#oc-cancel').onclick=cerrar;
-  $('#oc-save').onclick=async()=>{
-   const rows=[...lines.querySelectorAll('.oc-line')];
-   const items=rows.map(row=>({producto_id:row.querySelector('[data-oc-product]').value,unidades_solicitadas:Number(row.querySelector('[data-oc-units]').value),costo_unitario_base:Number(row.querySelector('[data-oc-cost]').value)}));
-   if(!items.length||items.some(x=>!x.producto_id||!Number.isInteger(x.unidades_solicitadas)||x.unidades_solicitadas<=0||!Number.isFinite(x.costo_unitario_base)||x.costo_unitario_base<0))throw new Error('Revisa productos, unidades y costos de todas las líneas.');
-   const ids=items.map(x=>x.producto_id);if(new Set(ids).size!==ids.length)throw new Error('No repitas el mismo producto en la orden; combina sus unidades en una sola línea.');
-   const {data,error}=await sb.rpc('crear_orden_compra',{p_proveedor_id:$('#oc-provider').value,p_items:items,p_documento:$('#oc-doc').value,p_notas:null});
-   if(error)throw error;if(!data)throw new Error('Supabase no confirmó la creación de la orden.');
-   cerrar();await cargarOrdenes();alert('Orden creada como borrador.');
-  };
- }
- async function aprobar(id){const {error}=await sb.rpc('aprobar_orden_compra',{p_orden_id:id});if(error)throw error;await cargarOrdenes()}
- async function recibir(id){
-  const operationId=crypto.randomUUID();
-  const {data:items,error}=await sb.from('ordenes_compra_items').select('id,producto_id,unidades_solicitadas,unidades_recibidas,costo_unitario_base,productos(nombre,codigo)').eq('orden_id',id);
-  if(error)throw error;
-  const pendiente=(items||[]).filter(x=>x.unidades_solicitadas>x.unidades_recibidas);
-  if(!pendiente.length)throw new Error('Esta orden ya está recibida completamente.');
-  modal('<h2>Recepción física</h2><p class="mut sm">Registra solo lo que llegó. Los costos pueden variar frente a la orden.</p><label>Factura / documento proveedor</label><input id="oc-receipt-doc" maxlength="100"><label>Filtrar productos de esta orden por nombre o código</label><input id="oc-receipt-search" type="search" placeholder="Buscar en los productos pendientes…" autocomplete="off"><p class="mut sm">El filtro solo oculta líneas; no elimina cantidades ni productos de la recepción.</p><div id="oc-receipt-lines">'+pendiente.map(x=>'<div class="item oc-receipt-line" data-oc-filter="'+esc([x.productos?.nombre,x.productos?.codigo].join(' '))+'"><b>'+esc(x.productos?.nombre||'Producto')+'</b><p class="mut sm">Código: '+esc(x.productos?.codigo||'Sin código')+' · Pendiente: '+(x.unidades_solicitadas-x.unidades_recibidas)+' unidades</p><label>Unidades recibidas ahora</label><input type="number" min="0" max="'+(x.unidades_solicitadas-x.unidades_recibidas)+'" step="1" value="'+(x.unidades_solicitadas-x.unidades_recibidas)+'" data-oc-qty="'+x.id+'"><label>Costo real por unidad</label><input type="number" min="0" step="0.01" value="'+x.costo_unitario_base+'" data-oc-unitcost="'+x.id+'"></div>').join('')+'</div><div class="acts"><button class="btn full" id="oc-save-receipt">Confirmar recepción</button><button class="btn alt full" id="oc-cancel">Cancelar</button></div>');
-  $('#oc-cancel').onclick=cerrar;
-  $('#oc-receipt-search').addEventListener('input',e=>{const normalizarFiltro=valor=>String(valor||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();const q=normalizarFiltro(e.target.value);document.querySelectorAll('#oc-receipt-lines .oc-receipt-line').forEach(el=>{el.hidden=!normalizarFiltro(el.dataset.ocFilter).includes(q)})});
-  $('#oc-save-receipt').onclick=async()=>{
-   const lines=pendiente.map(x=>({orden_item_id:x.id,unidades:Number($('[data-oc-qty="'+x.id+'"]').value),costo_unitario_base:Number($('[data-oc-unitcost="'+x.id+'"]').value)})).filter(x=>x.unidades>0);
-   if(!lines.length||lines.some(x=>!Number.isInteger(x.unidades)||x.unidades<0||!Number.isFinite(x.costo_unitario_base)||x.costo_unitario_base<0))throw new Error('Ingresa al menos una línea con cantidades y costos válidos.');
-   if(lines.some(x=>x.costo_unitario_base===0)&&!confirm('Hay productos con costo $0. Si no es una muestra gratuita, corrige el costo antes de continuar. ¿Confirmas que realmente tienen costo cero?'))return;
-   const save=$('#oc-save-receipt');if(save.disabled)return;save.disabled=true;save.textContent='Registrando…';
-   try{const {error}=await sb.rpc('registrar_recepcion_compra',{p_orden_id:id,p_documento_proveedor:$('#oc-receipt-doc').value,p_items:lines,p_operacion_id:operationId,p_notas:null});
-    if(error)throw error;cerrar();await cargarOrdenes();await invCargarDatos();alert('Recepción registrada. Kardex y costos actualizados.');
-   }catch(err){save.disabled=false;save.textContent='Reintentar recepción';alert(err.message||'No se pudo confirmar la recepción. Puedes reintentar sin duplicar el movimiento.');}
-  };
- }
- document.addEventListener('click',async e=>{
-  const b=e.target.closest('button');if(!b)return;
-  try{
-   if(b.id==='oc-new')await nuevaOrden();
-   if(b.dataset.ocApprove)await aprobar(b.dataset.ocApprove);
-   if(b.dataset.ocReceive)await recibir(b.dataset.ocReceive);
-  }catch(err){console.error(err);alert(err.message||'Error en compras');}
- });
- document.addEventListener('click',e=>{const b=e.target.closest('[data-home="neg"]');if(b)setTimeout(()=>{cargarOrdenes().catch(err=>console.error(err));cargarProveedores().catch(()=>{})},50)});
- document.addEventListener('click',e=>{if(e.target.closest('#more-menu [data-v="neg"]'))setTimeout(()=>{cargarOrdenes().catch(err=>console.error(err));cargarProveedores().catch(()=>{})},50)});
-})();
-</script>
 
+
+<script src="modules/gestion-negocio.js"></script>
+<script src="modules/ayuda-sistema.js"></script>
 <script src="modules/pedidos.js"></script>
+<script src="modules/recepcion-mercancia.js"></script>
 </body>
 </html>

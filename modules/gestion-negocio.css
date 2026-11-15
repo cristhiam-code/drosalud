@@ -1,0 +1,4 @@
+/* Compras y proveedores: estilos propios del módulo. */
+.neg-heading{margin:0 0 14px;padding:16px;background:var(--card);border:1px solid var(--line);border-radius:14px}
+.neg-heading h2{margin:0 0 5px}
+.neg-heading p{margin:0;color:var(--mut);font-size:.86rem}
