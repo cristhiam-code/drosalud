@@ -117,3 +117,6 @@
 .pedidos-urgent-table td:nth-child(3),.pedidos-urgent-table td:nth-child(4){text-align:center;font-variant-numeric:tabular-nums}
 .pedidos-urgent-table .pedidos-empty{text-align:center;padding:18px}
 .pedidos-urgent-table .pedidos-remove{display:grid;place-items:center}
+
+.pedidos-heading-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+@media(max-width:600px){.pedidos-heading-actions{width:100%}.pedidos-heading-actions .btn{flex:1}}

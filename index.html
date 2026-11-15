@@ -561,7 +561,7 @@ nav button{font-size:.78rem}
  <div id="pedidos-app"><p class="mut sm">Abriendo módulo de pedidos…</p></div>
 </section>
 <section id="v-recepcion" hidden>
- <div id="recepcion-mercancia-app"><p class="mut sm">Abriendo recepción de mercancía…</p></div>
+ <div id="recepcion-mercancia-app"><p class="mut sm">Abriendo remisiones…</p></div>
 </section>
 <section id="v-cli" hidden>
  <div class="seg"><button data-cv="todos" aria-pressed="true">Todos</button><button data-cv="ret" aria-pressed="false">Para retomar</button></div>
@@ -598,17 +598,17 @@ nav button{font-size:.78rem}
 </section>
 <section id="v-neg" hidden>
  <div class="sum" id="neg-kpi"></div>
- <div class="seg"><button data-neg-tab="pend" aria-pressed="true">Por conseguir</button><button data-neg-tab="prov" aria-pressed="false">Proveedores</button></div>
+ <div class="seg"><button data-neg-tab="pend" aria-pressed="true">Solicitudes de clientes</button><button data-neg-tab="prov" aria-pressed="false">Proveedores</button></div>
  <div id="neg-pend">
   <button class="btn full" id="neg-new-buy">＋ Registrar medicamento por conseguir</button>
-  <p class="mut sm">Anota medicamentos que un cliente pidió y aún no has conseguido. Este registro no modifica las existencias.</p>
+  <p class="mut sm">Registra productos solicitados por clientes que aún no has conseguido. Esto no genera órdenes de compra ni modifica existencias.</p>
   <div id="neg-buy-list"></div>
  </div>
  <div id="neg-prov" hidden>
   <button class="btn full" id="neg-new-provider">＋ Agregar proveedor</button>
   <div id="neg-provider-list"></div>
  </div>
- <p class="mut sm">Los datos de solicitudes, cotizaciones y proveedores se guardan asociados a tu usuario. Para reponer existencias usa Pedidos y luego Recepción.</p>
+ <p class="mut sm">Este apartado conserva solicitudes de clientes, cotizaciones y datos de proveedores. Para reponer inventario, usa el flujo Pedidos → Órdenes de compra → Remisiones.</p>
 </section>
 <section id="v-caja" hidden>
  <label for="cj-f">Fecha de la jornada</label>
@@ -630,7 +630,7 @@ nav button{font-size:.78rem}
  <details><summary>Productos · Catálogo</summary><div class="help-detail"><p><b>Para qué sirve:</b> consultar y mantener los productos que se pueden vender.</p><ol><li>Busca por código, nombre o laboratorio.</li><li>Revisa presentación, precios y unidades por empaque.</li><li>Conserva la trazabilidad de cada presentación mediante su código de producto.</li></ol><p><b>Resultado:</b> catálogo disponible para ventas, pedidos e informes.</p></div></details>
  <details><summary>Clientes · Registro y seguimiento</summary><div class="help-detail"><p><b>Para qué sirve:</b> consultar, registrar y actualizar clientes.</p><ol><li>Busca por nombre, teléfono o documento.</li><li>Registra un cliente nuevo o actualiza sus datos.</li><li>Consulta clientes que puedes retomar.</li></ol><p><b>Resultado:</b> datos disponibles para futuras ventas y seguimiento.</p></div></details>
  <details><summary>Pedidos · Qué comprar</summary><div class="help-detail"><p><b>Para qué sirve:</b> organizar las necesidades de compra antes de contactar proveedores.</p><ol><li><b>Pedido sugerido:</b> calcula reposición con ventas de los últimos 7 días, existencias y unidades pendientes por recibir.</li><li><b>Pedido urgente:</b> permite pedir en cajas únicamente productos con inventario negativo.</li><li><b>Pedido extraordinario:</b> permite solicitar productos nuevos o cantidades adicionales.</li><li>Guarda el borrador o envía a autorización. El administrador revisa antes de generar órdenes.</li></ol><p><b>Resultado:</b> solicitud trazable; todavía no aumenta inventario.</p></div></details>
- <details><summary>Recepción · Ingresar mercancía</summary><div class="help-detail"><p><b>Para qué sirve:</b> registrar lo que realmente llegó del proveedor.</p><ol><li>Abre una orden aprobada o parcialmente recibida.</li><li>Escribe factura o remisión.</li><li>Compara cantidades con la mercancía física.</li><li>Registra el costo real por unidad y confirma.</li></ol><p><b>Resultado:</b> actualiza inventario y Kardex. No confirmes mercancía que no hayas recibido.</p></div></details>
+ <details><summary>Remisiones · Registrar mercancía recibida</summary><div class="help-detail"><p><b>Para qué sirve:</b> registrar lo que realmente llegó del proveedor.</p><ol><li>Abre una orden aprobada o parcialmente recibida.</li><li>Escribe factura o remisión.</li><li>Compara cantidades con la mercancía física.</li><li>Registra el costo real por unidad y confirma.</li></ol><p><b>Resultado:</b> actualiza inventario y Kardex. No confirmes mercancía que no hayas recibido.</p></div></details>
  <details><summary>Kardex · Existencias y movimientos</summary><div class="help-detail"><p><b>Para qué sirve:</b> consultar saldos y movimientos de inventario.</p><ol><li>Selecciona laboratorios y filtros.</li><li>Elige todos los saldos, negativos, en cero o diferentes de cero.</li><li>Genera el informe en pantalla, PDF, tira POS o Excel.</li></ol><p><b>Resultado:</b> identifica productos disponibles, agotados o negativos.</p></div></details>
  <details><summary>Historial · Ventas y reportes</summary><div class="help-detail"><p><b>Para qué sirve:</b> consultar recibos, anulaciones y resúmenes por período.</p><ol><li>Selecciona el período.</li><li>Busca recibos y revisa totales o detalle de productos.</li><li>Descarga el período en Excel.</li></ol><p><b>Resultado:</b> información histórica para revisar y analizar ventas.</p></div></details>
  <details><summary>Cotizaciones · Ofertas a clientes</summary><div class="help-detail"><p><b>Para qué sirve:</b> preparar ofertas sin registrar una venta.</p><ol><li>Selecciona productos y cantidades.</li><li>Revisa precios y vigencia.</li><li>Guarda o comparte la cotización.</li></ol><p><b>Resultado:</b> propuesta sin descontar inventario ni crear recibo.</p></div></details>
@@ -733,7 +733,7 @@ nav button{font-size:.78rem}
  <button data-v="his">Historial</button>
  <button data-v="cot">Cotizaciones</button>
  <button data-v="aju">Ajustes</button>
- <button data-v="neg">Compras</button>
+ <button data-v="neg">Solicitudes y proveedores</button>
 </div>
 <nav id="nav" aria-label="Navegación principal">
  <button data-v="venta" aria-current="true">Recibo<span class="bdg" id="bg" hidden></span></button>
@@ -1027,7 +1027,7 @@ $('#mfa-no').onclick=async()=>{try{await sb.auth.mfa.unenroll({factorId:data.id}
 $('#mfa-ok').onclick=()=>go(async()=>{const code=$('#mfa-code').value.replace(/\s/g,''),m=$('#mfa-msg');m.textContent='';if(!/^\d{6}$/.test(code)){m.textContent='Escribe los 6 dígitos del código.';return}const{error:ev}=await sb.auth.mfa.challengeAndVerify({factorId:data.id,code});if(ev){m.textContent='Código incorrecto o vencido. Revisa tu app e intenta de nuevo.';return}closeM();toast('Verificación en dos pasos activada');mfaEstado()})}
 async function mfaDesactivar(){const{data:l,error:e0}=await sb.auth.mfa.listFactors();if(e0)throw e0;const f=(l.totp||[])[0];if(!f){mfaEstado();return}if(!confirm('¿Desactivar la verificación en dos pasos? Tu cuenta quedará protegida solo con la contraseña.'))return;const{error}=await sb.auth.mfa.unenroll({factorId:f.id});if(error){toast(/aal2|assurance|verif/i.test(String(error.message))?'Para desactivarla debes haber entrado con tu código.':'No se pudo desactivar. Intenta de nuevo.');return}toast('Verificación en dos pasos desactivada');mfaEstado()}
 function showLogin(){$('#spl').hidden=true;$('#app').hidden=true;$('#rsx').hidden=true;$('#mfa').hidden=true;$('#lg').hidden=false;try{const e=localStorage.getItem('lastEmail');if(e&&!$('#em').value){$('#em').value=e;$('#pw').focus()}}catch(x){}}
-const TT={venta:'Recibo',cat:'Catálogo',cli:'Clientes',his:'Historial',cot:'Cotizaciones',aju:'Ajustes',neg:'Compras y proveedores',caja:'Caja',cajahistorial:'Historial de cierres',ayuda:'Ayuda y sistema',inventario:'Generar Kardex',pedidos:'Pedidos',recepcion:'Recepción'}
+const TT={venta:'Recibo',cat:'Catálogo',cli:'Clientes',his:'Historial',cot:'Cotizaciones',aju:'Ajustes',neg:'Compras y proveedores',caja:'Caja',cajahistorial:'Historial de cierres',ayuda:'Ayuda y sistema',inventario:'Generar Kardex',pedidos:'Pedidos',recepcion:'Remisiones'}
 /*CAJA-INICIO*/
 let CJ={fecha:null,res:null,gastos:[]},savingCaja=false;
 const hoyCO=()=>new Date().toLocaleDateString('en-CA',{timeZone:'America/Bogota'});

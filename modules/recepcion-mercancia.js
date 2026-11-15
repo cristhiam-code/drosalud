@@ -122,7 +122,10 @@
             <h2>Remisiones</h2>
             <p>Registra facturas y remisiones, compara lo solicitado con lo recibido y confirma el ingreso al inventario.</p>
           </div>
-          <button class="btn alt" type="button" data-rm-export><svg class="excel-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 2h9l5 5v11H3z"/><path fill="#fff" d="M12 2v5h5"/><path fill="none" stroke="#fff" stroke-width="1.5" d="m5.5 10 4 5m0-5-4 5"/></svg> Exportar a Excel</button>
+          <div class="rm-heading-actions">
+            <button class="btn alt" type="button" data-rm-back-orders>← Pedidos</button>
+            <button class="btn alt" type="button" data-rm-export><svg class="excel-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 2h9l5 5v11H3z"/><path fill="#fff" d="M12 2v5h5"/><path fill="none" stroke="#fff" stroke-width="1.5" d="m5.5 10 4 5m0-5-4 5"/></svg> Exportar a Excel</button>
+          </div>
         </header>
         <p class="mut sm" data-rm-count></p>
         <p class="mut sm" data-rm-status role="status"></p>
@@ -239,6 +242,10 @@
   }
 
   root.addEventListener('click', event => {
+    if (event.target.closest('[data-rm-back-orders]')) {
+      if (typeof show === 'function') show('pedidos');
+      return;
+    }
     const exportButton = event.target.closest('[data-rm-export]');
     if (exportButton) return exportExcel();
     const openButton = event.target.closest('[data-rm-open]');

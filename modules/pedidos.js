@@ -213,7 +213,10 @@
       <section class="pedidos-panel">
         <div class="pedidos-section-title">
           <div><h3>Seguimiento de pedidos</h3><p>Consulta solicitudes, autorizaciones y órdenes generadas.</p></div>
-          <button type="button" class="btn alt" data-action="refresh">Actualizar</button>
+          <div class="pedidos-heading-actions">
+            <button type="button" class="btn alt" data-action="go-remisiones">Abrir Remisiones</button>
+            <button type="button" class="btn alt" data-action="refresh">Actualizar</button>
+          </div>
         </div>
         <div data-pedidos-list></div>
         <div class="pedidos-actions"><button type="button" class="btn alt" data-action="back-home">Volver a pedidos</button></div>
@@ -733,7 +736,10 @@
     const action = button.dataset.action;
     try {
       button.disabled = true;
-      if (action === 'back-home') {
+      if (action === 'go-remisiones') {
+        if (typeof show === 'function') show('recepcion');
+        return;
+      } else if (action === 'back-home') {
         state.editing = null; state.formItems = []; state.mode = 'inicio'; message(''); renderPanel();
       } else if (action === 'refresh') {
         if (state.mode === 'seguimiento') { await reload(); message('Datos actualizados.'); }
