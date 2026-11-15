@@ -102,69 +102,11 @@
         const suggestedUnits = Math.max(0, Math.ceil(soldUnits - stockUnits - pendingUnits));
         return { product, soldUnits, stockUnits, pendingUnits, suggestedUnits };
       })
-      // Un saldo negativo también es una necesidad, aunque no haya ventas en los últimos 7 días.
+      // Un saldo negativo también requiere reposición, aunque no haya ventas en los últimos 7 días.
       .filter(row => (row.soldUnits > 0 || row.stockUnits < 0) && row.suggestedUnits > 0)
       .sort((a,b) => (a.product.laboratorio || '').localeCompare(b.product.laboratorio || '', 'es')
         || a.product.nombre.localeCompare(b.product.nombre, 'es'));
     state.suggestedCalculatedAt = new Date();
-  }
-
-  async function loadData() {
-    const { data: auth, error: authError } = await sb.auth.getUser();
-    if (authError) throw authError;
-    if (!auth?.user) throw new Error('Inicia sesión nuevamente.');
-    state.user = auth.user;
-
-    const { data: profile, error: profileError } = await sb.from('usuarios_drosalud')
-      .select('rol,activo').eq('user_id', auth.user.id).maybeSingle();
-    if (profileError) throw profileError;
-    if (!profile || profile.activo !== true || !['admin','vendedor'].includes(profile.rol)) {
-      throw new Error('Tu usuario no tiene un rol activo en Drosalud.');
-    }
-    state.role = profile.rol;
-
-    const [products, providers, pedidos, balances] = await Promise.all([
-      getAll(() => sb.from('productos_app')
-        .select('id,codigo,nombre,laboratorio,precio_compra,unidades_por_caja,unidades_por_venta')
-        .order('nombre').order('id')),
-      getAll(() => sb.from('proveedores').select('id,nombre,activo')
-        .eq('activo', true).order('nombre')),
-      getAll(() => sb.from('pedidos_resumen').select('*').order('creado_en', { ascending:false })),
-      getAll(() => sb.from('inventario_saldos').select('producto_id,saldo_unidades').order('producto_id'))
-    ]);
-    state.products = products || [];
-    const negativeIds = new Set((balances || [])
-      .filter(row => Number(row.saldo_unidades) < 0)
-      .map(row => row.producto_id));
-    state.negativeProducts = state.products.filter(product => negativeIds.has(product.id));
-    state.providers = providers || [];
-    state.pedidos = pedidos || [];
-
-    const ids = state.pedidos.map(row => row.id);
-    if (ids.length) {
-      state.items = await getAll(() => sb.from('pedidos_items')
-        .select('*').in('pedido_id', ids).order('creado_en'));
-    } else state.items = [];
-
-    const pedidoIds = ids;
-    state.orders = pedidoIds.length
-      ? await getAll(() => sb.from('ordenes_compra')
-          .select('id,numero,pedido_id,proveedor_id,estado,creado_en')
-          .in('pedido_id', pedidoIds)
-          .order('creado_en', { ascending:false }))
-      : [];
-    const orderIds = state.orders.map(order => order.id);
-    state.orderItems = orderIds.length
-      ? await getAll(() => sb.from('ordenes_compra_items')
-          .select('id,orden_id,pedido_item_id,producto_id,unidades_solicitadas,unidades_recibidas,costo_unitario_base')
-          .in('orden_id', orderIds)
-          .order('creado_en'))
-      : [];
-  }
-
-  function itemsFor(pedidoId) {
-      .sort((a,b) => (a.product.laboratorio || '').localeCompare(b.product.laboratorio || '', 'es')
-        || a.product.nombre.localeCompare(b.product.nombre, 'es'));
   }
 
   async function loadData() {
