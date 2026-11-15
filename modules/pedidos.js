@@ -414,10 +414,9 @@
     const items = itemsFor(pedido.id);
     const canEdit = pedido.estado === 'borrador' && (isAdmin() || pedido.creado_por === state.user.id);
     const relatedOrders = ordersFor(pedido.id);
-    const details = items.map(item => {
-      const approved = item.cantidad_autorizada == null ? '' : ` · Autorizado: ${units(item.cantidad_autorizada)}`;
-      return `<li><span>${esc(item.producto_nombre)}</span><small>Solicitado: ${units(item.cantidad_solicitada)}${approved} unidades</small></li>`;
-    }).join('');
+    const details = items.map(item =>
+      `<li><span>${esc(item.producto_nombre)}</span><small>Solicitado: ${units(item.cantidad_solicitada)} unidades</small></li>`
+    ).join('');
     let controls = '';
     if (canEdit) {
       controls = `<div class="pedidos-actions">
@@ -444,13 +443,14 @@
           <span class="pedidos-status status-${esc(pedido.estado_operativo || pedido.estado)}">${statusLabel(pedido.estado_operativo || pedido.estado)}</span>
         </div>
         <ul class="pedidos-item-list">${details}</ul>
-        ${pedido.notas ? `<p class="pedidos-muted">${esc(pedido.notas)}</p>` : ''}
+        ${pedido.notas && !['sugerido','urgente'].includes(pedido.tipo) ? `<p class="pedidos-muted">${esc(pedido.notas)}</p>` : ''}
         ${pedido.motivo_rechazo ? `<p class="pedidos-warning">Motivo: ${esc(pedido.motivo_rechazo)}</p>` : ''}
-        <div class="pedidos-summary">
-          <span>Autorizado: <b>${units(pedido.unidades_autorizadas)}</b></span>
-          <span>Comprado: <b>${units(pedido.unidades_compradas)}</b></span>
-          <span>Recibido: <b>${units(pedido.unidades_recibidas)}</b></span>
-        </div>
+        ${['autorizado','parcial','completado'].includes(pedido.estado_operativo || pedido.estado) ? `
+          <div class="pedidos-summary">
+            <span>Autorizado: <b>${units(pedido.unidades_autorizadas)}</b></span>
+            <span>Comprado: <b>${units(pedido.unidades_compradas)}</b></span>
+            <span>Recibido: <b>${units(pedido.unidades_recibidas)}</b></span>
+          </div>` : ''}
         ${orderSummary}${controls}
       </article>`;
   }
