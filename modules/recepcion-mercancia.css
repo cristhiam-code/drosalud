@@ -1,4 +1,4 @@
-/* Recepción de mercancía: estilos aislados del resto de Drosalud. */
+/* Remisiones de compra: estilos aislados del resto de Drosalud. */
 .rm-module{display:grid;gap:14px}
 .rm-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
 .rm-heading h2{margin:3px 0 5px;font-size:1.2rem}

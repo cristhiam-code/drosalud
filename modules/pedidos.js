@@ -58,24 +58,32 @@
       .select('id').eq('anulado', false).gte('creado_en', since)
       .lte('creado_en', now.toISOString()).order('creado_en').order('id'));
     const sold = {};
+    const receiptBatches = [];
     for (let offset = 0; offset < receipts.length; offset += 100) {
-      const ids = receipts.slice(offset, offset + 100).map(row => row.id);
-      const lines = await getAll(() => sb.from('recibo_items_app')
-        .select('producto_id,cantidad,unidades_por_presentacion')
-        .in('recibo_id', ids).order('id'));
-      lines.forEach(line => {
-        if (!line.producto_id) return;
-        sold[line.producto_id] = (sold[line.producto_id] || 0)
-          + (Number(line.cantidad) || 0) * Math.max(1, Number(line.unidades_por_presentacion) || 1);
-      });
+      receiptBatches.push(receipts.slice(offset, offset + 100).map(row => row.id));
     }
+    const receiptLines = await Promise.all(receiptBatches.map(ids => getAll(() =>
+      sb.from('recibo_items_app')
+        .select('producto_id,cantidad,unidades_por_presentacion')
+        .in('recibo_id', ids).order('id')
+    )));
+    receiptLines.flat().forEach(line => {
+      if (!line.producto_id) return;
+      sold[line.producto_id] = (sold[line.producto_id] || 0)
+        + (Number(line.cantidad) || 0) * Math.max(1, Number(line.unidades_por_presentacion) || 1);
+    });
 
-    const [balances, orders, orderItems] = await Promise.all([
+    const [balances, orders] = await Promise.all([
       getAll(() => sb.from('inventario_saldos').select('producto_id,saldo_unidades').order('producto_id')),
-      getAll(() => sb.from('ordenes_compra').select('id,estado').order('creado_en')),
-      getAll(() => sb.from('ordenes_compra_items').select('orden_id,producto_id,unidades_solicitadas,unidades_recibidas').order('creado_en'))
+      getAll(() => sb.from('ordenes_compra').select('id').in('estado', ['aprobada','parcial']).order('creado_en'))
     ]);
-    const activeOrders = new Set(orders.filter(order => ['aprobada','parcial'].includes(order.estado)).map(order => order.id));
+    const activeOrderIds = orders.map(order => order.id);
+    const orderItems = activeOrderIds.length
+      ? await getAll(() => sb.from('ordenes_compra_items')
+          .select('orden_id,producto_id,unidades_solicitadas,unidades_recibidas')
+          .in('orden_id', activeOrderIds).order('creado_en'))
+      : [];
+    const activeOrders = new Set(activeOrderIds);
     const stock = {};
     balances.forEach(row => { stock[row.producto_id] = Number(row.saldo_unidades) || 0; });
     const pending = {};
@@ -137,15 +145,20 @@
         .select('*').in('pedido_id', ids).order('creado_en'));
     } else state.items = [];
 
-    const [orders, orderItems] = await Promise.all([
-      getAll(() => sb.from('ordenes_compra').select('id,numero,pedido_id,proveedor_id,estado,creado_en')
-        .order('creado_en', { ascending:false })),
-      getAll(() => sb.from('ordenes_compra_items')
-        .select('id,orden_id,pedido_item_id,producto_id,unidades_solicitadas,unidades_recibidas,costo_unitario_base')
-        .order('creado_en'))
-    ]);
-    state.orders = orders || [];
-    state.orderItems = orderItems || [];
+    const pedidoIds = ids;
+    state.orders = pedidoIds.length
+      ? await getAll(() => sb.from('ordenes_compra')
+          .select('id,numero,pedido_id,proveedor_id,estado,creado_en')
+          .in('pedido_id', pedidoIds)
+          .order('creado_en', { ascending:false }))
+      : [];
+    const orderIds = state.orders.map(order => order.id);
+    state.orderItems = orderIds.length
+      ? await getAll(() => sb.from('ordenes_compra_items')
+          .select('id,orden_id,pedido_item_id,producto_id,unidades_solicitadas,unidades_recibidas,costo_unitario_base')
+          .in('orden_id', orderIds)
+          .order('creado_en'))
+      : [];
   }
 
   function itemsFor(pedidoId) {
@@ -401,10 +414,9 @@
     const items = itemsFor(pedido.id);
     const canEdit = pedido.estado === 'borrador' && (isAdmin() || pedido.creado_por === state.user.id);
     const relatedOrders = ordersFor(pedido.id);
-    const details = items.map(item => {
-      const approved = item.cantidad_autorizada == null ? '' : ` · Autorizado: ${units(item.cantidad_autorizada)}`;
-      return `<li><span>${esc(item.producto_nombre)}</span><small>Solicitado: ${units(item.cantidad_solicitada)}${approved} unidades</small></li>`;
-    }).join('');
+    const details = items.map(item =>
+      `<li><span>${esc(item.producto_nombre)}</span><small>Solicitado: ${units(item.cantidad_solicitada)} unidades</small></li>`
+    ).join('');
     let controls = '';
     if (canEdit) {
       controls = `<div class="pedidos-actions">
@@ -431,13 +443,14 @@
           <span class="pedidos-status status-${esc(pedido.estado_operativo || pedido.estado)}">${statusLabel(pedido.estado_operativo || pedido.estado)}</span>
         </div>
         <ul class="pedidos-item-list">${details}</ul>
-        ${pedido.notas ? `<p class="pedidos-muted">${esc(pedido.notas)}</p>` : ''}
+        ${pedido.notas && !['sugerido','urgente'].includes(pedido.tipo) ? `<p class="pedidos-muted">${esc(pedido.notas)}</p>` : ''}
         ${pedido.motivo_rechazo ? `<p class="pedidos-warning">Motivo: ${esc(pedido.motivo_rechazo)}</p>` : ''}
-        <div class="pedidos-summary">
-          <span>Autorizado: <b>${units(pedido.unidades_autorizadas)}</b></span>
-          <span>Comprado: <b>${units(pedido.unidades_compradas)}</b></span>
-          <span>Recibido: <b>${units(pedido.unidades_recibidas)}</b></span>
-        </div>
+        ${['autorizado','parcial','completado'].includes(pedido.estado_operativo || pedido.estado) ? `
+          <div class="pedidos-summary">
+            <span>Autorizado: <b>${units(pedido.unidades_autorizadas)}</b></span>
+            <span>Comprado: <b>${units(pedido.unidades_compradas)}</b></span>
+            <span>Recibido: <b>${units(pedido.unidades_recibidas)}</b></span>
+          </div>` : ''}
         ${orderSummary}${controls}
       </article>`;
   }
