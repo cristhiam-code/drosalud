@@ -7,7 +7,7 @@
   const state = {
     user: null, role: null, products: [], negativeProducts: [], providers: [], pedidos: [], items: [],
     orders: [], orderItems: [], suggested: [], formItems: [], editing: null,
-    operationIds: {}, mode: 'inicio', loading: false
+    operationIds: {}, mode: 'inicio', loading: false, suggestedCalculatedAt: null
   };
 
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({
@@ -94,7 +94,6 @@
     });
 
     state.suggested = state.products
-      .filter(product => (sold[product.id] || 0) > 0)
       .map(product => {
         const soldUnits = sold[product.id] || 0;
         const stockUnits = stock[product.id] || 0;
@@ -103,9 +102,11 @@
         const suggestedUnits = Math.max(0, Math.ceil(soldUnits - stockUnits - pendingUnits));
         return { product, soldUnits, stockUnits, pendingUnits, suggestedUnits };
       })
-      .filter(row => row.suggestedUnits > 0)
+      // Un saldo negativo también requiere reposición, aunque no haya ventas en los últimos 7 días.
+      .filter(row => (row.soldUnits > 0 || row.stockUnits < 0) && row.suggestedUnits > 0)
       .sort((a,b) => (a.product.laboratorio || '').localeCompare(b.product.laboratorio || '', 'es')
         || a.product.nombre.localeCompare(b.product.nombre, 'es'));
+    state.suggestedCalculatedAt = new Date();
   }
 
   async function loadData() {
@@ -229,6 +230,7 @@
       <article class="pedidos-suggest-row">
         <div class="pedidos-product">
           <b>${esc(row.product.nombre)}</b>
+          ${row.stockUnits < 0 ? '<span class="pedidos-stock-alert">Existencia negativa · déficit de ' + units(Math.abs(row.stockUnits)) + ' unidades</span>' : ''}
           <small>${esc(row.product.codigo || 'Sin código')} · ${esc(row.product.laboratorio || 'Sin laboratorio')}</small>
         </div>
         <div class="pedidos-metrics">
@@ -253,7 +255,8 @@
           <div><small>Unidades sugeridas</small><b>${units(total)}</b></div>
           <div><small>Cobertura objetivo</small><b>7 días</b></div>
         </div>
-        <p class="pedidos-note">Cálculo inicial: ventas de 7 días − existencia − unidades pendientes de recibir. No se inventa un stock mínimo; puedes ajustar cada cantidad.</p>
+        <p class="pedidos-note">Cálculo actualizado: ventas de los últimos 7 días − existencia actual − unidades pendientes de recibir. Los saldos negativos también generan reposición, aunque no haya ventas recientes. Recalcular consulta nuevamente los datos; no crea ni duplica pedidos.</p>
+        ${state.suggestedCalculatedAt ? '<p class="pedidos-calculated-at">Última consulta: ' + state.suggestedCalculatedAt.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}) + '</p>' : ''}
         <div class="pedidos-suggest-list">${rows || '<p class="pedidos-empty">No hay productos que requieran reposición según los datos actuales.</p>'}</div>
         <div class="pedidos-actions">
           <button type="button" class="btn alt" data-action="save-suggested">Guardar borrador</button>
@@ -708,6 +711,7 @@
   }
 
   async function handleClick(event) {
+    if (state.loading) return;
     const modeButton = event.target.closest('[data-mode]');
     if (modeButton) {
       state.editing = null;
@@ -746,9 +750,15 @@
         else if (state.mode === 'sugerido') { await loadSuggested(); renderPanel(); message('Cálculo actualizado.'); }
         else { await loadData(); renderPanel(); message('Datos actualizados.'); }
       } else if (action === 'recalc') {
+        if (state.loading) return;
         state.loading = true; renderPanel();
-        try { await loadSuggested(); message('Cálculo actualizado con los datos más recientes.'); }
-        finally { state.loading = false; renderPanel(); }
+        try {
+          await loadSuggested();
+          message('Cálculo actualizado con los datos más recientes. No se creó ningún pedido.');
+        } finally {
+          state.loading = false;
+          renderPanel();
+        }
       } else if (action === 'save-suggested') {
         await saveSuggested(false);
       } else if (action === 'send-suggested') {

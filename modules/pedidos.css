@@ -120,3 +120,8 @@
 
 .pedidos-heading-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 @media(max-width:600px){.pedidos-heading-actions{width:100%}.pedidos-heading-actions .btn{flex:1}}
+
+
+/* Señal visible para productos cuyo saldo ya está por debajo de cero. */
+.pedidos-stock-alert{display:inline-flex;align-items:center;width:max-content;max-width:100%;margin-top:5px;padding:4px 8px;border-radius:7px;background:#fff0e8;color:#a33b12;font-size:.7rem;font-weight:800;line-height:1.25}
+.pedidos-calculated-at{margin:-5px 0 8px;color:var(--mut);font-size:.72rem}
