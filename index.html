@@ -371,6 +371,18 @@ nav button{font-size:.78rem}
  body.print-pos #sheet{width:72mm!important;max-width:72mm!important;margin:0 auto!important;padding:4mm!important;font-size:10pt!important}
  body.print-pos #sheet .inv-cols{grid-template-columns:minmax(0,1fr) 13mm 13mm!important;gap:2mm!important;font-size:9pt!important}
  body.print-pos #sheet .cj-line{display:grid!important;break-inside:avoid;page-break-inside:avoid;overflow-wrap:anywhere}
+ /* Kardex POS: misma caja útil del recibo de venta (rollo 80 mm, contenido 72 mm). */
+ @page kardexpos{size:80mm auto;margin:0}
+ body.print-kardex-pos{page:kardexpos!important;width:80mm!important}
+ body.print-kardex-pos #modal{width:80mm!important;max-width:80mm!important}
+ body.print-kardex-pos #sheet{box-sizing:border-box!important;width:72mm!important;max-width:72mm!important;margin:0 auto!important;padding:4mm!important;font-family:Arial,sans-serif!important;font-size:9pt!important;line-height:1.25!important;color:#111!important}
+ body.print-kardex-pos #sheet h2{font-size:13pt!important;text-align:center!important;margin:0 0 3mm!important}
+ body.print-kardex-pos #sheet h3{font-size:10pt!important;margin:3mm 0 1.5mm!important;border-bottom:1px solid #777!important;padding-bottom:1mm!important;break-after:avoid-page;page-break-after:avoid}
+ body.print-kardex-pos #sheet p{font-size:8pt!important;text-align:center!important;margin:0 0 3mm!important}
+ body.print-kardex-pos #sheet .inv-cols{grid-template-columns:minmax(0,1fr) 12mm 12mm!important;gap:1mm!important;font-size:8pt!important}
+ body.print-kardex-pos #sheet .cj-line{display:grid!important;grid-template-columns:minmax(0,1fr) 12mm 12mm!important;gap:1mm!important;padding:1.5mm 0!important;border-bottom:1px dotted #aaa!important;break-inside:avoid!important;page-break-inside:avoid!important;overflow-wrap:anywhere!important}
+ body.print-kardex-pos #sheet .cj-line span{min-width:0!important;white-space:normal!important;overflow-wrap:anywhere!important}
+ body.print-kardex-pos #sheet .acts{display:none!important}
  body.print-inventario:not(.print-pos){page:inventory!important;width:auto!important;min-height:0!important;margin:0!important;padding:0!important;background:#fff!important;overflow:visible!important}
  body.print-inventario:not(.print-pos) #modal{width:auto!important;height:auto!important;position:static!important;inset:auto!important;overflow:visible!important;background:#fff!important}
  body.print-inventario:not(.print-pos) #sheet{width:auto!important;max-width:none!important;max-height:none!important;height:auto!important;margin:0!important;padding:0!important;overflow:visible!important;border:0!important;box-shadow:none!important;background:#fff!important}
@@ -890,8 +902,8 @@ function invImprimirKardex(pos=false){
  const labs=[...new Set(rows.map(p=>(p.laboratorio||'Sin laboratorio').trim()))];
  labs.forEach(l=>{h+='<h3>'+esc(l)+'</h3><div class="cj-line inv-cols"><b>Producto</b><b>Cantidad</b><b>Unidades</b></div>';rows.filter(p=>(p.laboratorio||'Sin laboratorio').trim()===l).forEach(p=>{const v=invPartes(invSaldo(p),p.unidades_por_caja);h+='<div class="cj-line inv-cols"><span>'+esc(p.nombre)+'</span><b>'+v.cajas+'</b><b>'+v.sueltas+'</b></div>'})});
  openM(h+'<div class="acts"><button class="btn alt full" onclick="closeM()">Cerrar</button></div>');
- document.body.classList.add('print-inventario');if(pos)document.body.classList.add('print-pos');
- window.addEventListener('afterprint',()=>document.body.classList.remove('print-inventario','print-pos'),{once:true});window.print();
+ document.body.classList.add('print-inventario');if(pos)document.body.classList.add('print-pos','print-kardex-pos');
+ window.addEventListener('afterprint',()=>document.body.classList.remove('print-inventario','print-pos','print-kardex-pos'),{once:true});window.print();
 }
 function invImprimirPedido(){
  let h='<h2>Pedido sugerido</h2><p>Ventas de la semana actual (desde el lunes) · '+new Date().toLocaleDateString('es-CO')+'</p>';
