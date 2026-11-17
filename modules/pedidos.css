@@ -39,7 +39,7 @@
 .pedidos-field input,.pedidos-field textarea{margin:0}
 .pedidos-form-lines{display:grid;gap:8px;margin:14px 0}
 .pedidos-form-line{display:grid;grid-template-columns:minmax(0,1fr) auto 34px;align-items:center;gap:10px;padding:10px;border:1px solid var(--line);border-radius:11px}
-.pedidos-remove,.pedidos-remove-allocation{width:32px;height:32px;border-radius:8px;background:var(--soft);color:var(--bad);font-size:1.2rem}
+.pedidos-remove,.pedidos-remove-allocation{width:44px;min-width:44px;height:44px;min-height:44px;display:inline-grid;place-items:center;border-radius:9px;background:var(--soft);color:var(--bad);font-size:1.2rem;box-sizing:border-box}
 .pedidos-history{display:grid;gap:12px}
 .pedidos-card{margin-bottom:10px}
 .pedidos-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
@@ -109,7 +109,7 @@
 
 
 /* Pedido urgente: tabla simple con cantidades expresadas en cajas. */
-.pedidos-urgent-table-wrap{overflow-x:auto;margin-top:14px;border:1px solid var(--line);border-radius:12px}
+.pedidos-urgent-table-wrap{overflow-x:auto;margin-top:14px;border:1px solid var(--line);border-radius:12px;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}.pedidos-urgent-table-wrap::after{content:"Desliza horizontalmente para ver todas las columnas";position:sticky;left:0;display:block;width:max-content;max-width:100%;padding:8px 11px;background:var(--soft);color:var(--mut);font-size:.72rem;border-top:1px solid var(--line)}
 .pedidos-urgent-table{width:100%;min-width:560px;border-collapse:collapse;background:var(--card);font-size:.84rem}
 .pedidos-urgent-table th,.pedidos-urgent-table td{padding:11px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
 .pedidos-urgent-table th{background:var(--soft);color:var(--ink);font-size:.76rem;white-space:nowrap}
