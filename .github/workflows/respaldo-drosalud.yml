@@ -1,0 +1,99 @@
+name: Respaldo seguro de Drosalud
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Cada domingo a las 06:00, hora de Colombia (UTC-5).
+    - cron: "0 11 * * 0"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: respaldo-seguro-drosalud
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    name: Crear y cifrar respaldo
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      BACKUP_AGE_RECIPIENT: ${{ vars.BACKUP_AGE_RECIPIENT }}
+
+    steps:
+      - name: Comprobar configuración
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if [[ -z "${SUPABASE_DB_URL}" ]]; then
+            echo "::error::Falta el secreto SUPABASE_DB_URL en GitHub."
+            exit 1
+          fi
+          if [[ -z "${BACKUP_AGE_RECIPIENT}" ]]; then
+            echo "::error::Falta la variable BACKUP_AGE_RECIPIENT en GitHub."
+            exit 1
+          fi
+          if [[ ! "${BACKUP_AGE_RECIPIENT}" =~ ^age1[0-9a-z]+$ ]]; then
+            echo "::error::BACKUP_AGE_RECIPIENT no parece una clave pública age válida."
+            exit 1
+          fi
+
+      - name: Preparar herramientas
+        uses: actions/checkout@v4
+
+      - name: Instalar Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Instalar cifrado age
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes age
+
+      - name: Exportar estructura, roles y datos
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p respaldo
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f respaldo/roles.sql --role-only
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f respaldo/estructura.sql
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f respaldo/datos.sql --use-copy --data-only
+          for f in respaldo/roles.sql respaldo/estructura.sql respaldo/datos.sql; do
+            test -s "$f" || { echo "::error::El archivo $f está vacío."; exit 1; }
+          done
+          printf 'Respaldo generado: %s\n' "$(date -u +'%Y-%m-%d %H:%M UTC')" > respaldo/LEEME.txt
+          printf '%s\n' 'Incluye roles, estructura y datos exportados por Supabase CLI.' >> respaldo/LEEME.txt
+          printf '%s\n' 'No incluye los archivos de Storage ni la configuración externa del proyecto.' >> respaldo/LEEME.txt
+          tar -czf drosalud-respaldo.tar.gz -C respaldo .
+          gzip -t drosalud-respaldo.tar.gz
+          test -s drosalud-respaldo.tar.gz
+
+      - name: Cifrar el respaldo antes de publicarlo
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          age --encrypt --recipient "$BACKUP_AGE_RECIPIENT" --output drosalud-respaldo.tar.gz.age drosalud-respaldo.tar.gz
+          test -s drosalud-respaldo.tar.gz.age
+          sha256sum drosalud-respaldo.tar.gz.age > drosalud-respaldo.tar.gz.age.sha256
+          rm -rf respaldo drosalud-respaldo.tar.gz
+
+      - name: Publicar archivo cifrado por 3 días
+        uses: actions/upload-artifact@v4
+        with:
+          name: drosalud-respaldo-cifrado
+          path: |
+            drosalud-respaldo.tar.gz.age
+            drosalud-respaldo.tar.gz.age.sha256
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Limpiar archivos temporales
+        if: always()
+        shell: bash
+        run: |
+          rm -rf respaldo drosalud-respaldo.tar.gz drosalud-respaldo.tar.gz.age drosalud-respaldo.tar.gz.age.sha256
