@@ -96,6 +96,7 @@ nav button[aria-current="true"]{color:var(--pri);font-weight:800;box-shadow:inse
 .bdg{background:var(--pri);color:var(--pri-ink);border-radius:99px;font-size:.72rem;padding:1px 7px;margin-left:4px}
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:10;overflow-y:auto}
 #sheet{background:var(--bg);width:100%;max-width:640px;border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:94%;overflow-y:auto}
+@media(max-width:640px){#modal{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}#sheet{max-height:94vh;max-height:calc(100dvh - env(safe-area-inset-top,0px) - 12px);overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))}}
 .tkt{background:#FFFEF8;color:#1D1D1B;font-family:ui-monospace,"Courier New",monospace;font-size:.9rem;padding:22px 18px 30px;margin:0 0 14px;-webkit-mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) 50%/14px 100%;mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) 50%/14px 100%}
 .tkt h3{margin:0;text-align:center;font-size:1.05rem;text-transform:none}
 .tkt .c{text-align:center}
