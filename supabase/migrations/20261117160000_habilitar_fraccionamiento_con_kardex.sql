@@ -21,7 +21,12 @@ begin
         using errcode = '23514';
     end if;
 
-    if new.unidades_por_caja is distinct from old.unidades_por_caja then
+    if new.unidades_por_caja is distinct from old.unidades_por_caja
+       and not (
+         old.fraccionable = false
+         and new.fraccionable = true
+         and coalesce(current_setting('drosalud.habilitar_fraccionamiento', true), '') = 'on'
+       ) then
       raise exception
         'Este producto ya tiene movimientos en el Kardex. La equivalencia de la caja no se puede cambiar.'
         using errcode = '23514';
