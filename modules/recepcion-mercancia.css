@@ -29,3 +29,25 @@
 
 .rm-heading-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 @media(max-width:600px){.rm-heading-actions{width:100%}.rm-heading-actions .btn{flex:1}}
+
+/* Recepción: tabla de escritorio y tarjetas legibles en iPhone. */
+.rm-mobile-list{display:none}
+.rm-mobile-card{display:grid;gap:13px;padding:14px;background:var(--card);border:1px solid var(--line);border-radius:14px}
+.rm-mobile-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.rm-mobile-card-head>div{display:grid;gap:4px;min-width:0}
+.rm-mobile-card-head small{font-size:.72rem;color:var(--mut);overflow-wrap:anywhere}
+.rm-mobile-card-head b{font-size:.92rem;overflow-wrap:anywhere}
+.rm-mobile-card-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.rm-mobile-card-meta span{display:grid;gap:3px;min-width:0;padding:9px;border-radius:10px;background:var(--bg)}
+.rm-mobile-card-meta small{font-size:.68rem;color:var(--mut)}
+.rm-mobile-card-meta b{font-size:.82rem;overflow-wrap:anywhere}
+.rm-mobile-card-action .btn{width:100%;min-height:46px}
+@media(max-width:650px){
+ .rm-table-wrap{display:none}
+ .rm-mobile-list{display:grid;gap:10px}
+ .rm-heading{gap:10px}
+ .rm-heading>div:first-child{width:100%}
+ .rm-heading-actions{display:grid;grid-template-columns:1fr 1fr;width:100%}
+ .rm-heading-actions .btn{min-width:0;min-height:44px;padding:10px 8px;font-size:.82rem}
+}
+@media(max-width:360px){.rm-mobile-card-meta{grid-template-columns:1fr 1fr}.rm-mobile-card-meta span:last-child{grid-column:1/-1}}

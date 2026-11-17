@@ -101,6 +101,7 @@
     ].sort((a,b) => new Date(b.date || 0) - new Date(a.date || 0));
 
     const body = $('[data-rm-rows]');
+    const empty = '<tr><td colspan="7" class="rm-empty">No hay remisiones ni órdenes pendientes por recibir.</td></tr>';
     body.innerHTML = rows.length ? rows.map(row => `
       <tr>
         <td><strong>${esc(row.number)}</strong></td>
@@ -110,7 +111,15 @@
         <td>${money(row.total)}</td>
         <td><span class="rm-state ${row.state === 'Cargado al inventario' ? 'is-loaded' : 'is-pending'}">${esc(row.state)}</span></td>
         <td>${row.action}</td>
-      </tr>`).join('') : '<tr><td colspan="7" class="rm-empty">No hay remisiones ni órdenes pendientes por recibir.</td></tr>';
+      </tr>`).join('') : empty;
+    const mobile = $('[data-rm-mobile-rows]');
+    if (mobile) mobile.innerHTML = rows.length ? rows.map(row => `
+      <article class="rm-mobile-card">
+        <div class="rm-mobile-card-head"><div><small>${esc(row.number)}</small><b>${esc(row.provider || 'Proveedor sin nombre')}</b></div>
+          <span class="rm-state ${row.state === 'Cargado al inventario' ? 'is-loaded' : 'is-pending'}">${esc(row.state)}</span></div>
+        <div class="rm-mobile-card-meta"><span><small>Fecha</small><b>${esc(date(row.date))}</b></span><span><small>Productos</small><b>${row.count}</b></span><span><small>Valor total</small><b>${money(row.total)}</b></span></div>
+        <div class="rm-mobile-card-action">${row.action}</div>
+      </article>`).join('') : '<p class="rm-empty">No hay remisiones ni órdenes pendientes por recibir.</p>';
     $('[data-rm-count]').textContent = rows.length + ' documento(s)';
   }
 
@@ -138,6 +147,7 @@
             <tbody data-rm-rows></tbody>
           </table>
         </div>
+        <div class="rm-mobile-list" data-rm-mobile-rows></div>
       </section>`;
     renderRows();
   }

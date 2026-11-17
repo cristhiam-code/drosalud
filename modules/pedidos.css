@@ -125,3 +125,16 @@
 /* Señal visible para productos cuyo saldo ya está por debajo de cero. */
 .pedidos-stock-alert{display:inline-flex;align-items:center;width:max-content;max-width:100%;margin-top:5px;padding:4px 8px;border-radius:7px;background:#fff0e8;color:#a33b12;font-size:.7rem;font-weight:800;line-height:1.25}
 .pedidos-calculated-at{margin:-5px 0 8px;color:var(--mut);font-size:.72rem}
+
+/* Vista móvil real: filas de pedido urgente como tarjetas, sin scroll horizontal. */
+.pedidos-urgent-cards{display:none}
+.pedidos-urgent-card{padding:13px;border:1px solid var(--line);border-radius:13px;background:var(--card);display:grid;gap:12px}
+.pedidos-urgent-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.pedidos-urgent-card-head>div{display:grid;gap:4px;min-width:0}
+.pedidos-urgent-card-head small{color:var(--mut);font-size:.68rem;font-weight:800;letter-spacing:.06em}
+.pedidos-urgent-card-head b{font-size:.9rem;overflow-wrap:anywhere}
+.pedidos-urgent-card-data{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pedidos-urgent-card-data span{display:grid;gap:3px;padding:9px;border-radius:10px;background:var(--bg)}
+.pedidos-urgent-card-data small{font-size:.7rem;color:var(--mut)}
+.pedidos-urgent-card-data b{font-size:1rem;color:var(--ink)}
+@media(max-width:650px){.pedidos-urgent-table-wrap{display:none}.pedidos-urgent-cards{display:grid;gap:9px;margin-top:14px}}
