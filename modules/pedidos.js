@@ -274,24 +274,31 @@
       + (product.codigo ? `<option value="${esc(product.codigo)}" label="${esc(product.nombre)}"></option>` : '')
     ).join('');
     const formatBoxes = value => Number(value || 0).toLocaleString('es-CO',{maximumFractionDigits:2});
-    const lines = state.formItems.map((item,index) => {
-      if (urgentMode) {
-        const product = state.products.find(row => row.id === item.producto_id);
-        const packageUnits = Math.max(1,Number(product?.unidades_por_caja) || 1);
-        return `<tr>
-          <td><strong>${esc(product?.codigo || '—')}</strong></td>
-          <td>${esc(product?.nombre || item.producto_nombre)}</td>
-          <td>${units(packageUnits)}</td>
-          <td>${formatBoxes(Number(item.cantidad_solicitada) / packageUnits)}</td>
-          <td><button type="button" class="pedidos-remove" data-action="remove-line" data-index="${index}" aria-label="Quitar producto">×</button></td>
-        </tr>`;
-      }
-      return `<article class="pedidos-form-line">
-        <div><b>${esc(item.producto_nombre)}</b><small>${item.producto_id ? 'Producto del catálogo' : 'Producto por vincular al catálogo'}</small></div>
-        <span>${units(item.cantidad_solicitada)} unidades</span>
-        <button type="button" class="pedidos-remove" data-action="remove-line" data-index="${index}" aria-label="Quitar producto">×</button>
+    const urgentRows = state.formItems.map((item,index) => {
+      const product = state.products.find(row => row.id === item.producto_id);
+      const packageUnits = Math.max(1,Number(product?.unidades_por_caja) || 1);
+      return `<tr>
+        <td><strong>${esc(product?.codigo || '—')}</strong></td>
+        <td>${esc(product?.nombre || item.producto_nombre)}</td>
+        <td>${units(packageUnits)}</td>
+        <td>${formatBoxes(Number(item.cantidad_solicitada) / packageUnits)}</td>
+        <td><button type="button" class="pedidos-remove" data-action="remove-line" data-index="${index}" aria-label="Quitar producto">×</button></td>
+      </tr>`;
+    }).join('');
+    const urgentCards = state.formItems.map((item,index) => {
+      const product = state.products.find(row => row.id === item.producto_id);
+      const packageUnits = Math.max(1,Number(product?.unidades_por_caja) || 1);
+      return `<article class="pedidos-urgent-card">
+        <div class="pedidos-urgent-card-head"><div><small>CÓDIGO ${esc(product?.codigo || '—')}</small><b>${esc(product?.nombre || item.producto_nombre)}</b></div>
+          <button type="button" class="pedidos-remove" data-action="remove-line" data-index="${index}" aria-label="Quitar ${esc(product?.nombre || item.producto_nombre)}">×</button></div>
+        <div class="pedidos-urgent-card-data"><span><small>Unidades por caja</small><b>${units(packageUnits)}</b></span><span><small>Cajas solicitadas</small><b>${formatBoxes(Number(item.cantidad_solicitada) / packageUnits)}</b></span></div>
       </article>`;
     }).join('');
+    const lines = urgentMode ? '' : state.formItems.map((item,index) => `<article class="pedidos-form-line">
+      <div><b>${esc(item.producto_nombre)}</b><small>${item.producto_id ? 'Producto del catálogo' : 'Producto por vincular al catálogo'}</small></div>
+      <span>${units(item.cantidad_solicitada)} unidades</span>
+      <button type="button" class="pedidos-remove" data-action="remove-line" data-index="${index}" aria-label="Quitar producto">×</button>
+    </article>`).join('');
     const modeLabel = state.editing ? (state.editing.tipo === 'sugerido' ? 'Pedido sugerido' : state.editing.tipo === 'urgente' ? 'Pedido urgente' : 'Pedido extraordinario')
       : state.mode === 'urgente' ? 'Pedido urgente' : 'Pedido extraordinario';
     return `
@@ -317,9 +324,10 @@
           <div class="pedidos-urgent-table-wrap">
             <table class="pedidos-urgent-table">
               <thead><tr><th>Producto</th><th>Descripción</th><th>Cant Empaq</th><th>Cajas</th><th aria-label="Quitar"></th></tr></thead>
-              <tbody>${lines || '<tr><td colspan="5" class="pedidos-empty">Agrega al menos un producto.</td></tr>'}</tbody>
+              <tbody>${urgentRows || '<tr><td colspan="5" class="pedidos-empty">Agrega al menos un producto.</td></tr>'}</tbody>
             </table>
-          </div>` : `
+          </div>
+          <div class="pedidos-urgent-cards">${urgentCards || '<p class="pedidos-empty">Agrega al menos un producto.</p>'}</div>` : `
           <div class="pedidos-form-lines">${lines || '<p class="pedidos-empty">Agrega al menos un producto.</p>'}</div>
           <div class="pedidos-field">
             <label for="ped-product-reason">Motivo / justificación</label>
