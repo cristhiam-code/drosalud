@@ -179,3 +179,13 @@ La rama ahora contiene una primera versión funcional del módulo, no solo el di
 5. El historial muestra costo por unidad y por presentación; se debe completar una prueba visual con registros reales para confirmar nombres de producto/proveedor en todas las relaciones.
 
 La vista desplegada en Vercel es un preview de rama. No es producción. No se han creado facturas, recepciones ni movimientos de inventario de prueba. Las tablas nuevas continúan sin documentos de ejemplo.
+
+
+### Ajustes de seguridad y trazabilidad añadidos después de la primera integración
+
+- Migración 20261118000300: agrega el campo motivo a auditoria_precios y una RPC de actualización que registra el motivo en la misma transacción que el cambio de costo/precio.
+- Migración 20261118000500: conserva la posibilidad anterior de dejar vacío el precio de venta habitual desde la ficha del producto.
+- Migraciones 20261118000600 y 20261118000700: preservan el reintento idempotente de recepciones documentadas y registran el número de factura/remisión como motivo del cambio de costo generado por la recepción.
+- El despliegue de preview utiliza el hostname distinto al dominio de producción; la selección de conexión en index.html dirige esos hostnames al proyecto Supabase QA uorhpljsofnfgzblxcga. Producción sigue conectada al proyecto fwkaqxzdhqpvvjhixeod.
+- En QA se verificó que las tablas nuevas de documentos no tienen registros de prueba. La recepción existente que se encontró (REC-5, 12-11-2026) es anterior a estos cambios y no está enlazada a un documento nuevo.
+- El último deployment de la rama quedó en estado READY. Esto confirma la publicación estática, no sustituye pruebas de navegador con sesión autenticada.
