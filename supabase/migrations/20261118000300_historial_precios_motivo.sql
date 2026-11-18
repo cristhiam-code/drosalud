@@ -1,0 +1,79 @@
+alter table public.auditoria_precios
+  add column if not exists motivo text;
+
+create or replace function public.auditar_precios_drosalud()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+declare
+  v_email text;
+  v_rol text;
+  v_motivo text;
+begin
+  select email into v_email from auth.users where id=auth.uid();
+  select rol into v_rol from public.usuarios_drosalud where user_id=auth.uid();
+  v_motivo := nullif(pg_catalog.btrim(current_setting('app.precio_motivo', true)), '');
+
+  if new.precio_compra is distinct from old.precio_compra then
+    insert into public.auditoria_precios
+      (producto_id,producto_nombre,campo,valor_anterior,valor_nuevo,usuario_id,usuario_email,rol,motivo)
+    values
+      (new.id,new.nombre,'precio_compra',old.precio_compra,new.precio_compra,auth.uid(),v_email,v_rol,
+       coalesce(v_motivo,'No indicado'));
+  end if;
+  if new.precio_venta is distinct from old.precio_venta then
+    insert into public.auditoria_precios
+      (producto_id,producto_nombre,campo,valor_anterior,valor_nuevo,usuario_id,usuario_email,rol,motivo)
+    values
+      (new.id,new.nombre,'precio_venta',old.precio_venta,new.precio_venta,auth.uid(),v_email,v_rol,
+       coalesce(v_motivo,'No indicado'));
+  end if;
+  return new;
+end
+$function$;
+
+create or replace function public.actualizar_precios_drosalud_con_motivo(
+  p_producto_id uuid,
+  p_precio_compra numeric default null,
+  p_precio_venta numeric default null,
+  p_motivo text default null
+) returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+declare
+  v_prod public.productos%rowtype;
+begin
+  if auth.uid() is null or not public.es_usuario_drosalud() then
+    raise exception 'Usuario Drosalud no autorizado';
+  end if;
+  if p_precio_compra is null and p_precio_venta is null then
+    raise exception 'Indica al menos un costo o precio';
+  end if;
+  if (p_precio_compra is not null and (p_precio_compra < 0 or p_precio_compra >= 1000000000))
+     or (p_precio_venta is not null and (p_precio_venta < 0 or p_precio_venta >= 1000000000)) then
+    raise exception 'Precio fuera de rango';
+  end if;
+  if nullif(pg_catalog.btrim(p_motivo),'') is null or pg_catalog.length(pg_catalog.btrim(p_motivo)) < 4 then
+    raise exception 'Explica brevemente por qué cambió el costo o el precio';
+  end if;
+  perform pg_catalog.set_config('app.precio_motivo',pg_catalog.left(pg_catalog.btrim(p_motivo),250),true);
+  select * into v_prod from public.productos where id=p_producto_id for update;
+  if not found then raise exception 'Producto no encontrado'; end if;
+  update public.productos
+    set precio_compra=coalesce(p_precio_compra,precio_compra),
+        precio_venta=coalesce(p_precio_venta,precio_venta),
+        actualizado_en=pg_catalog.now()
+    where id=p_producto_id returning * into v_prod;
+  return pg_catalog.jsonb_build_object(
+    'id',v_prod.id,'precio_compra',v_prod.precio_compra,'precio_venta',v_prod.precio_venta,
+    'margen_negativo',coalesce(v_prod.precio_venta,0)<v_prod.precio_compra
+  );
+end
+$function$;
+
+revoke all on function public.actualizar_precios_drosalud_con_motivo(uuid,numeric,numeric,text) from public,anon;
+grant execute on function public.actualizar_precios_drosalud_con_motivo(uuid,numeric,numeric,text) to authenticated;
