@@ -154,3 +154,28 @@ No fusionar ni desplegar en producción hasta aprobación explícita del usuario
 - La segunda valida que la recepción corresponda al proveedor y a las líneas documentadas, evita recibir más unidades que las facturadas y delega el movimiento real a `registrar_recepcion_compra`, conservando sus controles de inventario e idempotencia. Después enlaza la recepción al documento.
 - Verificación de QA: ambas funciones existen; `authenticated` puede ejecutarlas y `anon` no. Ambas mantienen validación interna de usuario DROSalud. Los avisos generales del asesor de Supabase sobre funciones SECURITY DEFINER incluyen muchas funciones preexistentes; no se han relajado permisos de tablas.
 - Pendiente antes de habilitar operación: conectar formularios del módulo real a las RPC, añadir pruebas autenticadas de punta a punta y completar vista de historial de costos/precios. No hay cambios en producción ni en el cálculo del pedido sugerido.
+
+
+## Implementación conectada en QA (18-11-2026)
+
+La rama ahora contiene una primera versión funcional del módulo, no solo el diseño:
+
+- modules/recepcion-mercancia.js: cuatro vistas dentro del módulo existente: órdenes, documentos, recepciones e historial de costos/precios.
+- modules/recepcion-mercancia.css: estilos adaptables a escritorio y móvil, aislados del resto del panel.
+- Registro de factura/remisión asociado a una orden, con fecha, número, subtotal, descuentos, impuestos, flete, total y detalle de líneas.
+- Recepción por unidades aceptadas. La pantalla calcula el máximo entre lo pendiente de la orden y lo aún no recibido del documento.
+- La RPC de recepción enlaza el registro físico al documento y deriva el estado del documento a parcial o conciliado.
+- El movimiento de inventario y el historial de costo continúan ejecutándose mediante la RPC original registrar_recepcion_compra; no se creó un inventario paralelo.
+- Se añadió auditoria_precios.motivo y la RPC actualizar_precios_drosalud_con_motivo. Los formularios de actualización de costo/precio solicitan el motivo y el historial muestra usuario, fecha, valor anterior y nuevo.
+- Los registros de auditoría anteriores no tenían motivo; se muestran como «No indicado», sin inventar una explicación.
+- Las funciones nuevas están disponibles para authenticated, no para anon, y validan usuario DROSalud dentro de la función.
+
+### Límites que siguen pendientes antes de habilitar producción
+
+1. La primera versión relaciona cada documento con una orden y con sus líneas. Falta soportar en pantalla una factura que agrupe varias órdenes.
+2. Si la factura declara más unidades que la orden, la diferencia se conserva como documento parcial; el exceso no se puede ingresar al inventario hasta autorizar un ajuste de orden.
+3. Todavía no se registra por separado mercancía físicamente recibida pero rechazada/dañada, lote o vencimiento. Esas cantidades no deben marcarse como aceptadas.
+4. Falta probar con sesión autenticada los escenarios de entrega parcial, reintento, costo diferente, cantidades por presentación y regresión de inventario/Kardex.
+5. El historial muestra costo por unidad y por presentación; se debe completar una prueba visual con registros reales para confirmar nombres de producto/proveedor en todas las relaciones.
+
+La vista desplegada en Vercel es un preview de rama. No es producción. No se han creado facturas, recepciones ni movimientos de inventario de prueba. Las tablas nuevas continúan sin documentos de ejemplo.
