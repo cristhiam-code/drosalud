@@ -135,3 +135,30 @@ Fase 5 — Revisión:
 - Contabilidad/cuentas por pagar completa.
 - Integración automática con DIAN o lectura OCR de facturas.
 - Costeo fiscal/contable avanzado sin definir antes el tratamiento de impuestos y fletes.
+
+
+## Hallazgos de auditoría del esquema y RPC actuales (18-11-2026)
+
+Verificado directamente en el proyecto Supabase conectado:
+
+- Las seis tablas existentes de órdenes, recepciones, movimientos y costos tienen RLS habilitado.
+- Las políticas visibles para el equipo permiten lectura; no hay políticas directas de INSERT/UPDATE para esas tablas. La escritura se canaliza por RPC.
+- No se encontraron triggers en las seis tablas consultadas.
+- `registrar_recepcion_compra` es una función `SECURITY DEFINER` que permite recibir a un usuario reconocido por `es_usuario_drosalud()`; valida orden aprobada/parcial, líneas pertenecientes a la orden, no exceder cantidad pendiente y evita reintentos duplicados con identificador de operación.
+- Esa RPC inserta recepción, movimientos de inventario, actualiza unidades recibidas, actualiza `productos.precio_compra` y agrega historial de costos en una misma transacción.
+- El costo de presentación se calcula actualmente multiplicando costo por unidad base por `productos.unidades_por_caja`. La nueva experiencia debe mostrar explícitamente esta equivalencia y no asumir que el nombre de la presentación comercial es intercambiable con el factor de conversión.
+- La RPC actual no registra fecha/tipo/valores del documento, ni distingue cantidades facturadas de cantidades recibidas. Tampoco permite exceso o producto adicional; eso es una limitación de control deliberada que debe mantenerse hasta que exista un flujo explícito de autorización.
+- `generar_ordenes_compra_pedido` es solo para administrador y valida que las asignaciones no superen lo autorizado. Esta autorización debe conservarse.
+- `autorizar_pedido` es solo para administrador y valida todas las líneas. No tocar.
+
+### Riesgos que bloquean una implementación inmediata de la nueva recepción
+
+1. Cambiar directamente la RPC actual podría alterar inventario y costo histórico. La nueva versión debe añadirse con compatibilidad o versionarse, no reemplazar a ciegas.
+2. La función actual actualiza el costo vigente con cada recepción parcial. Para el nuevo flujo debe definirse si se confirma por entrega o al conciliar el documento completo; no cambiar esta regla sin prueba de regresión.
+3. La base de datos actual no ofrece relaciones para una factura con múltiples entregas ni para varios documentos por una orden. Deben añadirse relaciones explícitas.
+4. No se deben conceder escrituras directas a tablas nuevas desde el navegador. Mantener operaciones críticas dentro de RPC transaccionales y aplicar RLS/grants mínimos.
+5. No se debe habilitar recepción por encima de lo pendiente ni productos extra hasta incorporar un registro de autorización verificable.
+
+### Decisión técnica
+
+La primera implementación de código debe ser aditiva: nuevas tablas de documentos y relaciones, nuevas RPC versionadas y una interfaz que inicialmente permita registrar documentos y conciliar cantidades sin alterar el algoritmo de pedido ni el comportamiento actual de recepción. El corte del flujo antiguo al nuevo solo ocurrirá después de validar los escenarios en QA.
