@@ -1,53 +1,69 @@
-/* Remisiones de compra: estilos aislados del resto de Drosalud. */
-.rm-module{display:grid;gap:14px}
-.rm-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
-.rm-heading h2{margin:3px 0 5px;font-size:1.2rem}
-.rm-heading p{margin:0;color:var(--mut)}
-.rm-kicker{font-size:.7rem;font-weight:800;letter-spacing:.12em;color:var(--mut)}
-.rm-table-wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:14px;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}.rm-table-wrap::after{content:"Desliza horizontalmente para ver todas las columnas";position:sticky;left:0;display:block;width:max-content;max-width:100%;padding:8px 11px;background:var(--soft);color:var(--mut);font-size:.72rem;border-top:1px solid var(--line)}
-.rm-table{width:100%;border-collapse:collapse;min-width:900px;font-size:.88rem}
-.rm-table th,.rm-table td{padding:12px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
-.rm-table th{background:var(--soft);font-size:.78rem;color:var(--ink);white-space:nowrap}
-.rm-table tbody tr:last-child td{border-bottom:0}
-.rm-state{display:inline-flex;padding:5px 9px;border-radius:99px;font-size:.75rem;font-weight:700;white-space:nowrap}
-.rm-state.is-pending{background:#fff3d6;color:#8a5a00}
-.rm-state.is-loaded{background:#e4f6ed;color:#176b45}
-.rm-empty{text-align:center!important;color:var(--mut);padding:28px!important}
-.rm-error{padding:12px;border:1px solid #efb4b4;border-radius:10px;color:var(--bad);background:#fff5f5}
-.rm-overlay{position:fixed;inset:0;z-index:30;background:rgba(13,28,45,.55);display:flex;align-items:flex-end;justify-content:center;padding:12px 12px calc(12px + env(safe-area-inset-bottom,0px));overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
-.rm-dialog{width:min(680px,100%);max-height:94vh;max-height:calc(100dvh - env(safe-area-inset-top,0px) - 24px);min-height:0;overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;background:var(--bg);border-radius:18px;padding:18px;box-shadow:0 16px 48px rgba(0,0,0,.2)}
-.rm-dialog h2{margin:0 0 8px}
-.rm-lines{display:grid;gap:10px;margin:12px 0}
-.rm-line{display:grid;gap:6px;padding:12px;background:var(--card);border:1px solid var(--line);border-radius:12px}
-.rm-line small{color:var(--mut)}
-.rm-line label{margin-top:4px}
-.rm-line input{margin:0}
-.rm-actions{display:grid;gap:9px;margin-top:14px}.rm-actions button,.rm-actions .btn{min-height:44px}
-.rm-error{color:var(--bad)}
+/* Estilos aislados del módulo de compras y recepción. */
+.rm-module{display:grid;gap:14px}.rm-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}.rm-heading h2{margin:3px 0 5px;font-size:1.3rem}.rm-heading p{margin:0;color:var(--mut)}.rm-kicker{font-size:.7rem;font-weight:800;letter-spacing:.12em;color:var(--mut)}.rm-heading-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.rm-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.rm-stats article{display:grid;gap:6px;padding:14px;background:var(--card);border:1px solid var(--line);border-radius:13px}.rm-stats small{color:var(--mut);font-size:.76rem}.rm-stats b{font-size:1.35rem;letter-spacing:-.03em}
+.rm-tabs{display:flex!important;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:8px}.rm-tabs button{padding:10px 13px;border-radius:10px;color:var(--mut);font-weight:750}.rm-tabs button.active{background:var(--soft);color:var(--pri)}.rm-panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:8px 0}.rm-panel-head h3{font-size:1rem;margin:0}.rm-panel-head small{color:var(--mut)}
+.rm-table-wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:14px;-webkit-overflow-scrolling:touch}.rm-table{width:100%;border-collapse:collapse;min-width:850px;font-size:.86rem}.rm-table th,.rm-table td{padding:12px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}.rm-table th{background:var(--soft);font-size:.76rem;white-space:nowrap}.rm-table tbody tr:last-child td{border-bottom:0}.rm-empty{text-align:center!important;color:var(--mut);padding:28px!important}.rm-state{display:inline-flex;padding:5px 9px;border-radius:99px;font-size:.75rem;font-weight:750;white-space:nowrap}.rm-state.is-pending{background:#fff3d6;color:#8a5a00}.rm-state.is-loaded{background:#e4f6ed;color:#176b45}.rm-state.is-review{background:#eaf0ff;color:#3d5b9c}
+.rm-note{padding:12px 14px;background:var(--soft);border:1px solid var(--line);border-radius:11px;color:var(--mut);font-size:.82rem;line-height:1.5}.rm-error{padding:12px;border:1px solid #efb4b4;border-radius:10px;color:var(--bad);background:#fff5f5}
+.rm-overlay{position:fixed;inset:0;z-index:40;background:rgba(13,28,45,.58);display:flex;align-items:flex-end;justify-content:center;padding:12px 12px calc(12px + env(safe-area-inset-bottom,0px));overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}.rm-dialog{width:min(780px,100%);max-height:94vh;max-height:calc(100dvh - env(safe-area-inset-top,0px) - 24px);overflow:auto;overscroll-behavior:contain;background:var(--bg);border-radius:18px;padding:18px;box-shadow:0 16px 48px rgba(0,0,0,.2)}.rm-dialog h2{margin:0 0 8px}.rm-dialog h3{margin:16px 0 6px;font-size:.95rem}.rm-form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}.rm-form-grid label,.rm-dialog>label,.rm-line label{display:block;font-size:.78rem;font-weight:750;color:var(--mut)}.rm-form-grid input,.rm-form-grid select,.rm-dialog textarea,.rm-line input{width:100%;margin:5px 0 8px;padding:11px;border:1.5px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink)}.rm-lines{display:grid;gap:10px;margin:12px 0}.rm-line{display:grid;gap:5px;padding:12px;background:var(--card);border:1px solid var(--line);border-radius:12px}.rm-line small{color:var(--mut);line-height:1.4}.rm-line input{margin:0 0 5px}.rm-actions{display:grid;gap:9px;margin-top:14px}.rm-actions button{min-height:46px}
 @media(min-width:700px){.rm-overlay{align-items:center}.rm-dialog{max-height:90vh}}
+@media(max-width:760px){.rm-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.rm-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.rm-heading-actions{width:100%}.rm-heading-actions .btn{flex:1}.rm-tabs{overflow-x:auto;flex-wrap:nowrap}.rm-tabs button{white-space:nowrap;flex:none}.rm-panel-head{align-items:flex-start;flex-direction:column}}
+@media(max-width:420px){.rm-form-grid{grid-template-columns:1fr}.rm-dialog{padding:14px}.rm-stats article{padding:11px}.rm-stats b{font-size:1.15rem}}
 
 
-.rm-heading-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-@media(max-width:600px){.rm-heading-actions{width:100%}.rm-heading-actions .btn{flex:1}}
-
-/* Recepción: tabla de escritorio y tarjetas legibles en iPhone. */
-.rm-mobile-list{display:none}
-.rm-mobile-card{display:grid;gap:13px;padding:14px;background:var(--card);border:1px solid var(--line);border-radius:14px}
-.rm-mobile-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-.rm-mobile-card-head>div{display:grid;gap:4px;min-width:0}
-.rm-mobile-card-head small{font-size:.72rem;color:var(--mut);overflow-wrap:anywhere}
-.rm-mobile-card-head b{font-size:.92rem;overflow-wrap:anywhere}
-.rm-mobile-card-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.rm-mobile-card-meta span{display:grid;gap:3px;min-width:0;padding:9px;border-radius:10px;background:var(--bg)}
-.rm-mobile-card-meta small{font-size:.68rem;color:var(--mut)}
-.rm-mobile-card-meta b{font-size:.82rem;overflow-wrap:anywhere}
-.rm-mobile-card-action .btn{width:100%;min-height:46px}
-@media(max-width:650px){
- .rm-table-wrap{display:none}
- .rm-mobile-list{display:grid;gap:10px}
- .rm-heading{gap:10px}
- .rm-heading>div:first-child{width:100%}
- .rm-heading-actions{display:grid;grid-template-columns:1fr 1fr;width:100%}
- .rm-heading-actions .btn{min-width:0;min-height:44px;padding:10px 8px;font-size:.82rem}
+/* Adaptación móvil aislada: escritorio conserva exactamente su presentación. */
+@media(max-width:760px){
+  .rm-module{gap:12px;min-width:0}
+  .rm-heading{gap:10px}
+  .rm-heading h2{font-size:1.18rem}
+  .rm-heading p{font-size:.88rem;line-height:1.4}
+  .rm-heading-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .rm-heading-actions .btn{width:100%;min-height:44px;padding:10px 8px}
+  .rm-stats{gap:8px}
+  .rm-stats article{min-width:0}
+  .rm-tabs{margin:0 -2px 2px;padding:0 0 8px;scrollbar-width:thin}
+  .rm-tabs button{min-height:42px;padding:10px 12px}
+  .rm-panel-head{gap:4px;margin:6px 0 10px}
+  .rm-table-wrap{overflow:visible;border:0;background:transparent}
+  .rm-table{display:block;min-width:0;width:100%;font-size:.88rem}
+  .rm-table thead{display:none}
+  .rm-table tbody{display:grid;gap:10px}
+  .rm-table tbody tr{display:grid;gap:0;padding:7px 12px;background:var(--card);border:1px solid var(--line);border-radius:13px;box-shadow:0 2px 8px rgba(0,0,0,.035)}
+  .rm-table tbody tr:last-child td{border-bottom:1px solid var(--line)}
+  .rm-table tbody tr td{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;width:100%;padding:9px 0;border-bottom:1px solid var(--line);text-align:right;overflow-wrap:anywhere}
+  .rm-table tbody tr td:last-child{border-bottom:0}
+  .rm-table tbody tr td:not(.rm-empty)::before{flex:0 0 38%;max-width:38%;color:var(--mut);font-size:.74rem;font-weight:750;text-align:left;line-height:1.35}
+  .rm-table tbody tr td:nth-child(1):not(.rm-empty)::before{content:"Registro"}
+  .rm-table tbody tr td:nth-child(2):not(.rm-empty)::before{content:"Fecha"}
+  .rm-table tbody tr td:nth-child(3):not(.rm-empty)::before{content:"Proveedor / campo"}
+  .rm-table tbody tr td:nth-child(4):not(.rm-empty)::before{content:"Detalle"}
+  .rm-table tbody tr td:nth-child(5):not(.rm-empty)::before{content:"Información"}
+  .rm-table tbody tr td:nth-child(6):not(.rm-empty)::before{content:"Estado / cantidad"}
+  .rm-table tbody tr td:nth-child(7):not(.rm-empty)::before{content:"Acción / motivo"}
+  .rm-table tbody tr td .btn{width:auto;max-width:62%;min-height:42px;white-space:normal}
+  .rm-table tbody tr td.rm-empty{display:block;text-align:center!important;padding:18px 8px!important;border:0}
+  .rm-table tbody tr td.rm-empty::before{content:none}
+  .rm-state{white-space:normal;text-align:center}
+  .rm-overlay{padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));align-items:flex-end}
+  .rm-dialog{width:100%;max-width:none;max-height:calc(100dvh - env(safe-area-inset-top,0px) - 16px);padding:15px 13px;border-radius:17px 17px 12px 12px}
+  .rm-dialog h2{font-size:1.12rem;line-height:1.3;padding-right:4px}
+  .rm-dialog h3{margin-top:14px}
+  .rm-form-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
+  .rm-form-grid label,.rm-dialog>label,.rm-line label{font-size:.76rem;line-height:1.35}
+  .rm-form-grid input,.rm-form-grid select,.rm-dialog textarea,.rm-line input{min-height:44px;font-size:16px;padding:10px}
+  .rm-lines{gap:9px}
+  .rm-line{padding:11px;gap:7px}
+  .rm-line b{font-size:.92rem;line-height:1.35}
+  .rm-line small{font-size:.77rem}
+  .rm-line input{margin:0}
+  .rm-actions{position:sticky;bottom:calc(-15px - env(safe-area-inset-bottom,0px));padding:10px 0 calc(8px + env(safe-area-inset-bottom,0px));margin:12px -13px -15px;background:var(--bg);border-top:1px solid var(--line);z-index:2}
+  .rm-actions button{min-height:48px;font-size:.9rem}
 }
-@media(max-width:360px){.rm-mobile-card-meta{grid-template-columns:1fr 1fr}.rm-mobile-card-meta span:last-child{grid-column:1/-1}}
+@media(max-width:420px){
+  .rm-heading-actions{grid-template-columns:1fr 1fr}
+  .rm-form-grid{grid-template-columns:1fr}
+  .rm-dialog{padding:13px 11px}
+  .rm-actions{margin-left:-11px;margin-right:-11px;bottom:calc(-13px - env(safe-area-inset-bottom,0px))}
+  .rm-table tbody tr{padding:6px 10px}
+  .rm-table tbody tr td{gap:8px;font-size:.83rem}
+  .rm-table tbody tr td:not(.rm-empty)::before{flex-basis:35%;max-width:35%;font-size:.7rem}
+}
