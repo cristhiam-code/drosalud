@@ -74,7 +74,7 @@
         <section class="rm-view" data-rm-view="documentos" ${active!=='documentos'?'hidden':''}>
           <div class="rm-panel-head"><h3>Documentos del proveedor</h3><small>${docs.length} documento(s)</small></div>
           <div class="rm-table-wrap"><table class="rm-table"><thead><tr><th>Documento</th><th>Emisión</th><th>Proveedor</th><th>Valor</th><th>Orden</th><th>Estado</th><th></th></tr></thead><tbody>
-          ${docs.map(d=>{const linkedOrder=orders.find(o=>d.ordenes?.includes(o.id));const canReceive=linkedOrder&&['aprobada','parcial'].includes(linkedOrder.estado)&&!['conciliado','anulado'].includes(d.estado);return '<tr><td><b>'+esc(d.tipo_documento.toUpperCase())+' '+esc(d.numero_documento)+'</b></td><td>'+date(d.fecha_emision)+'</td><td>'+esc(d.proveedor?.nombre||'—')+'</td><td>'+money(d.total)+'</td><td>'+esc(d.ordenes?.map(id=>{const x=orders.find(o=>o.id===id);return x?'OC-'+x.numero:'Orden asociada'}).join(', ')||'—')+'</td><td>'+pill(d.estado)+'</td><td>'+(canReceive?'<button class="btn alt full" data-rm-receive="'+esc(d.id)+'">Registrar recepción</button>':(linkedOrder?.estado==='recibida'?'<span class="rm-note">Orden completa: diferencia pendiente de ajuste</span>':'—'))+'</td></tr>'}).join('')||'<tr><td colspan="7" class="rm-empty">Todavía no hay facturas o remisiones registradas.</td></tr>'}
+          ${docs.map(d=>{const linkedOrder=orders.find(o=>d.ordenes?.includes(o.id));const canReceive=d.tipo_documento!=='nota_credito'&&linkedOrder&&['aprobada','parcial'].includes(linkedOrder.estado)&&!['conciliado','anulado'].includes(d.estado);return '<tr><td><b>'+esc(d.tipo_documento.toUpperCase())+' '+esc(d.numero_documento)+'</b></td><td>'+date(d.fecha_emision)+'</td><td>'+esc(d.proveedor?.nombre||'—')+'</td><td>'+money(d.total)+'</td><td>'+esc(d.ordenes?.map(id=>{const x=orders.find(o=>o.id===id);return x?'OC-'+x.numero:'Orden asociada'}).join(', ')||'—')+'</td><td>'+pill(d.estado)+'</td><td>'+(canReceive?'<button class="btn alt full" data-rm-receive="'+esc(d.id)+'">Registrar recepción</button>':(d.tipo_documento==='nota_credito'?'<span class="rm-note">Nota crédito: no genera entrada de inventario</span>':(linkedOrder?.estado==='recibida'?'<span class="rm-note">Orden completa: diferencia pendiente de ajuste</span>':'—')))+'</td></tr>'}).join('')||'<tr><td colspan="7" class="rm-empty">Todavía no hay facturas o remisiones registradas.</td></tr>'}
           </tbody></table></div>
         </section>
         <section class="rm-view" data-rm-view="recepciones" ${active!=='recepciones'?'hidden':''}>
@@ -102,7 +102,7 @@
       <div class="rm-overlay" data-rm-overlay><section class="rm-dialog" role="dialog" aria-modal="true">
         <h2>Registrar factura o remisión</h2><p class="mut sm">Orden OC-${esc(order.numero)} · ${esc(order.proveedor?.nombre||'Proveedor')}</p>
         <div class="rm-form-grid">
-          <div><label>Tipo</label><select data-doc-type><option value="factura">Factura</option><option value="remision">Remisión</option><option value="nota_credito">Nota crédito</option><option value="otro">Otro</option></select></div>
+          <div><label>Tipo</label><select data-doc-type><option value="factura">Factura</option><option value="remision">Remisión</option><option value="otro">Otro</option></select></div>
           <div><label>Número del documento</label><input data-doc-number maxlength="120" placeholder="Ej. DFPS204606"></div>
           <div><label>Fecha de emisión</label><input data-doc-date type="date" value="${new Date().toLocaleDateString('en-CA',{timeZone:'America/Bogota'})}"></div>
           <div><label>Subtotal (COP)</label><input data-doc-sub type="number" min="0" step=".01"></div>
@@ -140,6 +140,7 @@
     };
   }
   function openReception(doc){
+    if(doc.tipo_documento==='nota_credito'){status('Una nota crédito no es mercancía recibida y no puede generar entradas al inventario.',true);return}
     const linked=orders.find(o=>doc.ordenes?.includes(o.id)) || null;
     const items=doc.items||[];
     const op=crypto.randomUUID();
