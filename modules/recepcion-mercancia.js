@@ -21,7 +21,7 @@
   }
   async function fetchData(){
     const [o,d,l,r,c,a]=await Promise.all([
-      sb.from('ordenes_compra').select('id,numero,proveedor_id,estado,documento_proveedor,creado_en,proveedor:proveedores(nombre),items:ordenes_compra_items(id,producto_id,unidades_solicitadas,unidades_recibidas,costo_unitario_base,producto:productos(id,nombre,codigo,unidades_por_caja))').in('estado',['aprobada','parcial']).order('creado_en',{ascending:false}),
+      sb.from('ordenes_compra').select('id,numero,proveedor_id,estado,documento_proveedor,creado_en,proveedor:proveedores(nombre),items:ordenes_compra_items(id,producto_id,unidades_solicitadas,unidades_recibidas,costo_unitario_base,producto:productos(id,nombre,codigo,unidades_por_caja))').in('estado',['aprobada','parcial','recibida']).order('creado_en',{ascending:false}),
       sb.from('documentos_proveedor').select('id,proveedor_id,tipo_documento,numero_documento,fecha_emision,subtotal,descuentos,impuestos,flete,total,estado,notas,creado_en,proveedor:proveedores(nombre)').order('creado_en',{ascending:false}).limit(300),
       sb.from('documentos_proveedor_items').select('id,documento_id,orden_item_id,producto_id,descripcion_documento,presentacion_documento,unidades_por_presentacion,cantidad_documentada,unidades_documentadas,precio_por_presentacion,costo_unitario_base,producto:productos(nombre,codigo)').order('creado_en',{ascending:true}).limit(1500),
       sb.from('recepciones_compra').select('id,numero,orden_id,proveedor_id,documento_id,documento_proveedor,recibido_en,proveedor:proveedores(nombre),items:recepciones_compra_items(id,orden_item_id,producto_id,unidades,costo_unitario_base,producto:productos(nombre,codigo))').order('recibido_en',{ascending:false}).limit(500),
@@ -52,7 +52,7 @@
           <div class="rm-heading-actions"><button class="btn alt" data-rm-back>← Pedidos</button><button class="btn alt" data-rm-export>Exportar Excel</button></div>
         </header>
         <div class="rm-stats">
-          <article><small>Órdenes abiertas</small><b>${orders.length}</b></article>
+          <article><small>Órdenes abiertas</small><b>${orders.filter(o=>['aprobada','parcial'].includes(o.estado)).length}</b></article>
           <article><small>Documentos registrados</small><b>${docs.length}</b></article>
           <article><small>Recepciones físicas</small><b>${receipts.length}</b></article>
           <article><small>Costos históricos</small><b>${costs.length}</b></article>
@@ -67,14 +67,14 @@
         <section class="rm-view" data-rm-view="ordenes" ${active!=='ordenes'?'hidden':''}>
           <div class="rm-panel-head"><h3>Órdenes autorizadas por recibir</h3><small>El pedido sugerido permanece sin cambios.</small></div>
           <div class="rm-table-wrap"><table class="rm-table"><thead><tr><th>Orden</th><th>Proveedor</th><th>Fecha</th><th>Productos</th><th>Pendiente</th><th>Estado</th><th></th></tr></thead><tbody>
-          ${orders.map(o=>{const rem=(o.items||[]).reduce((s,i)=>s+Math.max(0,Number(i.unidades_solicitadas)-Number(i.unidades_recibidas)),0);return '<tr><td><b>OC-'+esc(o.numero)+'</b></td><td>'+esc(o.proveedor?.nombre||'—')+'</td><td>'+date(o.creado_en)+'</td><td>'+((o.items||[]).length)+'</td><td>'+rem+' unidades</td><td>'+pill(o.estado)+'</td><td><button class="btn full" data-rm-doc="'+esc(o.id)+'">Registrar factura / remisión</button></td></tr>'}).join('')||'<tr><td colspan="7" class="rm-empty">No hay órdenes autorizadas pendientes.</td></tr>'}
+          ${orders.filter(o=>['aprobada','parcial'].includes(o.estado)).map(o=>{const rem=(o.items||[]).reduce((s,i)=>s+Math.max(0,Number(i.unidades_solicitadas)-Number(i.unidades_recibidas)),0);return '<tr><td><b>OC-'+esc(o.numero)+'</b></td><td>'+esc(o.proveedor?.nombre||'—')+'</td><td>'+date(o.creado_en)+'</td><td>'+((o.items||[]).length)+'</td><td>'+rem+' unidades</td><td>'+pill(o.estado)+'</td><td><button class="btn full" data-rm-doc="'+esc(o.id)+'">Registrar factura / remisión</button></td></tr>'}).join('')||'<tr><td colspan="7" class="rm-empty">No hay órdenes autorizadas pendientes.</td></tr>'}
           </tbody></table></div>
           <p class="rm-note">Primero se registra el documento comercial. Después se confirma la mercancía aceptada físicamente. Una factura no aumenta el inventario por sí sola.</p>
         </section>
         <section class="rm-view" data-rm-view="documentos" ${active!=='documentos'?'hidden':''}>
           <div class="rm-panel-head"><h3>Documentos del proveedor</h3><small>${docs.length} documento(s)</small></div>
           <div class="rm-table-wrap"><table class="rm-table"><thead><tr><th>Documento</th><th>Emisión</th><th>Proveedor</th><th>Valor</th><th>Orden</th><th>Estado</th><th></th></tr></thead><tbody>
-          ${docs.map(d=>'<tr><td><b>'+esc(d.tipo_documento.toUpperCase())+' '+esc(d.numero_documento)+'</b></td><td>'+date(d.fecha_emision)+'</td><td>'+esc(d.proveedor?.nombre||'—')+'</td><td>'+money(d.total)+'</td><td>'+esc(d.ordenes?.map(id=>{const x=orders.find(o=>o.id===id);return x?'OC-'+x.numero:'Orden asociada'}) .join(', ')||'—')+'</td><td>'+pill(d.estado)+'</td><td><button class="btn alt full" data-rm-receive="'+esc(d.id)+'">Registrar recepción</button></td></tr>').join('')||'<tr><td colspan="7" class="rm-empty">Todavía no hay facturas o remisiones registradas.</td></tr>'}
+          ${docs.map(d=>{const linkedOrder=orders.find(o=>d.ordenes?.includes(o.id));const canReceive=linkedOrder&&['aprobada','parcial'].includes(linkedOrder.estado)&&!['conciliado','anulado'].includes(d.estado);return '<tr><td><b>'+esc(d.tipo_documento.toUpperCase())+' '+esc(d.numero_documento)+'</b></td><td>'+date(d.fecha_emision)+'</td><td>'+esc(d.proveedor?.nombre||'—')+'</td><td>'+money(d.total)+'</td><td>'+esc(d.ordenes?.map(id=>{const x=orders.find(o=>o.id===id);return x?'OC-'+x.numero:'Orden asociada'}).join(', ')||'—')+'</td><td>'+pill(d.estado)+'</td><td>'+(canReceive?'<button class="btn alt full" data-rm-receive="'+esc(d.id)+'">Registrar recepción</button>':(linkedOrder?.estado==='recibida'?'<span class="rm-note">Orden completa: diferencia pendiente de ajuste</span>':'—'))+'</td></tr>'}).join('')||'<tr><td colspan="7" class="rm-empty">Todavía no hay facturas o remisiones registradas.</td></tr>'}
           </tbody></table></div>
         </section>
         <section class="rm-view" data-rm-view="recepciones" ${active!=='recepciones'?'hidden':''}>
