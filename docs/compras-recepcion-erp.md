@@ -144,3 +144,13 @@ Pendiente de implementar: una vista única de trazabilidad que permita consultar
 5. Pruebas de los diez escenarios en QA, inventario/Kardex, historial y regresión del pedido sugerido.
 
 No fusionar ni desplegar en producción hasta aprobación explícita del usuario.
+
+
+## Avance de implementación (18-11-2026, QA)
+
+- Se creó `preview-compras.html` para revisar la estructura visual en una ruta separada, con datos ilustrativos. No escribe en Supabase ni altera la aplicación operativa.
+- En QA se añadieron las RPC `registrar_documento_proveedor` y `registrar_recepcion_compra_documentada`.
+- La primera registra cabecera, líneas y relación con la orden; valida proveedor, pertenencia de las líneas, equivalencia de presentación y cantidades/precios no negativos.
+- La segunda valida que la recepción corresponda al proveedor y a las líneas documentadas, evita recibir más unidades que las facturadas y delega el movimiento real a `registrar_recepcion_compra`, conservando sus controles de inventario e idempotencia. Después enlaza la recepción al documento.
+- Verificación de QA: ambas funciones existen; `authenticated` puede ejecutarlas y `anon` no. Ambas mantienen validación interna de usuario DROSalud. Los avisos generales del asesor de Supabase sobre funciones SECURITY DEFINER incluyen muchas funciones preexistentes; no se han relajado permisos de tablas.
+- Pendiente antes de habilitar operación: conectar formularios del módulo real a las RPC, añadir pruebas autenticadas de punta a punta y completar vista de historial de costos/precios. No hay cambios en producción ni en el cálculo del pedido sugerido.
