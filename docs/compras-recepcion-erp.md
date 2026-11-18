@@ -1,6 +1,6 @@
 # Diseño funcional — Compras y recepción profesional
 
-Estado: propuesta técnica para revisión. Esta especificación NO modifica datos existentes ni habilita cambios en producción.
+Estado: implementación de base de datos iniciada en QA. Sin cambios en producción.
 
 ## Objetivo
 
@@ -66,20 +66,35 @@ Estados sugeridos: pendiente, parcial, conciliado, diferencia por revisar, recha
 - Descuentos, impuestos recuperables/no recuperables y flete requieren una regla contable definida antes de incorporarlos al costo de adquisición; no se deben sumar arbitrariamente.
 - Diferencias de precio requieren confirmación antes de actualizar el costo del producto y el historial de costos.
 
-## Cambios necesarios identificados en el esquema actual
+## Hallazgos de auditoría del esquema y RPC actuales (18-11-2026)
 
-El esquema actual tiene `ordenes_compra`, `ordenes_compra_items`, `recepciones_compra` y `recepciones_compra_items`. La recepción actual guarda un único `documento_proveedor`, fecha de recepción y líneas con unidades/costo por unidad base; no separa tipo/fecha/valores del documento ni cantidades documentadas y físicamente aceptadas.
+Verificado directamente en el proyecto Supabase conectado:
+- Las tablas de órdenes, recepciones, movimientos y costos tienen RLS habilitado.
+- Las políticas visibles para el equipo permiten lectura; no hay políticas directas de INSERT/UPDATE para las tablas operativas consultadas. La escritura se canaliza por RPC.
+- `registrar_recepcion_compra` es `SECURITY DEFINER`, permite recibir a un usuario reconocido por `es_usuario_drosalud()`, valida orden aprobada/parcial, líneas pertenecientes a la orden, no exceder cantidad pendiente y evita reintentos duplicados con identificador de operación.
+- Esa RPC inserta recepción, movimientos de inventario, actualiza unidades recibidas, actualiza `productos.precio_compra` y agrega historial de costos en una misma transacción.
+- El costo de presentación se calcula multiplicando costo por unidad base por `productos.unidades_por_caja`.
+- La RPC actual no registra fecha/tipo/valores del documento ni distingue cantidades facturadas de cantidades recibidas.
+- `generar_ordenes_compra_pedido` y `autorizar_pedido` tienen validaciones de administrador que deben conservarse.
 
-La evolución debe ser aditiva y compatible:
-- Crear cabecera de documentos de proveedor.
-- Crear líneas de documentos de proveedor.
-- Relacionar documentos con órdenes sin asumir relación 1:1.
-- Relacionar una o varias recepciones con el documento correspondiente.
-- Ampliar las líneas de recepción para conservar cantidad recibida, aceptada y rechazada, presentación y equivalencia histórica.
-- Añadir estados/diferencias auditables y usuario/fecha de autorización.
-- Mantener las tablas actuales y sus datos históricos; no renombrar ni eliminar columnas en la primera etapa.
+## Base de datos añadida en QA
 
-No ejecutar DDL hasta revisar las funciones RPC, triggers, RLS, grants, vistas y dependencias del esquema completo. La nueva superficie pública debe tener RLS y permisos mínimos, siguiendo las políticas/roles existentes de DROSalud; no crear políticas genéricas para todos los usuarios.
+Migración aplicada únicamente al proyecto `drosalud-pruebas`:
+`supabase/migrations/20261118000100_compras_documentos_proveedor_base.sql`
+
+Añade:
+- `documentos_proveedor`: cabecera de factura/remisión/nota crédito, proveedor, fecha, valores y estado.
+- `documentos_proveedor_items`: cantidades y precios tal como aparecen en el documento, guardando la equivalencia de presentación usada en ese momento.
+- `documentos_proveedor_ordenes`: permite relacionar un documento con varias órdenes.
+- `recepciones_compra.documento_id`: vínculo opcional entre una entrega física y su documento.
+
+Seguridad inicial:
+- RLS habilitado en las tres tablas nuevas.
+- Lectura limitada a usuarios reconocidos de DROSalud.
+- Sin permisos de escritura directa para `anon` ni `authenticated`; las altas y cambios deberán pasar por RPC con validaciones.
+- Verificación SQL confirmó que RLS está activo en las tres tablas.
+
+Esta etapa es solo la estructura. Todavía no hay pantalla nueva ni RPC de alta/conciliación conectadas a estas tablas. El flujo anterior sigue intacto. No registrar compras reales en estas tablas desde la interfaz hasta completar los servicios y pruebas.
 
 ## Interfaz propuesta
 
@@ -90,6 +105,22 @@ Sección «Compras y recepción» con cuatro vistas:
 4. Conciliación: comparativo por línea con acciones explícitas para aceptar, dejar pendiente o rechazar diferencias.
 
 En cada línea mostrar la presentación comercial primero y la equivalencia base como detalle. Ejemplo: «2 cajas (60 unidades)». El costo se captura como aparece en el documento, y el sistema calcula la unidad base.
+
+## Precios y costos: reglas funcionales
+
+Mantener tres valores separados:
+1. Costo de compra vigente: valor real pagado al proveedor por la presentación comercial, convertido a unidad base. Se actualiza desde una recepción confirmada, no por una oferta o cotización.
+2. Precio habitual del catálogo: precio normal de venta que se propone por defecto en el POS.
+3. Precio aplicado a la venta: precio particular cobrado en esa transacción. Un descuento manual en el carrito no debe reescribir el precio habitual del catálogo.
+
+La advertencia existente cuando el precio de venta queda por debajo del costo se conserva sin cambios. El costo debe mostrarse con su unidad clara (por caja/presentación o por unidad base).
+
+La auditoría identificó tres historiales distintos:
+- `historial_costos`: costo, proveedor, presentación, origen, referencia y fecha.
+- `historial_precios`: la pantalla actual lo usa para cambios del costo de compra.
+- `auditoria_precios`: guarda campo, valor anterior/nuevo, usuario, correo, rol y fecha, pero no se encontró una pantalla que lo consulte ni un motivo de cambio.
+
+Pendiente de implementar: una vista única de trazabilidad que permita consultar por producto los cambios del costo de compra y del precio habitual de venta, mostrando fecha, valor anterior, valor nuevo, usuario, origen y motivo cuando exista. No confundir el precio particular de una venta con una modificación del catálogo.
 
 ## Escenarios de aceptación obligatorios
 
@@ -104,61 +135,12 @@ En cada línea mostrar la presentación comercial primero y la equivalencia base
 9. Presentación de 30 unidades: 2 cajas deben convertirse exactamente a 60 unidades base.
 10. Documento sin orden (compra urgente): permitir flujo excepcional con autorización y trazabilidad, sin alterar el cálculo del pedido sugerido.
 
-## Plan de implementación
+## Siguientes fases
 
-Fase 1 — Esquema aditivo y seguro:
-- Revisar RPC, triggers, RLS, grants, dependencias y restricciones actuales.
-- Preparar migración versionada y reversible cuando sea posible.
-- Probar en proyecto/entorno QA; no aplicar a producción.
+1. RPC seguras para registrar documentos y relacionarlos con órdenes; sin escritura directa del navegador.
+2. RPC de recepción/conciliación versionadas, conservando compatibilidad e idempotencia de la recepción actual.
+3. Interfaz de documentos y recepción dentro del módulo actual, sin alterar panel global ni sugerencia de pedidos.
+4. Vista de historial de costos/precios y etiquetas inequívocas para caja/unidad.
+5. Pruebas de los diez escenarios en QA, inventario/Kardex, historial y regresión del pedido sugerido.
 
-Fase 2 — Servicios y validaciones:
-- Crear RPC transaccionales para documento, recepción y conciliación.
-- Evitar que el cliente escriba directamente movimientos de inventario.
-- Mantener idempotencia, validaciones de proveedor/orden/producto y permisos.
-
-Fase 3 — Interfaz:
-- Implementar la experiencia de cuatro vistas dentro del módulo actual, preservando estilos y responsive existentes.
-- Mostrar errores claros y evitar doble envío.
-
-Fase 4 — Pruebas:
-- Ejecutar los 10 escenarios anteriores en QA y comprobar órdenes, documentos, recepciones, inventario, Kardex e historial de costos.
-- Verificar explícitamente que el código de pedido sugerido no cambió.
-
-Fase 5 — Revisión:
-- Abrir PR para revisión.
-- No fusionar ni desplegar en producción hasta aprobación explícita del usuario.
-
-## Fuera de alcance de esta primera entrega
-
-- Cambios al algoritmo de pedido sugerido.
-- Cambios al POS, caja, roles/permisos o panel global.
-- Contabilidad/cuentas por pagar completa.
-- Integración automática con DIAN o lectura OCR de facturas.
-- Costeo fiscal/contable avanzado sin definir antes el tratamiento de impuestos y fletes.
-
-
-## Hallazgos de auditoría del esquema y RPC actuales (18-11-2026)
-
-Verificado directamente en el proyecto Supabase conectado:
-
-- Las seis tablas existentes de órdenes, recepciones, movimientos y costos tienen RLS habilitado.
-- Las políticas visibles para el equipo permiten lectura; no hay políticas directas de INSERT/UPDATE para esas tablas. La escritura se canaliza por RPC.
-- No se encontraron triggers en las seis tablas consultadas.
-- `registrar_recepcion_compra` es una función `SECURITY DEFINER` que permite recibir a un usuario reconocido por `es_usuario_drosalud()`; valida orden aprobada/parcial, líneas pertenecientes a la orden, no exceder cantidad pendiente y evita reintentos duplicados con identificador de operación.
-- Esa RPC inserta recepción, movimientos de inventario, actualiza unidades recibidas, actualiza `productos.precio_compra` y agrega historial de costos en una misma transacción.
-- El costo de presentación se calcula actualmente multiplicando costo por unidad base por `productos.unidades_por_caja`. La nueva experiencia debe mostrar explícitamente esta equivalencia y no asumir que el nombre de la presentación comercial es intercambiable con el factor de conversión.
-- La RPC actual no registra fecha/tipo/valores del documento, ni distingue cantidades facturadas de cantidades recibidas. Tampoco permite exceso o producto adicional; eso es una limitación de control deliberada que debe mantenerse hasta que exista un flujo explícito de autorización.
-- `generar_ordenes_compra_pedido` es solo para administrador y valida que las asignaciones no superen lo autorizado. Esta autorización debe conservarse.
-- `autorizar_pedido` es solo para administrador y valida todas las líneas. No tocar.
-
-### Riesgos que bloquean una implementación inmediata de la nueva recepción
-
-1. Cambiar directamente la RPC actual podría alterar inventario y costo histórico. La nueva versión debe añadirse con compatibilidad o versionarse, no reemplazar a ciegas.
-2. La función actual actualiza el costo vigente con cada recepción parcial. Para el nuevo flujo debe definirse si se confirma por entrega o al conciliar el documento completo; no cambiar esta regla sin prueba de regresión.
-3. La base de datos actual no ofrece relaciones para una factura con múltiples entregas ni para varios documentos por una orden. Deben añadirse relaciones explícitas.
-4. No se deben conceder escrituras directas a tablas nuevas desde el navegador. Mantener operaciones críticas dentro de RPC transaccionales y aplicar RLS/grants mínimos.
-5. No se debe habilitar recepción por encima de lo pendiente ni productos extra hasta incorporar un registro de autorización verificable.
-
-### Decisión técnica
-
-La primera implementación de código debe ser aditiva: nuevas tablas de documentos y relaciones, nuevas RPC versionadas y una interfaz que inicialmente permita registrar documentos y conciliar cantidades sin alterar el algoritmo de pedido ni el comportamiento actual de recepción. El corte del flujo antiguo al nuevo solo ocurrirá después de validar los escenarios en QA.
+No fusionar ni desplegar en producción hasta aprobación explícita del usuario.
