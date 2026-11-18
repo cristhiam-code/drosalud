@@ -8,3 +8,62 @@
 @media(min-width:700px){.rm-overlay{align-items:center}.rm-dialog{max-height:90vh}}
 @media(max-width:760px){.rm-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.rm-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.rm-heading-actions{width:100%}.rm-heading-actions .btn{flex:1}.rm-tabs{overflow-x:auto;flex-wrap:nowrap}.rm-tabs button{white-space:nowrap;flex:none}.rm-panel-head{align-items:flex-start;flex-direction:column}}
 @media(max-width:420px){.rm-form-grid{grid-template-columns:1fr}.rm-dialog{padding:14px}.rm-stats article{padding:11px}.rm-stats b{font-size:1.15rem}}
+
+
+/* Adaptación móvil aislada: escritorio conserva exactamente su presentación. */
+@media(max-width:760px){
+  .rm-module{gap:12px;min-width:0}
+  .rm-heading{gap:10px}
+  .rm-heading h2{font-size:1.18rem}
+  .rm-heading p{font-size:.88rem;line-height:1.4}
+  .rm-heading-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .rm-heading-actions .btn{width:100%;min-height:44px;padding:10px 8px}
+  .rm-stats{gap:8px}
+  .rm-stats article{min-width:0}
+  .rm-tabs{margin:0 -2px 2px;padding:0 0 8px;scrollbar-width:thin}
+  .rm-tabs button{min-height:42px;padding:10px 12px}
+  .rm-panel-head{gap:4px;margin:6px 0 10px}
+  .rm-table-wrap{overflow:visible;border:0;background:transparent}
+  .rm-table{display:block;min-width:0;width:100%;font-size:.88rem}
+  .rm-table thead{display:none}
+  .rm-table tbody{display:grid;gap:10px}
+  .rm-table tbody tr{display:grid;gap:0;padding:7px 12px;background:var(--card);border:1px solid var(--line);border-radius:13px;box-shadow:0 2px 8px rgba(0,0,0,.035)}
+  .rm-table tbody tr:last-child td{border-bottom:1px solid var(--line)}
+  .rm-table tbody tr td{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;width:100%;padding:9px 0;border-bottom:1px solid var(--line);text-align:right;overflow-wrap:anywhere}
+  .rm-table tbody tr td:last-child{border-bottom:0}
+  .rm-table tbody tr td:not(.rm-empty)::before{flex:0 0 38%;max-width:38%;color:var(--mut);font-size:.74rem;font-weight:750;text-align:left;line-height:1.35}
+  .rm-table tbody tr td:nth-child(1):not(.rm-empty)::before{content:"Registro"}
+  .rm-table tbody tr td:nth-child(2):not(.rm-empty)::before{content:"Fecha"}
+  .rm-table tbody tr td:nth-child(3):not(.rm-empty)::before{content:"Proveedor / campo"}
+  .rm-table tbody tr td:nth-child(4):not(.rm-empty)::before{content:"Detalle"}
+  .rm-table tbody tr td:nth-child(5):not(.rm-empty)::before{content:"Información"}
+  .rm-table tbody tr td:nth-child(6):not(.rm-empty)::before{content:"Estado / cantidad"}
+  .rm-table tbody tr td:nth-child(7):not(.rm-empty)::before{content:"Acción / motivo"}
+  .rm-table tbody tr td .btn{width:auto;max-width:62%;min-height:42px;white-space:normal}
+  .rm-table tbody tr td.rm-empty{display:block;text-align:center!important;padding:18px 8px!important;border:0}
+  .rm-table tbody tr td.rm-empty::before{content:none}
+  .rm-state{white-space:normal;text-align:center}
+  .rm-overlay{padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));align-items:flex-end}
+  .rm-dialog{width:100%;max-width:none;max-height:calc(100dvh - env(safe-area-inset-top,0px) - 16px);padding:15px 13px;border-radius:17px 17px 12px 12px}
+  .rm-dialog h2{font-size:1.12rem;line-height:1.3;padding-right:4px}
+  .rm-dialog h3{margin-top:14px}
+  .rm-form-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
+  .rm-form-grid label,.rm-dialog>label,.rm-line label{font-size:.76rem;line-height:1.35}
+  .rm-form-grid input,.rm-form-grid select,.rm-dialog textarea,.rm-line input{min-height:44px;font-size:16px;padding:10px}
+  .rm-lines{gap:9px}
+  .rm-line{padding:11px;gap:7px}
+  .rm-line b{font-size:.92rem;line-height:1.35}
+  .rm-line small{font-size:.77rem}
+  .rm-line input{margin:0}
+  .rm-actions{position:sticky;bottom:calc(-15px - env(safe-area-inset-bottom,0px));padding:10px 0 calc(8px + env(safe-area-inset-bottom,0px));margin:12px -13px -15px;background:var(--bg);border-top:1px solid var(--line);z-index:2}
+  .rm-actions button{min-height:48px;font-size:.9rem}
+}
+@media(max-width:420px){
+  .rm-heading-actions{grid-template-columns:1fr 1fr}
+  .rm-form-grid{grid-template-columns:1fr}
+  .rm-dialog{padding:13px 11px}
+  .rm-actions{margin-left:-11px;margin-right:-11px;bottom:calc(-13px - env(safe-area-inset-bottom,0px))}
+  .rm-table tbody tr{padding:6px 10px}
+  .rm-table tbody tr td{gap:8px;font-size:.83rem}
+  .rm-table tbody tr td:not(.rm-empty)::before{flex-basis:35%;max-width:35%;font-size:.7rem}
+}
