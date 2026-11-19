@@ -6,10 +6,10 @@
   const api = window.DrosaludConteoApi;
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
   let rights={count:false,approve:false,admin:false}, userId=null, products=[], sessions=[], selected=new Set();
-  let sessionId=null, items=[], review=[], query='', reason='', busy=false, errorMessage='';
+  let sessionId=null, items=[], review=[], query='', reason='', busy=false, errorMessage='', refreshStale=false;
   const labelState = { abierto:'Abierto', cerrado:'Cerrado', cancelado:'Cancelado', seleccionado:'Por iniciar', contando:'Conteo iniciado', pendiente_reconteo:'Requiere reconteo', pendiente_aprobacion:'Pendiente de aprobación', aprobado:'Aprobado', cancelado_item:'Cancelado' };
   function productMatches(p){const q=query.trim().toLocaleLowerCase();return !q||[p.nombre,p.codigo,p.laboratorio].some(x=>String(x||'').toLocaleLowerCase().includes(q))}
-  function statusBox(){return errorMessage?`<p class="cf-alert" role="alert">${esc(errorMessage)}</p>`:''}
+  function statusBox(){return `${errorMessage?`<p class="cf-alert" role="alert">${esc(errorMessage)}</p>`:''}${refreshStale?'<p class="cf-alert" role="status">La operación pudo guardarse, pero no se pudo actualizar la pantalla. Actualiza antes de continuar para evitar repetirla.</p>':''}`}
   function renderHome(){
     root.innerHTML=`<section class="cf-module">
       <header class="cf-heading"><div><span class="cf-kicker">INVENTARIO · CONTROL FÍSICO</span><h2>Conteo físico</h2><p>Cuenta sin ver el saldo del sistema. Las diferencias requieren otro contador antes de aprobar.</p></div></header>
@@ -51,7 +51,7 @@
       if(rights.approve&&item.estado==='pendiente_aprobacion'&&!canApprove) action+='<p class="cf-muted">Una persona que participó en el conteo no puede aprobarlo.</p>';
       return `<article class="cf-item"><div class="cf-item-head"><div><b>${esc(item.nombre)}</b><small>${esc(item.codigo||'')} · ${esc(item.laboratorio||'')}${item.fraccionable?' · Caja de '+item.unidades_por_caja+' unidades':''}</small></div><span class="cf-state">${esc(labelState[item.estado]||item.estado)}</span></div>${action}</article>`;
     }).join('');
-    root.innerHTML=`<section class="cf-module"><header class="cf-heading"><div><span class="cf-kicker">SESIÓN DE CONTEO</span><h2>${esc(sessions.find(s=>s.conteo_id===sessionId)?.motivo||'Conteo físico')}</h2><p>Las ventas, entradas y cambios de presentación quedan bloqueados para cada producto iniciado.</p></div><div class="cf-heading-actions"><button type="button" class="btn alt" data-cf-home>Volver</button>${rights.admin&&sessions.find(s=>s.conteo_id===sessionId)?.estado==='abierto'?'<button type="button" class="btn bad" data-cf-cancel>Cancelar sesión</button>':''}</div></header>${statusBox()}<div class="cf-items">${cards||'<p class="cf-muted">No hay productos en esta sesión.</p>'}</div></section>`;
+    root.innerHTML=`<section class="cf-module"><header class="cf-heading"><div><span class="cf-kicker">SESIÓN DE CONTEO</span><h2>${esc(sessions.find(s=>s.conteo_id===sessionId)?.motivo||'Conteo físico')}</h2><p>Las ventas, entradas y cambios de presentación quedan bloqueados para cada producto iniciado.</p></div><div class="cf-heading-actions"><button type="button" class="btn alt" data-cf-refresh ${busy?'disabled':''}>Actualizar</button><button type="button" class="btn alt" data-cf-home>Volver</button>${rights.admin&&sessions.find(s=>s.conteo_id===sessionId)?.estado==='abierto'?'<button type="button" class="btn bad" data-cf-cancel>Cancelar sesión</button>':''}</div></header>${statusBox()}<div class="cf-items">${cards||'<p class="cf-muted">No hay productos en esta sesión.</p>'}</div></section>`;
   }
   async function refresh(){
     const [s, it] = await Promise.all([api.list(), sessionId?api.items(sessionId):Promise.resolve({data:[],error:null})]);
@@ -59,14 +59,18 @@
     if(it.error) throw it.error;
     sessions=s.data||[]; items=it.data||[];
     if(sessionId&&rights.approve){const r=await api.review(sessionId);if(r.error)throw r.error;review=r.data||[]}else review=[];
-    errorMessage='';
+    errorMessage=''; refreshStale=false;
     sessionId?renderSession():renderHome();
   }
-  async function run(task){
+  async function run(task,{refreshAfter=true,refreshOnly=false}={}){
     if(busy)return;
     busy=true;errorMessage='';
     sessionId?renderSession():renderHome();
-    try{await task();await refresh()}
+    try{
+      if(refreshOnly){await refresh();return}
+      await task();
+      if(refreshAfter){try{await refresh()}catch(error){console.error('Recarga de conteo físico:',error);refreshStale=true;errorMessage='La operación se realizó, pero la actualización falló. Actualiza la pantalla antes de continuar.'}}
+    }
     catch(error){console.error('Conteo físico:',error);errorMessage=error?.message||'No se pudo completar la operación.';sessionId?renderSession():renderHome()}
     finally{busy=false;sessionId?renderSession():renderHome()}
   }
@@ -74,12 +78,13 @@
   root.addEventListener('input',e=>{if(e.target.id==='cf-search'){query=e.target.value;renderHome();const input=root.querySelector('#cf-search');input?.focus();input?.setSelectionRange(query.length,query.length)}if(e.target.id==='cf-reason')reason=e.target.value});
   root.addEventListener('click',e=>{
     const button=e.target.closest('button');if(!button)return;
+    if(refreshStale&&!button.hasAttribute('data-cf-refresh')){errorMessage='Actualiza la pantalla antes de continuar.';sessionId?renderSession():renderHome();return}
     if(button.hasAttribute('data-cf-product')){const id=button.dataset.cfProduct;selected.has(id)?selected.delete(id):selected.add(id);renderHome();return}
     if(button.hasAttribute('data-cf-remove')){selected.delete(button.dataset.cfRemove);renderHome();return}
-    if(button.hasAttribute('data-cf-refresh')){run(refresh);return}
-    if(button.hasAttribute('data-cf-create')){run(async()=>{const r=await api.create([...selected],reason);sessionId=r;selected.clear();query='';reason='';await refresh()});return}
-    if(button.hasAttribute('data-cf-open')){sessionId=button.dataset.cfOpen;run(refresh);return}
-    if(button.hasAttribute('data-cf-home')){sessionId=null;run(refresh);return}
+    if(button.hasAttribute('data-cf-refresh')){run(refresh,{refreshOnly:true});return}
+    if(button.hasAttribute('data-cf-create')){run(async()=>{const r=await api.create([...selected],reason);sessionId=r;selected.clear();query='';reason=''});return}
+    if(button.hasAttribute('data-cf-open')){sessionId=button.dataset.cfOpen;run(refresh,{refreshOnly:true});return}
+    if(button.hasAttribute('data-cf-home')){sessionId=null;run(refresh,{refreshOnly:true});return}
     if(button.hasAttribute('data-cf-start')){run(()=>api.start(button.dataset.cfStart));return}
     if(button.hasAttribute('data-cf-submit')){run(()=>api.submit(button.dataset.cfSubmit));return}
     if(button.hasAttribute('data-cf-approve')){const id=button.dataset.cfApprove, why=root.querySelector(`#cf-ap-${CSS.escape(id)}`)?.value||'';if(why.trim().length<3){errorMessage='Escribe el motivo de aprobación.';renderSession();return}run(()=>api.approve(id,why));return}
@@ -87,6 +92,7 @@
     if(button.hasAttribute('data-cf-permission')){const id=root.querySelector('#cf-user')?.value.trim(),count=!!root.querySelector('#cf-can-count')?.checked,approve=!!root.querySelector('#cf-can-approve')?.checked;if(!id){errorMessage='Escribe el ID del usuario.';renderHome();return}run(()=>api.setPermission(id,count,approve));return}
   });
   root.addEventListener('submit',e=>{
+    if(refreshStale){e.preventDefault();errorMessage='Actualiza la pantalla antes de continuar.';renderSession();return}
     if(e.target.matches('[data-cf-save-form]')){e.preventDefault();const id=e.target.dataset.cfSaveForm;let q;try{q=parseQuantity(e.target)}catch(error){errorMessage=error.message;renderSession();return}run(()=>api.save(id,q));}
     if(e.target.matches('[data-cf-recount-form]')){e.preventDefault();const id=e.target.dataset.cfRecountForm;let q;try{q=parseQuantity(e.target)}catch(error){errorMessage=error.message;renderSession();return}const why=new FormData(e.target).get('reason');run(()=>api.recount(id,q,why));}
   });

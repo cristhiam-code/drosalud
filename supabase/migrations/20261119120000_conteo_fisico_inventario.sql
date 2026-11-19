@@ -1,21 +1,62 @@
 -- Drosalud: conteo físico ciego con aprobación independiente.
--- Borrador local autorizado para implementación; NO ejecutar hasta revisar
--- el contrato real de registrar_recepcion_compra y validar en QA aislado.
--- No modifica RPC existentes de venta, compra, recepción o fraccionamiento.
+-- Migración local de preparación; no ejecutar antes de revisar y aprobar QA.
+-- Conserva las RPC de venta/compra/recepción/fraccionamiento instaladas. En QA,
+-- registrar_recepcion_compra usa las columnas de metadatos añadidas abajo.
 begin;
+
+-- Metadatos de recepción de compra. La RPC existente inserta estos campos en
+-- inventario_movimientos; se conservan tipos, nulabilidad y FKs observados en QA.
+alter table public.inventario_movimientos
+  add column if not exists proveedor_id uuid,
+  add column if not exists recepcion_compra_id uuid,
+  add column if not exists costo_unitario_base numeric;
+
+do $migration$
+declare
+  v_constraint text;
+begin
+  select pg_catalog.pg_get_constraintdef(c.oid, true) into v_constraint
+  from pg_catalog.pg_constraint c
+  where c.conrelid = 'public.inventario_movimientos'::regclass
+    and c.conname = 'inventario_movimientos_proveedor_id_fkey';
+  if v_constraint is null then
+    alter table public.inventario_movimientos
+      add constraint inventario_movimientos_proveedor_id_fkey
+      foreign key (proveedor_id) references public.proveedores(id);
+  elsif v_constraint <> 'FOREIGN KEY (proveedor_id) REFERENCES proveedores(id)' then
+    raise exception 'La FK de proveedor en inventario_movimientos difiere del esquema QA revisado';
+  end if;
+
+  v_constraint := null;
+  select pg_catalog.pg_get_constraintdef(c.oid, true) into v_constraint
+  from pg_catalog.pg_constraint c
+  where c.conrelid = 'public.inventario_movimientos'::regclass
+    and c.conname = 'inventario_movimientos_recepcion_compra_id_fkey';
+  if v_constraint is null then
+    alter table public.inventario_movimientos
+      add constraint inventario_movimientos_recepcion_compra_id_fkey
+      foreign key (recepcion_compra_id) references public.recepciones_compra(id);
+  elsif v_constraint <> 'FOREIGN KEY (recepcion_compra_id) REFERENCES recepciones_compra(id)' then
+    raise exception 'La FK de recepción en inventario_movimientos difiere del esquema QA revisado';
+  end if;
+end
+$migration$;
+
+create index if not exists idx_movimientos_proveedor
+  on public.inventario_movimientos(proveedor_id, creado_en desc);
 
 alter table public.inventario_movimientos
   drop constraint if exists inventario_movimientos_tipo_check;
 alter table public.inventario_movimientos
   add constraint inventario_movimientos_tipo_check
-  check (tipo in ('venta','anulacion','recepcion','ajuste'));
+  check (tipo in ('venta','anulacion','recepcion','saldo_inicial','ajuste'));
 
 create unique index if not exists inventario_movimientos_ajuste_referencia_unica_idx
   on public.inventario_movimientos(tipo, referencia_id)
   where tipo='ajuste' and referencia_id is not null;
-create unique index if not exists inventario_movimientos_ajuste_operacion_unica_idx
+create unique index if not exists inventario_movimientos_ajuste_operacion_unico_idx
   on public.inventario_movimientos(operacion_id)
-  where tipo='ajuste' and operacion_id is not null;
+  where tipo in ('saldo_inicial','ajuste') and operacion_id is not null;
 
 create table public.inventario_conteos (
   id uuid primary key default gen_random_uuid(),
@@ -139,6 +180,19 @@ declare v_item public.inventario_conteos_items%rowtype;
 begin
   perform 1 from public.productos p where p.id=new.producto_id for update;
   if not found then raise exception 'Producto inexistente para movimiento'; end if;
+  -- Un reintento idéntico de recepción manual es un no-op idempotente.
+  -- La RPC conserva su firma y su ON CONFLICT; no se permite cambiar el payload.
+  if new.tipo='recepcion' and new.operacion_id is not null and exists(
+    select 1 from public.inventario_movimientos m
+    where m.tipo=new.tipo and m.operacion_id=new.operacion_id
+      and m.producto_id=new.producto_id and m.unidades_delta=new.unidades_delta
+      and m.referencia_id is not distinct from new.referencia_id
+      and m.notas is not distinct from new.notas
+      and m.creado_por is not distinct from new.creado_por
+      and m.proveedor_id is not distinct from new.proveedor_id
+      and m.recepcion_compra_id is not distinct from new.recepcion_compra_id
+      and m.costo_unitario_base is not distinct from new.costo_unitario_base
+  ) then return new; end if;
   if exists(select 1 from public.inventario_conteos_bloqueos b where b.producto_id=new.producto_id) then
     raise exception 'Producto protegido por conteo físico' using errcode='55P03';
   end if;
@@ -162,6 +216,27 @@ revoke all on function public.proteger_movimiento_durante_conteo() from public,a
 create trigger trg_bloquear_movimiento_durante_conteo
 before insert on public.inventario_movimientos for each row
 execute function public.proteger_movimiento_durante_conteo();
+
+-- El Kardex es un registro append-only para los roles de aplicación.
+-- La protección cubre también borrado masivo; el propietario de BD puede
+-- administrar triggers, pero los roles normales no reciben esa capacidad.
+create or replace function public.rechazar_mutacion_kardex()
+returns trigger language plpgsql security definer set search_path=''
+as $function$
+begin
+  raise exception 'El Kardex es histórico y no admite modificaciones ni eliminaciones'
+    using errcode='55000';
+end;
+$function$;
+revoke all on function public.rechazar_mutacion_kardex() from public,anon,authenticated;
+drop trigger if exists trg_kardex_inmutable_fila on public.inventario_movimientos;
+create trigger trg_kardex_inmutable_fila
+before update or delete on public.inventario_movimientos
+for each row execute function public.rechazar_mutacion_kardex();
+drop trigger if exists trg_kardex_inmutable_truncate on public.inventario_movimientos;
+create trigger trg_kardex_inmutable_truncate
+before truncate on public.inventario_movimientos
+for each statement execute function public.rechazar_mutacion_kardex();
 
 create or replace function public.proteger_presentacion_durante_conteo()
 returns trigger language plpgsql security definer set search_path=''
