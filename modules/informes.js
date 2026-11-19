@@ -31,6 +31,7 @@
     ]);
     state.products=results[0]||[];state.balances={};
     (results[1]||[]).forEach(x=>state.balances[x.producto_id]=Number(x.saldo_unidades)||0);
+    let warning='';
     try{
       const opening=await readAll(()=>sb.from('inventario_movimientos').select('producto_id').eq('tipo','saldo_inicial').order('producto_id'));
       state.openingProducts=new Set((opening||[]).map(x=>x.producto_id).filter(Boolean));
@@ -39,7 +40,7 @@
       warning='No se pudo verificar el inventario inicial; por seguridad no se mostrará una valoración total.';
       console.warn('No se pudo verificar el inventario inicial:',e);
     }
-    const costMap={};let warning='';
+    const costMap={};
     try{
       const movements=await readAll(()=>sb.from('inventario_movimientos').select('producto_id,costo_unitario_base,creado_en').not('costo_unitario_base','is',null).order('creado_en',{ascending:false}));
       movements.forEach(x=>{const cost=Number(x.costo_unitario_base);if(x.producto_id&&cost>0&&!costMap[x.producto_id])costMap[x.producto_id]={cost:cost,source:'Último movimiento con costo',date:x.creado_en}});
