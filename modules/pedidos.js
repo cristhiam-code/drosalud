@@ -805,6 +805,7 @@
     const pedido = state.pedidos.find(row => row.id === pedidoId);
     if (!pedido) return;
     state.editing = pedido;
+    state.selectedPedidoId = null;
     state.formItems = itemsFor(pedidoId).map(item => ({...item}));
     state.mode = 'editor';
     renderPanel();
@@ -844,7 +845,15 @@
       if (action === 'go-remisiones') {
         if (typeof show === 'function') show('recepcion');
         return;
-      } else if (action === 'open-pedido') {\n        state.selectedPedidoId = button.dataset.pedidoId;\n        renderPanel();\n      } else if (action === 'back-to-list') {\n        state.selectedPedidoId = null;\n        renderPanel();\n      } else if (action === 'print-pedido') {\n        printPedido(button.dataset.pedidoId);\n      } else if (action === 'back-home') {
+      } else if (action === 'open-pedido') {
+        state.selectedPedidoId = button.dataset.pedidoId;
+        renderPanel();
+      } else if (action === 'back-to-list') {
+        state.selectedPedidoId = null;
+        renderPanel();
+      } else if (action === 'print-pedido') {
+        printPedido(button.dataset.pedidoId);
+      } else if (action === 'back-home') {
         state.editing = null; state.formItems = []; state.selectedPedidoId = null; state.mode = 'inicio'; message(''); renderPanel();
       } else if (action === 'refresh') {
         if (state.mode === 'seguimiento') { await reload(); message('Datos actualizados.'); }
