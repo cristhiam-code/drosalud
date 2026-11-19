@@ -32,13 +32,7 @@
   .rm-table tbody tr td{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;width:100%;padding:9px 0;border-bottom:1px solid var(--line);text-align:right;overflow-wrap:anywhere}
   .rm-table tbody tr td:last-child{border-bottom:0}
   .rm-table tbody tr td:not(.rm-empty)::before{flex:0 0 38%;max-width:38%;color:var(--mut);font-size:.74rem;font-weight:750;text-align:left;line-height:1.35}
-  .rm-table tbody tr td:nth-child(1):not(.rm-empty)::before{content:"Registro"}
-  .rm-table tbody tr td:nth-child(2):not(.rm-empty)::before{content:"Fecha"}
-  .rm-table tbody tr td:nth-child(3):not(.rm-empty)::before{content:"Proveedor / campo"}
-  .rm-table tbody tr td:nth-child(4):not(.rm-empty)::before{content:"Detalle"}
-  .rm-table tbody tr td:nth-child(5):not(.rm-empty)::before{content:"Información"}
-  .rm-table tbody tr td:nth-child(6):not(.rm-empty)::before{content:"Estado / cantidad"}
-  .rm-table tbody tr td:nth-child(7):not(.rm-empty)::before{content:"Acción / motivo"}
+  .rm-table tbody tr td:not(.rm-empty)::before{content:attr(data-label)}
   .rm-table tbody tr td .btn{width:auto;max-width:62%;min-height:42px;white-space:normal}
   .rm-table tbody tr td.rm-empty{display:block;text-align:center!important;padding:18px 8px!important;border:0}
   .rm-table tbody tr td.rm-empty::before{content:none}
@@ -69,7 +63,7 @@
 }
 
 
-/* Tabletas en orientación vertical: evitar que el listado fuerce scroll horizontal. */
+/* Tabletas en orientación vertical: fichas con etiquetas vinculadas a cada dato. */
 @media (min-width:761px) and (max-width:900px){
   .rm-table-wrap{overflow:visible;border:0;background:transparent}
   .rm-table{display:block;min-width:0;width:100%;font-size:.88rem}
@@ -79,58 +73,9 @@
   .rm-table tbody tr:last-child td{border-bottom:1px solid var(--line)}
   .rm-table tbody tr td{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;width:100%;padding:9px 0;border-bottom:1px solid var(--line);text-align:right;overflow-wrap:anywhere}
   .rm-table tbody tr td:last-child{border-bottom:0}
-  .rm-table tbody tr td:not(.rm-empty)::before{flex:0 0 38%;max-width:38%;color:var(--mut);font-size:.74rem;font-weight:750;text-align:left;line-height:1.35}
-  .rm-table tbody tr td:nth-child(1):not(.rm-empty)::before{content:"Registro"}
-  .rm-table tbody tr td:nth-child(2):not(.rm-empty)::before{content:"Fecha"}
-  .rm-table tbody tr td:nth-child(3):not(.rm-empty)::before{content:"Proveedor / campo"}
-  .rm-table tbody tr td:nth-child(4):not(.rm-empty)::before{content:"Detalle"}
-  .rm-table tbody tr td:nth-child(5):not(.rm-empty)::before{content:"Información"}
-  .rm-table tbody tr td:nth-child(6):not(.rm-empty)::before{content:"Estado / cantidad"}
-  .rm-table tbody tr td:nth-child(7):not(.rm-empty)::before{content:"Acción / motivo"}
+  .rm-table tbody tr td:not(.rm-empty)::before{flex:0 0 38%;max-width:38%;content:attr(data-label);color:var(--mut);font-size:.74rem;font-weight:750;text-align:left;line-height:1.35}
   .rm-table tbody tr td .btn{width:auto;max-width:62%;min-height:42px;white-space:normal}
   .rm-table tbody tr td.rm-empty{display:block;text-align:center!important;padding:18px 8px!important;border:0}
   .rm-table tbody tr td.rm-empty::before{content:none}
   .rm-state{white-space:normal;text-align:center}
-}
-
-/* Etiquetas reales de cada listado cuando las tablas se presentan como fichas. */
-@media(max-width:900px){
-  [data-rm-view="ordenes"] .rm-panel-head + .rm-table-wrap .rm-table tbody tr td:nth-child(1)::before{content:"Orden"}
-  [data-rm-view="ordenes"] .rm-panel-head + .rm-table-wrap .rm-table tbody tr td:nth-child(2)::before{content:"Proveedor"}
-  [data-rm-view="ordenes"] .rm-panel-head + .rm-table-wrap .rm-table tbody tr td:nth-child(3)::before{content:"Fecha"}
-  [data-rm-view="ordenes"] .rm-panel-head + .rm-table-wrap .rm-table tbody tr td:nth-child(4)::before{content:"Productos"}
-  [data-rm-view="ordenes"] .rm-panel-head + .rm-table-wrap .rm-table tbody tr td:nth-child(5)::before{content:"Pendiente"}
-  [data-rm-view="ordenes"] .rm-panel-head + .rm-table-wrap .rm-table tbody tr td:nth-child(6)::before{content:"Estado"}
-  [data-rm-view="ordenes"] .rm-panel-head + .rm-table-wrap .rm-table tbody tr td:nth-child(7)::before{content:"Acción"}
-
-  [data-rm-view="documentos"] .rm-panel-head + .rm-table-wrap .rm-table tbody tr td:nth-child(1)::before{content:"Documento"}
-  [data-rm-view="documentos"] .rm-panel-head + .rm-table-wrap .rm-table tbody tr td:nth-child(2)::before{content:"Emisión"}
-  [data-rm-view="documentos"] .rm-panel-head + .rm-table-wrap .rm-table tbody tr td:nth-child(3)::before{content:"Proveedor"}
-  [data-rm-view="documentos"] .rm-panel-head + .rm-table-wrap .rm-table tbody tr td:nth-child(4)::before{content:"Valor"}
-  [data-rm-view="documentos"] .rm-panel-head + .rm-table-wrap .rm-table tbody tr td:nth-child(5)::before{content:"Orden"}
-  [data-rm-view="documentos"] .rm-panel-head + .rm-table-wrap .rm-table tbody tr td:nth-child(6)::before{content:"Estado"}
-  [data-rm-view="documentos"] .rm-panel-head + .rm-table-wrap .rm-table tbody tr td:nth-child(7)::before{content:"Acción"}
-
-  [data-rm-view="recepciones"] .rm-table tbody tr td:nth-child(1)::before{content:"Recepción"}
-  [data-rm-view="recepciones"] .rm-table tbody tr td:nth-child(2)::before{content:"Fecha"}
-  [data-rm-view="recepciones"] .rm-table tbody tr td:nth-child(3)::before{content:"Proveedor"}
-  [data-rm-view="recepciones"] .rm-table tbody tr td:nth-child(4)::before{content:"Documento"}
-  [data-rm-view="recepciones"] .rm-table tbody tr td:nth-child(5)::before{content:"Productos"}
-  [data-rm-view="recepciones"] .rm-table tbody tr td:nth-child(6)::before{content:"Unidades aceptadas"}
-
-  [data-rm-view="historial"] .rm-panel-head + .rm-table-wrap .rm-table tbody tr td:nth-child(1)::before{content:"Fecha"}
-  [data-rm-view="historial"] .rm-panel-head + .rm-table-wrap .rm-table tbody tr td:nth-child(2)::before{content:"Producto"}
-  [data-rm-view="historial"] .rm-panel-head + .rm-table-wrap .rm-table tbody tr td:nth-child(3)::before{content:"Origen"}
-  [data-rm-view="historial"] .rm-panel-head + .rm-table-wrap .rm-table tbody tr td:nth-child(4)::before{content:"Proveedor"}
-  [data-rm-view="historial"] .rm-panel-head + .rm-table-wrap .rm-table tbody tr td:nth-child(5)::before{content:"Costo unidad"}
-  [data-rm-view="historial"] .rm-panel-head + .rm-table-wrap .rm-table tbody tr td:nth-child(6)::before{content:"Costo empaque"}
-  [data-rm-view="historial"] .rm-panel-head + .rm-table-wrap .rm-table tbody tr td:nth-child(7)::before{content:"Presentación"}
-
-  [data-rm-view="historial"] .rm-table-wrap + .rm-panel-head + .rm-table-wrap .rm-table tbody tr td:nth-child(1)::before{content:"Fecha"}
-  [data-rm-view="historial"] .rm-table-wrap + .rm-panel-head + .rm-table-wrap .rm-table tbody tr td:nth-child(2)::before{content:"Producto"}
-  [data-rm-view="historial"] .rm-table-wrap + .rm-panel-head + .rm-table-wrap .rm-table tbody tr td:nth-child(3)::before{content:"Campo"}
-  [data-rm-view="historial"] .rm-table-wrap + .rm-panel-head + .rm-table-wrap .rm-table tbody tr td:nth-child(4)::before{content:"Antes"}
-  [data-rm-view="historial"] .rm-table-wrap + .rm-panel-head + .rm-table-wrap .rm-table tbody tr td:nth-child(5)::before{content:"Ahora"}
-  [data-rm-view="historial"] .rm-table-wrap + .rm-panel-head + .rm-table-wrap .rm-table tbody tr td:nth-child(6)::before{content:"Usuario"}
-  [data-rm-view="historial"] .rm-table-wrap + .rm-panel-head + .rm-table-wrap .rm-table tbody tr td:nth-child(7)::before{content:"Motivo"}
 }
