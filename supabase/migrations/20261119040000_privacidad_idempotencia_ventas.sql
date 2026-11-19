@@ -48,7 +48,7 @@ BEGIN
     RAISE EXCEPTION 'La venta no tiene productos';
   END IF;
 
-  v_operacion_hash := md5((p_venta - 'operacion_id')::text || '|' || p_items::text);
+  v_operacion_hash := md5(auth.uid()::text || '|' || (p_venta - 'operacion_id')::text || '|' || p_items::text);
   INSERT INTO public.recibos_operaciones(operacion_id,payload_hash)
   VALUES(v_operacion_id,v_operacion_hash)
   ON CONFLICT (operacion_id) DO NOTHING
