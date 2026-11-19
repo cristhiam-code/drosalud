@@ -3,7 +3,7 @@
   'use strict';
   const root = document.getElementById('informes-app');
   if (!root) return;
-  const state = {products:[],balances:{},costs:{},rows:[],tab:'menu',filter:'todos',query:'',limit:50,loadedAt:null,warning:''};
+  const state = {products:[],balances:{},costs:{},openingProducts:new Set(),rows:[],tab:'menu',filter:'todos',query:'',limit:50,loadedAt:null,warning:''};
   const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const number = v => (Number(v)||0).toLocaleString('es-CO');
   const money = v => '$'+Math.round(Number(v)||0).toLocaleString('es-CO');
@@ -31,6 +31,14 @@
     ]);
     state.products=results[0]||[];state.balances={};
     (results[1]||[]).forEach(x=>state.balances[x.producto_id]=Number(x.saldo_unidades)||0);
+    try{
+      const opening=await readAll(()=>sb.from('inventario_movimientos').select('producto_id').eq('tipo','saldo_inicial').order('producto_id'));
+      state.openingProducts=new Set((opening||[]).map(x=>x.producto_id).filter(Boolean));
+    }catch(e){
+      state.openingProducts=new Set();
+      warning='No se pudo verificar el inventario inicial; por seguridad no se mostrará una valoración total.';
+      console.warn('No se pudo verificar el inventario inicial:',e);
+    }
     const costMap={};let warning='';
     try{
       const movements=await readAll(()=>sb.from('inventario_movimientos').select('producto_id,costo_unitario_base,creado_en').not('costo_unitario_base','is',null).order('creado_en',{ascending:false}));
@@ -43,8 +51,15 @@
     state.costs=costMap;
     state.rows=state.products.map(p=>{
       const registered=Object.prototype.hasOwnProperty.call(state.balances,p.id);const stock=registered?(Number(state.balances[p.id])||0):null;const cost=resolveCost(p,costMap[p.id]);
-      const sale=Number(p.precio_venta)>0?Number(p.precio_venta)/factor(p):null;
-      return {product:p,stock:stock,unitCost:cost.unit,costSource:cost.source,costDate:cost.date,value:stock!==null&&stock>0&&cost.unit!==null?stock*cost.unit:null,saleUnit:sale,saleValue:stock!==null&&stock>0&&sale!==null?stock*sale:null};
+      const fixedSale=p.precio_venta===null||p.precio_venta===undefined?null:Number(p.precio_venta);
+      const margin=typeof cfg!=='undefined'?Math.max(0,Number(cfg.m)||0):0;
+      const roundStep=typeof cfg!=='undefined'?Math.max(0,Number(cfg.r)||0):0;
+      const packageCost=Number(p.precio_compra)||0;
+      const calculatedSale=packageCost>0?(roundStep>0?Math.ceil((packageCost*(1+margin/100))/roundStep-1e-9)*roundStep:Math.round(packageCost*(1+margin/100))):null;
+      const sale=fixedSale!==null?fixedSale:calculatedSale;
+      const saleUnit=sale===null?null:sale/factor(p);
+      const initialCounted=state.openingProducts.has(p.id);
+      return {product:p,stock:stock,initialCounted,unitCost:cost.unit,costSource:cost.source,costDate:cost.date,value:initialCounted&&stock!==null&&stock>0&&cost.unit!==null?stock*cost.unit:null,saleUnit:saleUnit,saleValue:initialCounted&&stock!==null&&stock>0&&saleUnit!==null?stock*saleUnit:null};
     });
     state.loadedAt=new Date();state.warning=warning;state.limit=50;render();message('',false);
   }
@@ -64,32 +79,36 @@
   }
   function renderKpis(){
     const positive=state.rows.filter(r=>r.stock!==null&&r.stock>0),negative=state.rows.filter(r=>r.stock!==null&&r.stock<0),zero=state.rows.filter(r=>r.stock===0),unregistered=state.rows.filter(r=>r.stock===null);
-    const missing=positive.filter(r=>r.unitCost===null),saleMissing=positive.filter(r=>r.saleUnit===null).length;
-    const total=positive.reduce((s,r)=>s+(r.value||0),0),sale=positive.reduce((s,r)=>s+(r.saleValue||0),0);
+    const countedPositive=positive.filter(r=>r.initialCounted),uncountedPositive=positive.filter(r=>!r.initialCounted);
+    const missing=countedPositive.filter(r=>r.unitCost===null),saleMissing=countedPositive.filter(r=>r.saleUnit===null).length;
+    const total=countedPositive.reduce((s,r)=>s+(r.value||0),0),sale=countedPositive.reduce((s,r)=>s+(r.saleValue||0),0);
+    const hasOpening=state.openingProducts.size>0;
     let html='<div class="ir-kpis">';
-    html+='<article class="ir-kpi ir-kpi-main"><span>Valor conocido al costo</span><strong>'+money(total)+'</strong><small>'+(missing.length?'Valor parcial: hay productos sin costo registrado':'Todos los productos con saldo positivo tienen costo')+'</small></article>';
-    html+='<article class="ir-kpi"><span>Valor potencial de venta</span><strong>'+money(sale)+'</strong><small>'+number(saleMissing)+' productos sin precio de venta</small></article>';
-    html+='<article class="ir-kpi"><span>Con existencias</span><strong>'+number(positive.length)+'</strong><small>'+number(positive.reduce((s,r)=>s+r.stock,0))+' unidades base</small></article>';
-    html+='<article class="ir-kpi"><span>Agotados</span><strong>'+number(zero.length)+'</strong><small>Saldo registrado igual a cero</small></article>';
-    html+='<article class="ir-kpi"><span>Sin movimientos</span><strong>'+number(unregistered.length)+'</strong><small>Sin saldo inicial ni movimientos registrados</small></article>';
-    html+='<article class="ir-kpi"><span>Negativos</span><strong class="'+(negative.length?'ir-danger':'')+'">'+number(negative.length)+'</strong><small>'+number(negative.reduce((s,r)=>s+Math.abs(r.stock),0))+' unidades por cubrir</small></article>';
-    html+='<article class="ir-kpi"><span>Sin costo confiable</span><strong class="'+(missing.length?'ir-warning':'')+'">'+number(missing.length)+'</strong><small>Con saldo positivo</small></article></div>';
-    if(missing.length)html+='<p class="ir-alert ir-alert-warning">El valor mostrado es parcial. Los productos con existencias pero sin costo confiable se excluyen de la suma; no se les asigna un costo inventado.</p>';
-    if(negative.length)html+='<p class="ir-alert">Los saldos negativos se muestran como faltantes y no se restan del valor de la mercancía disponible.</p>';
+    html+='<article class="ir-kpi ir-kpi-main"><span>Valor al costo de productos con conteo inicial</span><strong>'+(hasOpening?money(total):'No disponible')+'</strong><small>'+(hasOpening?'Solo incluye productos con registro de saldo inicial; puede ser parcial.':'Pendiente: todavía no se ha registrado el inventario físico inicial.')+'</small></article>';
+    html+='<article class="ir-kpi"><span>Valor potencial de venta contado</span><strong>'+(hasOpening?money(sale):'No disponible')+'</strong><small>'+number(saleMissing)+' productos contados sin precio calculable</small></article>';
+    html+='<article class="ir-kpi"><span>Saldos positivos registrados</span><strong>'+number(positive.length)+'</strong><small>'+number(positive.reduce((s,r)=>s+r.stock,0))+' unidades en el Kardex; no equivalen a conteo físico</small></article>';
+    html+='<article class="ir-kpi"><span>Saldos cero registrados</span><strong>'+number(zero.length)+'</strong><small>El Kardex suma cero movimientos netos</small></article>';
+    html+='<article class="ir-kpi"><span>Sin movimientos</span><strong>'+number(unregistered.length)+'</strong><small>Sin saldo registrado en el Kardex</small></article>';
+    html+='<article class="ir-kpi"><span>Saldos negativos</span><strong class="'+(negative.length?'ir-danger':'')+'">'+number(negative.length)+'</strong><small>'+number(negative.reduce((s,r)=>s+Math.abs(r.stock),0))+' unidades por cubrir</small></article>';
+    html+='<article class="ir-kpi"><span>Productos contados sin costo</span><strong class="'+(missing.length?'ir-warning':'')+'">'+number(missing.length)+'</strong><small>Con saldo inicial y saldo positivo</small></article></div>';
+    if(!hasOpening)html+='<p class="ir-alert ir-alert-warning">Inventario inicial pendiente. Las ventas, recepciones y ajustes históricos no demuestran cuánta mercancía había físicamente. Drosalud no mostrará un valor total hasta que exista un conteo inicial registrado.</p>';
+    else if(uncountedPositive.length)html+='<p class="ir-alert ir-alert-warning">Valoración parcial: '+number(uncountedPositive.length)+' productos tienen saldo positivo en el Kardex, pero no tienen registro de conteo inicial. No se incluyen en el valor mostrado.</p>';
+    if(missing.length)html+='<p class="ir-alert ir-alert-warning">El valor mostrado es parcial. Los productos contados sin costo confiable se excluyen de la suma; no se les asigna un costo inventado.</p>';
+    if(negative.length)html+='<p class="ir-alert">Los saldos negativos se muestran como faltantes y no se restan del valor de la mercancía contada.</p>';
     if(unregistered.length)html+='<p class="ir-alert">Los productos sin movimientos no se consideran agotados: todavía no tienen saldo registrado en el Kardex.</p>';
-    if(saleMissing)html+='<p class="ir-alert">El valor potencial de venta es parcial porque hay productos sin precio de venta.</p>';
+    if(saleMissing)html+='<p class="ir-alert">El valor potencial de venta es parcial porque hay productos contados sin precio de venta calculable.</p>';
     if(state.warning)html+='<p class="ir-alert">'+esc(state.warning)+'</p>';
     return html;
   }
   function renderRows(rows){
     if(!rows.length)return '<div class="ir-empty">No hay productos que coincidan con esta consulta.</div>';
     const cards=rows.slice(0,state.limit).map(r=>{
-      const p=r.product;const status=r.stock===null?'<span class="ir-pill">Sin movimientos</span>':r.stock<0?'<span class="ir-pill ir-pill-danger">Negativo</span>':r.stock===0?'<span class="ir-pill">Agotado</span>':'<span class="ir-pill ir-pill-good">Disponible</span>';
+      const p=r.product;const status=r.stock===null?'<span class="ir-pill">Sin movimientos</span>':r.stock<0?'<span class="ir-pill ir-pill-danger">Saldo negativo</span>':r.stock===0?'<span class="ir-pill">Saldo cero</span>':'<span class="ir-pill ir-pill-good">Saldo positivo</span>';
       let html='<article class="ir-product"><div class="ir-product-title"><div><strong>'+esc(p.nombre)+'</strong><small>'+esc(p.codigo||'Sin código')+' · '+esc(p.laboratorio||'Sin laboratorio')+'</small></div>'+status+'</div>';
-      html+='<div class="ir-product-data"><div><span>Existencia</span><b class="'+(r.stock!==null&&r.stock<0?'ir-danger':'')+'">'+(r.stock===null?'Sin movimientos':number(r.stock)+' unidades')+'</b></div>';
+      html+='<div class="ir-product-data"><div><span>Saldo del Kardex</span><b class="'+(r.stock!==null&&r.stock<0?'ir-danger':'')+'">'+(r.stock===null?'Sin movimientos':number(r.stock)+' unidades')+'</b></div>';
       html+='<div><span>Costo por unidad</span><b>'+(r.unitCost===null?'<em>Sin costo</em>':money(r.unitCost))+'</b></div>';
-      html+='<div><span>Valor al costo</span><b>'+(r.value===null?'—':money(r.value))+'</b></div>';
-      html+='<div><span>Valor de venta</span><b>'+(r.saleValue===null?'—':money(r.saleValue))+'</b></div></div>';
+      html+='<div><span>Valor al costo</span><b>'+(r.value===null?(r.initialCounted?'Sin costo':'Pendiente de conteo'):money(r.value))+'</b></div>';
+      html+='<div><span>Valor de venta</span><b>'+(r.saleValue===null?(r.initialCounted?'Sin precio':'Pendiente de conteo'):money(r.saleValue))+'</b></div></div>';
       if(r.stock>0&&r.unitCost!==null)html+='<small class="ir-source">Costo: '+esc(r.costSource||'Catálogo')+(r.costDate?' · '+esc(dateTime(r.costDate)):'')+'</small>';
       return html+'</article>';
     }).join('');
@@ -98,7 +117,7 @@
   function renderMenu(){
     return '<section class="ir-module"><header class="ir-heading"><div><span class="ir-kicker">ANÁLISIS DEL NEGOCIO</span><h2>Informes y reportes</h2><p>Selecciona qué información necesitas consultar.</p></div><button type="button" class="btn alt" data-ir-refresh>Actualizar datos</button></header>'+
       '<div class="ir-menu-grid">'+
-      '<button type="button" class="ir-menu-card" data-ir-tab="valor"><span class="ir-menu-icon">▤</span><strong>Valor del inventario</strong><small>Consulta cuánto dinero representa la mercancía disponible, al costo y a precio de venta.</small><span class="ir-menu-link">Consultar informe →</span></button>'+
+      '<button type="button" class="ir-menu-card" data-ir-tab="valor"><span class="ir-menu-icon">▤</span><strong>Valor del inventario</strong><small>Consulta el valor de productos con conteo físico inicial registrado; no confunde movimientos con mercancía verificada.</small><span class="ir-menu-link">Consultar informe →</span></button>'+
       '<button type="button" class="ir-menu-card" data-ir-tab="existencias"><span class="ir-menu-icon">▦</span><strong>Existencias</strong><small>Revisa cuánto hay de cada producto y consulta su costo y valor.</small><span class="ir-menu-link">Consultar informe →</span></button>'+
       '<button type="button" class="ir-menu-card" data-ir-tab="faltantes"><span class="ir-menu-icon">⚑</span><strong>Faltantes</strong><small>Identifica productos agotados, con saldo negativo o sin movimientos registrados.</small><span class="ir-menu-link">Consultar informe →</span></button>'+
       '</div><p class="ir-footnote">Informes conectados a los datos actuales de Drosalud. Son consultas de solo lectura.</p></section>';
@@ -107,7 +126,7 @@
     if(state.tab==='menu'){root.innerHTML=renderMenu();return}
     const rows=filteredRows(),value=state.tab==='valor';
     const title=value?'Valor del inventario':state.tab==='existencias'?'Existencias':'Faltantes';
-    const description=value?'Consulta el valor de las unidades disponibles usando el costo por unidad base.':state.tab==='existencias'?'Consulta las cantidades actuales de cada producto, calculadas desde los saldos registrados.':'Productos agotados, con saldo negativo o sin movimientos registrados. Los productos sin movimientos no se consideran agotados.';
+    const description=value?'Valor de los productos con conteo inicial registrado. Sin inventario físico inicial, el total no se calcula.':state.tab==='existencias'?'Consulta los saldos calculados desde los movimientos del Kardex; no son un conteo físico.':'Productos con saldo cero, negativo o sin movimientos registrados. Un saldo cero no demuestra por sí solo que el producto esté físicamente agotado.';
     let html='<section class="ir-module"><header class="ir-heading ir-detail-heading"><div><button type="button" class="ir-back" data-ir-back>← Volver a informes</button><span class="ir-kicker">INFORMES Y REPORTES</span><h2>'+title+'</h2><p>'+description+'</p></div><button type="button" class="btn alt" data-ir-refresh>Actualizar</button></header>';
     if(value)html+=renderKpis();
     html+='<section class="ir-panel"><div class="ir-filters"><input type="search" data-ir-search placeholder="Buscar producto, código o laboratorio" value="'+esc(state.query)+'"><select data-ir-filter aria-label="Filtrar productos"><option value="todos" '+(state.filter==='todos'?'selected':'')+'>Todos</option><option value="positivas" '+(state.filter==='positivas'?'selected':'')+'>Con existencias</option><option value="agotados" '+(state.filter==='agotados'?'selected':'')+'>Agotados</option><option value="negativos" '+(state.filter==='negativos'?'selected':'')+'>Negativos</option><option value="sin-movimientos" '+(state.filter==='sin-movimientos'?'selected':'')+'>Sin movimientos</option><option value="sin-costo" '+(state.filter==='sin-costo'?'selected':'')+'>Con costo pendiente</option></select></div>';
@@ -117,7 +136,7 @@
   }
   function exportExcel(){
     if(typeof XLSX==='undefined'){message('No está disponible el componente de Excel en esta versión.',true);return}
-    const data=filteredRows().map(r=>({Codigo:r.product.codigo||'',Producto:r.product.nombre,Laboratorio:r.product.laboratorio||'',Existencias_unidades:r.stock,Estado_inventario:r.stock===null?'Sin movimientos':r.stock<0?'Negativo':r.stock===0?'Agotado':'Disponible',Costo_unitario_base:r.unitCost,Valor_inventario:r.value,Precio_venta_unitario:r.saleUnit,Valor_potencial_venta:r.saleValue,Fuente_costo:r.costSource||'Sin costo confiable'}));
+    const data=filteredRows().map(r=>({Codigo:r.product.codigo||'',Producto:r.product.nombre,Laboratorio:r.product.laboratorio||'',Saldo_Kardex_unidades:r.stock,Estado_Kardex:r.stock===null?'Sin movimientos':r.stock<0?'Negativo':r.stock===0?'Saldo cero':'Saldo positivo',Estado_conteo_inicial:r.initialCounted?'Con saldo inicial registrado':'Pendiente de conteo inicial',Costo_unitario_base:r.unitCost,Valor_inventario_contado:r.value,Precio_venta_unitario:r.saleUnit,Valor_potencial_venta_contado:r.saleValue,Fuente_costo:r.costSource||'Sin costo confiable'}));
     const book=XLSX.utils.book_new();XLSX.utils.book_append_sheet(book,XLSX.utils.json_to_sheet(data),'Inventario');
     XLSX.writeFile(book,'drosalud-inventario-'+new Date().toISOString().slice(0,10)+'.xlsx');
   }
