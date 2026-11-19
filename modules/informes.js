@@ -3,7 +3,7 @@
   'use strict';
   const root = document.getElementById('informes-app');
   if (!root) return;
-  const state = {products:[],balances:{},costs:{},rows:[],tab:'valor',filter:'todos',query:'',limit:50,loadedAt:null,warning:''};
+  const state = {products:[],balances:{},costs:{},rows:[],tab:'menu',filter:'todos',query:'',limit:50,loadedAt:null,warning:''};
   const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const number = v => (Number(v)||0).toLocaleString('es-CO');
   const money = v => '$'+Math.round(Number(v)||0).toLocaleString('es-CO');
@@ -95,16 +95,23 @@
     }).join('');
     return cards+(rows.length>state.limit?'<button type="button" class="btn alt full ir-more" data-ir-more>Mostrar '+Math.min(50,rows.length-state.limit)+' más ('+number(rows.length-state.limit)+' restantes)</button>':'');
   }
+  function renderMenu(){
+    return '<section class="ir-module"><header class="ir-heading"><div><span class="ir-kicker">ANÁLISIS DEL NEGOCIO</span><h2>Informes y reportes</h2><p>Selecciona qué información necesitas consultar.</p></div><button type="button" class="btn alt" data-ir-refresh>Actualizar datos</button></header>'+
+      '<div class="ir-menu-grid">'+
+      '<button type="button" class="ir-menu-card" data-ir-tab="valor"><span class="ir-menu-icon">▤</span><strong>Valor del inventario</strong><small>Consulta cuánto dinero representa la mercancía disponible, al costo y a precio de venta.</small><span class="ir-menu-link">Consultar informe →</span></button>'+
+      '<button type="button" class="ir-menu-card" data-ir-tab="existencias"><span class="ir-menu-icon">▦</span><strong>Existencias</strong><small>Revisa cuánto hay de cada producto y consulta su costo y valor.</small><span class="ir-menu-link">Consultar informe →</span></button>'+
+      '<button type="button" class="ir-menu-card" data-ir-tab="faltantes"><span class="ir-menu-icon">⚑</span><strong>Faltantes</strong><small>Identifica productos agotados, con saldo negativo o sin movimientos registrados.</small><span class="ir-menu-link">Consultar informe →</span></button>'+
+      '</div><p class="ir-footnote">Informes conectados a los datos actuales de Drosalud. Son consultas de solo lectura.</p></section>';
+  }
   function render(){
+    if(state.tab==='menu'){root.innerHTML=renderMenu();return}
     const rows=filteredRows(),value=state.tab==='valor';
-    const title=value?'Detalle del valor del inventario':state.tab==='existencias'?'Existencias por producto':'Productos agotados y negativos';
-    const description=value?'El costo se expresa por unidad base, respetando las presentaciones fraccionables.':state.tab==='existencias'?'Consulta las cantidades actuales calculadas desde los movimientos.':'Se muestran productos agotados, negativos o sin movimientos registrados. Estos últimos no se consideran agotados. No se estima un mínimo de stock porque ese parámetro aún no existe en el catálogo.';
-    let html='<section class="ir-module"><header class="ir-heading"><div><span class="ir-kicker">ANÁLISIS DEL NEGOCIO</span><h2>Informes y reportes</h2><p>Consulta información generada por las operaciones de Drosalud.</p></div><button type="button" class="btn alt" data-ir-refresh>Actualizar</button></header>';
-    html+='<div class="ir-tabs" role="tablist" aria-label="Informes de inventario"><button type="button" data-ir-tab="valor" aria-selected="'+(state.tab==='valor')+'">Valor del inventario</button><button type="button" data-ir-tab="existencias" aria-selected="'+(state.tab==='existencias')+'">Existencias</button><button type="button" data-ir-tab="faltantes" aria-selected="'+(state.tab==='faltantes')+'">Faltantes</button></div>';
+    const title=value?'Valor del inventario':state.tab==='existencias'?'Existencias':'Faltantes';
+    const description=value?'Consulta el valor de las unidades disponibles usando el costo por unidad base.':state.tab==='existencias'?'Consulta las cantidades actuales de cada producto, calculadas desde los saldos registrados.':'Productos agotados, con saldo negativo o sin movimientos registrados. Los productos sin movimientos no se consideran agotados.';
+    let html='<section class="ir-module"><header class="ir-heading ir-detail-heading"><div><button type="button" class="ir-back" data-ir-back>← Volver a informes</button><span class="ir-kicker">INFORMES Y REPORTES</span><h2>'+title+'</h2><p>'+description+'</p></div><button type="button" class="btn alt" data-ir-refresh>Actualizar</button></header>';
     if(value)html+=renderKpis();
-    html+='<section class="ir-panel"><div class="ir-panel-heading"><h3>'+title+'</h3><p>'+description+'</p></div>';
-    html+='<div class="ir-filters"><input type="search" data-ir-search placeholder="Buscar producto, código o laboratorio" value="'+esc(state.query)+'"><select data-ir-filter aria-label="Filtrar productos"><option value="todos" '+(state.filter==='todos'?'selected':'')+'>Todos</option><option value="positivas" '+(state.filter==='positivas'?'selected':'')+'>Con existencias</option><option value="agotados" '+(state.filter==='agotados'?'selected':'')+'>Agotados</option><option value="negativos" '+(state.filter==='negativos'?'selected':'')+'>Negativos</option><option value="sin-movimientos" '+(state.filter==='sin-movimientos'?'selected':'')+'>Sin movimientos</option><option value="sin-costo" '+(state.filter==='sin-costo'?'selected':'')+'>Con costo pendiente</option></select></div>';
-    html+='<div class="ir-results-meta"><span>'+number(rows.length)+' productos</span><span>Consulta: '+dateTime(state.loadedAt)+'</span></div><div class="ir-list">'+renderRows(rows)+'</div>';
+    html+='<section class="ir-panel"><div class="ir-filters"><input type="search" data-ir-search placeholder="Buscar producto, código o laboratorio" value="'+esc(state.query)+'"><select data-ir-filter aria-label="Filtrar productos"><option value="todos" '+(state.filter==='todos'?'selected':'')+'>Todos</option><option value="positivas" '+(state.filter==='positivas'?'selected':'')+'>Con existencias</option><option value="agotados" '+(state.filter==='agotados'?'selected':'')+'>Agotados</option><option value="negativos" '+(state.filter==='negativos'?'selected':'')+'>Negativos</option><option value="sin-movimientos" '+(state.filter==='sin-movimientos'?'selected':'')+'>Sin movimientos</option><option value="sin-costo" '+(state.filter==='sin-costo'?'selected':'')+'>Con costo pendiente</option></select></div>';
+    html+='<div class="ir-results-meta"><span>'+number(rows.length)+' productos</span><span>Actualizado: '+dateTime(state.loadedAt)+'</span></div><div class="ir-list">'+renderRows(rows)+'</div>';
     html+='<div class="ir-export"><button type="button" class="btn alt" data-ir-excel>Exportar Excel</button><button type="button" class="btn alt" data-ir-pdf>Guardar PDF</button></div></section><p class="ir-footnote">Consulta de solo lectura. No modifica existencias, costos, pedidos ni movimientos del Kardex.</p></section>';
     root.innerHTML=html;
   }
@@ -125,7 +132,7 @@
   root.addEventListener('click',e=>{
     const b=e.target.closest('button');if(!b)return;
     if(b.hasAttribute('data-ir-refresh'))loadData().catch(showError);
-    else if(b.dataset.irTab){state.tab=b.dataset.irTab;state.filter='todos';state.limit=50;render()}
+    else if(b.hasAttribute('data-ir-back')){state.tab='menu';state.query='';state.filter='todos';state.limit=50;render()}\n    else if(b.dataset.irTab){state.tab=b.dataset.irTab;state.query='';state.filter='todos';state.limit=50;render()}
     else if(b.hasAttribute('data-ir-more')){state.limit+=50;render()}
     else if(b.hasAttribute('data-ir-excel'))exportExcel();
     else if(b.hasAttribute('data-ir-pdf'))exportPdf();
