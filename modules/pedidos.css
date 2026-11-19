@@ -165,3 +165,16 @@
  .pedidos-document-header{flex-direction:column}
  .pedidos-document-toolbar .btn{flex:1}
 }
+
+
+/* Evita que las acciones de pedidos se desborden en móviles estrechos. */
+@media(max-width:650px){
+  .pedidos-actions{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+  .pedidos-actions .btn{width:100%;min-width:0}
+  .pedidos-section-title{flex-wrap:wrap}
+  .pedidos-section-title>div:first-child{min-width:0}
+}
+@media(max-width:380px){
+  .pedidos-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pedidos-metrics span{min-width:0;overflow-wrap:anywhere}
+}
