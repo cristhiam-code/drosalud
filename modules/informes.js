@@ -44,7 +44,7 @@
     state.rows=state.products.map(p=>{
       const registered=Object.prototype.hasOwnProperty.call(state.balances,p.id);const stock=registered?(Number(state.balances[p.id])||0):null;const cost=resolveCost(p,costMap[p.id]);
       const sale=Number(p.precio_venta)>0?Number(p.precio_venta)/factor(p):null;
-      return {product:p,stock:stock,unitCost:cost.unit,costSource:cost.source,costDate:cost.date,value:stock!==null&&stock>0&&cost.unit!==null?stock*cost.unit:null,saleUnit:sale,saleValue:stock!==null&&stock>0&&sale!==null?stock*sale:null};
+      return {product:p,stock:stock,unitCost:cost.unit,costSource:cost.source,costDate:cost.date,value:null,saleUnit:sale,saleValue:null};
     });
     state.loadedAt=new Date();state.warning=warning;state.limit=50;render();message('',false);
   }
@@ -64,20 +64,18 @@
   }
   function renderKpis(){
     const positive=state.rows.filter(r=>r.stock!==null&&r.stock>0),negative=state.rows.filter(r=>r.stock!==null&&r.stock<0),zero=state.rows.filter(r=>r.stock===0),unregistered=state.rows.filter(r=>r.stock===null);
-    const missing=positive.filter(r=>r.unitCost===null),saleMissing=positive.filter(r=>r.saleUnit===null).length;
-    const total=positive.reduce((s,r)=>s+(r.value||0),0),sale=positive.reduce((s,r)=>s+(r.saleValue||0),0);
+    const missing=positive.filter(r=>r.unitCost===null);
     let html='<div class="ir-kpis">';
-    html+='<article class="ir-kpi ir-kpi-main"><span>Valor conocido al costo</span><strong>'+money(total)+'</strong><small>'+(missing.length?'Valor parcial: hay productos sin costo registrado':'Todos los productos con saldo positivo tienen costo')+'</small></article>';
-    html+='<article class="ir-kpi"><span>Valor potencial de venta</span><strong>'+money(sale)+'</strong><small>'+number(saleMissing)+' productos sin precio de venta</small></article>';
+    html+='<article class="ir-kpi ir-kpi-main"><span>Valor del inventario físico</span><strong>No disponible</strong><small>Primero debes realizar y confirmar el conteo físico inicial.</small></article>';
+    html+='<article class="ir-kpi"><span>Valor potencial de venta</span><strong>No disponible</strong><small>Se calculará después de confirmar las cantidades físicas.</small></article>';
     html+='<article class="ir-kpi"><span>Con existencias</span><strong>'+number(positive.length)+'</strong><small>'+number(positive.reduce((s,r)=>s+r.stock,0))+' unidades base</small></article>';
     html+='<article class="ir-kpi"><span>Agotados</span><strong>'+number(zero.length)+'</strong><small>Saldo registrado igual a cero</small></article>';
     html+='<article class="ir-kpi"><span>Sin movimientos</span><strong>'+number(unregistered.length)+'</strong><small>Sin saldo inicial ni movimientos registrados</small></article>';
     html+='<article class="ir-kpi"><span>Negativos</span><strong class="'+(negative.length?'ir-danger':'')+'">'+number(negative.length)+'</strong><small>'+number(negative.reduce((s,r)=>s+Math.abs(r.stock),0))+' unidades por cubrir</small></article>';
     html+='<article class="ir-kpi"><span>Sin costo confiable</span><strong class="'+(missing.length?'ir-warning':'')+'">'+number(missing.length)+'</strong><small>Con saldo positivo</small></article></div>';
-    if(missing.length)html+='<p class="ir-alert ir-alert-warning">El valor mostrado es parcial. Los productos con existencias pero sin costo confiable se excluyen de la suma; no se les asigna un costo inventado.</p>';
-    if(negative.length)html+='<p class="ir-alert">Los saldos negativos se muestran como faltantes y no se restan del valor de la mercancía disponible.</p>';
-    if(unregistered.length)html+='<p class="ir-alert">Los productos sin movimientos no se consideran agotados: todavía no tienen saldo registrado en el Kardex.</p>';
-    if(saleMissing)html+='<p class="ir-alert">El valor potencial de venta es parcial porque hay productos sin precio de venta.</p>';
+    html+='<p class="ir-alert ir-alert-warning">Inventario físico inicial pendiente. Los saldos del Kardex, las ventas y los costos del catálogo no prueban qué mercancía existe físicamente. Por eso no se muestra ninguna valoración ni total de mercancía hasta completar el conteo.</p>';
+    if(negative.length)html+='<p class="ir-alert">Los saldos negativos se muestran como diferencias pendientes de revisar; no son una valoración de mercancía.</p>';
+    if(unregistered.length)html+='<p class="ir-alert">Los productos sin movimientos todavía no tienen saldo registrado en el Kardex.</p>';
     if(state.warning)html+='<p class="ir-alert">'+esc(state.warning)+'</p>';
     return html;
   }
@@ -98,7 +96,7 @@
   function renderMenu(){
     return '<section class="ir-module"><header class="ir-heading"><div><span class="ir-kicker">ANÁLISIS DEL NEGOCIO</span><h2>Informes y reportes</h2><p>Selecciona qué información necesitas consultar.</p></div><button type="button" class="btn alt" data-ir-refresh>Actualizar datos</button></header>'+
       '<div class="ir-menu-grid">'+
-      '<button type="button" class="ir-menu-card" data-ir-tab="valor"><span class="ir-menu-icon">▤</span><strong>Valor del inventario</strong><small>Consulta cuánto dinero representa la mercancía disponible, al costo y a precio de venta.</small><span class="ir-menu-link">Consultar informe →</span></button>'+
+      '<button type="button" class="ir-menu-card" data-ir-tab="valor"><span class="ir-menu-icon">▤</span><strong>Valor del inventario</strong><small>La valoración estará disponible después de registrar y confirmar el inventario físico inicial.</small><span class="ir-menu-link">Consultar informe →</span></button>'+
       '<button type="button" class="ir-menu-card" data-ir-tab="existencias"><span class="ir-menu-icon">▦</span><strong>Existencias</strong><small>Revisa cuánto hay de cada producto y consulta su costo y valor.</small><span class="ir-menu-link">Consultar informe →</span></button>'+
       '<button type="button" class="ir-menu-card" data-ir-tab="faltantes"><span class="ir-menu-icon">⚑</span><strong>Faltantes</strong><small>Identifica productos agotados, con saldo negativo o sin movimientos registrados.</small><span class="ir-menu-link">Consultar informe →</span></button>'+
       '</div><p class="ir-footnote">Informes conectados a los datos actuales de Drosalud. Son consultas de solo lectura.</p></section>';
