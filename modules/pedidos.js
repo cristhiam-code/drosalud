@@ -7,7 +7,7 @@
   const state = {
     user: null, role: null, products: [], negativeProducts: [], providers: [], pedidos: [], items: [],
     orders: [], orderItems: [], suggested: [], formItems: [], editing: null,
-    operationIds: {}, mode: 'inicio', loading: false, suggestedCalculatedAt: null
+    operationIds: {}, mode: 'inicio', loading: false, suggestedCalculatedAt: null, selectedPedidoId: null
   };
 
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({
@@ -453,12 +453,33 @@
       </div>`;
   }
 
+  // Vista resumida: un pedido por fila, sin formularios mezclados.
+  function renderPedidoSummary(pedido) {
+    const status = pedido.estado_operativo || pedido.estado;
+    const type = pedido.tipo === 'sugerido' ? 'Sugerido' : pedido.tipo === 'urgente' ? 'Urgente' : 'Extraordinario';
+    const date = new Date(pedido.creado_en).toLocaleDateString('es-CO');
+    const count = itemsFor(pedido.id).length;
+    return `
+      <article class="pedidos-card pedidos-summary-card">
+        <div class="pedidos-card-head">
+          <div>
+            <span class="pedidos-number">Pedido #${esc(pedido.numero)}</span>
+            <h4>${type}</h4>
+            <small>${date} · ${count} producto(s)</small>
+          </div>
+          <span class="pedidos-status status-${esc(status)}">${statusLabel(status)}</span>
+        </div>
+        <button type="button" class="btn full" data-action="open-pedido" data-pedido-id="${pedido.id}">Abrir pedido</button>
+      </article>`;
+  }
+
+  // Expediente individual: aquí viven los datos y las acciones de ESTE pedido.
   function renderPedidoCard(pedido) {
     const items = itemsFor(pedido.id);
     const canEdit = pedido.estado === 'borrador' && (isAdmin() || pedido.creado_por === state.user.id);
     const relatedOrders = ordersFor(pedido.id);
     const details = items.map(item =>
-      `<li><span>${esc(item.producto_nombre)}</span><small>Solicitado: ${units(item.cantidad_solicitada)} unidades</small></li>`
+      `<tr><td>${esc(item.producto_nombre)}</td><td>${units(item.cantidad_solicitada)}</td><td>${units(item.cantidad_autorizada)}</td></tr>`
     ).join('');
     let controls = '';
     if (canEdit) {
@@ -472,38 +493,81 @@
       controls = renderOrderGeneration(pedido,items);
     }
     const orderSummary = relatedOrders.length
-      ? `<div class="pedidos-related-orders"><b>Órdenes generadas</b>${relatedOrders.map(order => {
+      ? `<section class="pedidos-document-section"><h4>Órdenes de compra relacionadas</h4><ul>${relatedOrders.map(order => {
           const provider = state.providers.find(row => row.id === order.proveedor_id);
-          return `<span>Orden #${order.numero} · ${esc(provider?.nombre || 'Proveedor')} · ${statusLabel(order.estado)}</span>`;
-        }).join('')}</div>`
-      : '';
+          return `<li>OC-${esc(order.numero)} · ${esc(provider?.nombre || 'Proveedor')} · ${statusLabel(order.estado)}</li>`;
+        }).join('')}</ul></section>`
+      : '<p class="pedidos-muted">Todavía no hay órdenes de compra relacionadas.</p>';
+    const status = pedido.estado_operativo || pedido.estado;
     return `
-      <article class="pedidos-card">
-        <div class="pedidos-card-head">
-          <div><span class="pedidos-number">Pedido #${pedido.numero}</span>
-            <h4>${pedido.tipo === 'sugerido' ? 'Pedido sugerido' : pedido.tipo === 'urgente' ? 'Pedido urgente' : 'Pedido extraordinario'}</h4>
-            <small>${new Date(pedido.creado_en).toLocaleString('es-CO')}</small></div>
-          <span class="pedidos-status status-${esc(pedido.estado_operativo || pedido.estado)}">${statusLabel(pedido.estado_operativo || pedido.estado)}</span>
+      <article class="pedidos-card pedidos-document" data-pedido-document>
+        <div class="pedidos-document-toolbar">
+          <button type="button" class="btn alt" data-action="back-to-list">‹ Volver al seguimiento</button>
+          <button type="button" class="btn" data-action="print-pedido" data-pedido-id="${pedido.id}">Descargar PDF / Imprimir</button>
         </div>
-        <ul class="pedidos-item-list">${details}</ul>
-        ${pedido.notas && !['sugerido','urgente'].includes(pedido.tipo) ? `<p class="pedidos-muted">${esc(pedido.notas)}</p>` : ''}
-        ${pedido.motivo_rechazo ? `<p class="pedidos-warning">Motivo: ${esc(pedido.motivo_rechazo)}</p>` : ''}
-        ${['autorizado','parcial','completado'].includes(pedido.estado_operativo || pedido.estado) ? `
-          <div class="pedidos-summary">
-            <span>Autorizado: <b>${units(pedido.unidades_autorizadas)}</b></span>
-            <span>Comprado: <b>${units(pedido.unidades_compradas)}</b></span>
-            <span>Recibido: <b>${units(pedido.unidades_recibidas)}</b></span>
-          </div>` : ''}
-        ${orderSummary}${controls}
+        <header class="pedidos-document-header">
+          <div><span class="pedidos-number">DROSALUD · DOCUMENTO INTERNO</span><h2>Pedido #${esc(pedido.numero)}</h2><p>${pedido.tipo === 'sugerido' ? 'Pedido sugerido' : pedido.tipo === 'urgente' ? 'Pedido urgente' : 'Pedido extraordinario'}</p></div>
+          <span class="pedidos-status status-${esc(status)}">${statusLabel(status)}</span>
+        </header>
+        <section class="pedidos-document-section pedidos-document-meta">
+          <div><small>Fecha de creación</small><b>${new Date(pedido.creado_en).toLocaleString('es-CO')}</b></div>
+          <div><small>Estado actual</small><b>${statusLabel(status)}</b></div>
+          <div><small>Productos</small><b>${items.length}</b></div>
+        </section>
+        <section class="pedidos-document-section">
+          <h4>Detalle de productos</h4>
+          <div class="pedidos-document-table-wrap"><table class="pedidos-document-table"><thead><tr><th>Producto</th><th>Solicitado (unidades)</th><th>Autorizado (unidades)</th></tr></thead><tbody>${details || '<tr><td colspan="3">Sin productos registrados.</td></tr>'}</tbody></table></div>
+        </section>
+        ${pedido.notas ? `<section class="pedidos-document-section"><h4>Observaciones</h4><p>${esc(pedido.notas)}</p></section>` : ''}
+        ${pedido.motivo_rechazo ? `<section class="pedidos-document-section pedidos-warning"><h4>Motivo del rechazo</h4><p>${esc(pedido.motivo_rechazo)}</p></section>` : ''}
+        ${['autorizado','parcial','completado'].includes(status) ? `
+          <section class="pedidos-document-section">
+            <h4>Resumen de compra</h4>
+            <div class="pedidos-summary"><span>Autorizado: <b>${units(pedido.unidades_autorizadas)}</b></span><span>Comprado: <b>${units(pedido.unidades_compradas)}</b></span><span>Recibido: <b>${units(pedido.unidades_recibidas)}</b></span></div>
+          </section>` : ''}
+        <section class="pedidos-document-section">${orderSummary}</section>
+        <section class="pedidos-document-actions"><h4>Acciones disponibles</h4>${controls || '<p class="pedidos-muted">No hay acciones pendientes para este estado.</p>'}</section>
       </article>`;
   }
 
   function renderList() {
     const box = root.querySelector('[data-pedidos-list]');
     if (!box) return;
+    if (state.selectedPedidoId) {
+      const pedido = state.pedidos.find(row => row.id === state.selectedPedidoId);
+      box.innerHTML = pedido
+        ? renderPedidoCard(pedido)
+        : '<p class="pedidos-empty">No se encontró el pedido seleccionado. Actualiza el seguimiento.</p>';
+      return;
+    }
     box.innerHTML = state.pedidos.length
-      ? state.pedidos.map(renderPedidoCard).join('')
+      ? state.pedidos.map(renderPedidoSummary).join('')
       : '<p class="pedidos-empty">Todavía no hay pedidos registrados.</p>';
+  }
+
+  function printPedido(pedidoId) {
+    const pedido = state.pedidos.find(row => row.id === pedidoId);
+    if (!pedido) throw new Error('No se encontró el pedido que deseas imprimir.');
+    const items = itemsFor(pedido.id);
+    const orders = ordersFor(pedido.id);
+    const status = pedido.estado_operativo || pedido.estado;
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) throw new Error('El navegador bloqueó la ventana. Permite las ventanas emergentes para descargar el PDF.');
+    const rows = items.map(item => `<tr><td>${esc(item.producto_nombre)}</td><td>${units(item.cantidad_solicitada)}</td><td>${units(item.cantidad_autorizada)}</td></tr>`).join('');
+    const orderRows = orders.map(order => {
+      const provider = state.providers.find(row => row.id === order.proveedor_id);
+      return `<tr><td>OC-${esc(order.numero)}</td><td>${esc(provider?.nombre || 'Proveedor')}</td><td>${statusLabel(order.estado)}</td></tr>`;
+    }).join('');
+    printWindow.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Pedido ${esc(pedido.numero)} · Drosalud</title><style>
+      *{box-sizing:border-box}body{font:13px Arial,sans-serif;color:#172033;margin:32px}header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #243b64;padding-bottom:16px}h1{font-size:24px;margin:6px 0}h2{font-size:15px;margin:22px 0 9px}small{color:#667085}.status{border:1px solid #9aa4b2;border-radius:20px;padding:7px 11px;font-weight:bold} .meta{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:18px 0}.meta div{padding:10px;background:#f4f6f8}.meta b{display:block;margin-top:5px}table{width:100%;border-collapse:collapse;margin-top:8px}th,td{text-align:left;padding:9px;border-bottom:1px solid #d8dde5}th{background:#f1f3f6}p{line-height:1.5}.foot{margin-top:32px;color:#667085;font-size:11px}@media print{body{margin:16mm}button{display:none}}
+      </style></head><body><header><div><small>DROSALUD · DOCUMENTO INTERNO DE COMPRA</small><h1>Pedido #${esc(pedido.numero)}</h1><div>${pedido.tipo === 'sugerido' ? 'Pedido sugerido' : pedido.tipo === 'urgente' ? 'Pedido urgente' : 'Pedido extraordinario'}</div></div><span class="status">${statusLabel(status)}</span></header>
+      <div class="meta"><div><small>Fecha de creación</small><b>${new Date(pedido.creado_en).toLocaleString('es-CO')}</b></div><div><small>Estado</small><b>${statusLabel(status)}</b></div><div><small>Total de productos</small><b>${items.length}</b></div></div>
+      <h2>Detalle de productos</h2><table><thead><tr><th>Producto</th><th>Solicitado (unidades)</th><th>Autorizado (unidades)</th></tr></thead><tbody>${rows}</tbody></table>
+      ${pedido.notas ? `<h2>Observaciones</h2><p>${esc(pedido.notas)}</p>` : ''}
+      ${pedido.motivo_rechazo ? `<h2>Motivo del rechazo</h2><p>${esc(pedido.motivo_rechazo)}</p>` : ''}
+      <h2>Órdenes de compra relacionadas</h2><table><thead><tr><th>Orden</th><th>Proveedor</th><th>Estado</th></tr></thead><tbody>${orderRows || '<tr><td colspan="3">No se han generado órdenes.</td></tr>'}</tbody></table>
+      <p class="foot">Documento generado desde Drosalud. Este PDF representa el pedido interno y no sustituye las órdenes de compra ni los documentos del proveedor.</p><script>window.onload=()=>window.print();</script></body></html>`);
+    printWindow.document.close();
   }
 
   function renderPanel() {
@@ -741,6 +805,7 @@
     const pedido = state.pedidos.find(row => row.id === pedidoId);
     if (!pedido) return;
     state.editing = pedido;
+    state.selectedPedidoId = null;
     state.formItems = itemsFor(pedidoId).map(item => ({...item}));
     state.mode = 'editor';
     renderPanel();
@@ -753,6 +818,7 @@
     if (modeButton) {
       state.editing = null;
       state.formItems = [];
+      state.selectedPedidoId = null;
       state.mode = modeButton.dataset.mode;
       message('');
       if (state.mode === 'sugerido') {
@@ -780,8 +846,16 @@
       if (action === 'go-remisiones') {
         if (typeof show === 'function') show('recepcion');
         return;
+      } else if (action === 'open-pedido') {
+        state.selectedPedidoId = button.dataset.pedidoId;
+        renderPanel();
+      } else if (action === 'back-to-list') {
+        state.selectedPedidoId = null;
+        renderPanel();
+      } else if (action === 'print-pedido') {
+        printPedido(button.dataset.pedidoId);
       } else if (action === 'back-home') {
-        state.editing = null; state.formItems = []; state.mode = 'inicio'; message(''); renderPanel();
+        state.editing = null; state.formItems = []; state.selectedPedidoId = null; state.mode = 'inicio'; message(''); renderPanel();
       } else if (action === 'refresh') {
         if (state.mode === 'seguimiento') { await reload(); message('Datos actualizados.'); }
         else if (state.mode === 'sugerido') { await loadSuggested(); renderPanel(); message('Cálculo actualizado.'); }
