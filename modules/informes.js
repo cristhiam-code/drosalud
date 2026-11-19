@@ -42,9 +42,9 @@
     }catch(e){console.warn('No se pudo leer historial de costos:',e)}
     state.costs=costMap;
     state.rows=state.products.map(p=>{
-      const stock=Number(state.balances[p.id])||0;const cost=resolveCost(p,costMap[p.id]);
+      const registered=Object.prototype.hasOwnProperty.call(state.balances,p.id);const stock=registered?(Number(state.balances[p.id])||0):null;const cost=resolveCost(p,costMap[p.id]);
       const sale=Number(p.precio_venta)>0?Number(p.precio_venta)/factor(p):null;
-      return {product:p,stock:stock,unitCost:cost.unit,costSource:cost.source,costDate:cost.date,value:stock>0&&cost.unit!==null?stock*cost.unit:null,saleUnit:sale,saleValue:stock>0&&sale!==null?stock*sale:null};
+      return {product:p,stock:stock,unitCost:cost.unit,costSource:cost.source,costDate:cost.date,value:stock!==null&&stock>0&&cost.unit!==null?stock*cost.unit:null,saleUnit:sale,saleValue:stock!==null&&stock>0&&sale!==null?stock*sale:null};
     });
     state.loadedAt=new Date();state.warning=warning;state.limit=50;render();message('',false);
   }
@@ -52,28 +52,31 @@
     const q=state.query.trim().toLocaleLowerCase('es');
     return state.rows.filter(r=>{
       const p=r.product;
-      if(state.tab==='faltantes'&&r.stock>0)return false;
-      if(state.filter==='positivas'&&r.stock<=0)return false;
+      if(state.tab==='faltantes'&&r.stock!==null&&r.stock>0)return false;
+      if(state.filter==='positivas'&&!(r.stock!==null&&r.stock>0))return false;
       if(state.filter==='agotados'&&r.stock!==0)return false;
-      if(state.filter==='negativos'&&r.stock>=0)return false;
-      if(state.filter==='sin-costo'&&!(r.stock>0&&r.unitCost===null))return false;
+      if(state.filter==='negativos'&&!(r.stock!==null&&r.stock<0))return false;
+      if(state.filter==='sin-movimientos'&&r.stock!==null)return false;
+      if(state.filter==='sin-costo'&&!(r.stock!==null&&r.stock>0&&r.unitCost===null))return false;
       if(q&&![p.nombre,p.codigo,p.laboratorio,p.linea].some(v=>String(v||'').toLocaleLowerCase('es').includes(q)))return false;
       return true;
     }).sort((a,b)=>state.tab==='valor'?(b.value||0)-(a.value||0):a.product.nombre.localeCompare(b.product.nombre,'es'));
   }
   function renderKpis(){
-    const positive=state.rows.filter(r=>r.stock>0),negative=state.rows.filter(r=>r.stock<0),zero=state.rows.filter(r=>r.stock===0);
+    const positive=state.rows.filter(r=>r.stock!==null&&r.stock>0),negative=state.rows.filter(r=>r.stock!==null&&r.stock<0),zero=state.rows.filter(r=>r.stock===0),unregistered=state.rows.filter(r=>r.stock===null);
     const missing=positive.filter(r=>r.unitCost===null),saleMissing=positive.filter(r=>r.saleUnit===null).length;
     const total=positive.reduce((s,r)=>s+(r.value||0),0),sale=positive.reduce((s,r)=>s+(r.saleValue||0),0);
     let html='<div class="ir-kpis">';
     html+='<article class="ir-kpi ir-kpi-main"><span>Valor conocido al costo</span><strong>'+money(total)+'</strong><small>'+(missing.length?'Valor parcial: hay productos sin costo registrado':'Todos los productos con saldo positivo tienen costo')+'</small></article>';
     html+='<article class="ir-kpi"><span>Valor potencial de venta</span><strong>'+money(sale)+'</strong><small>'+number(saleMissing)+' productos sin precio de venta</small></article>';
     html+='<article class="ir-kpi"><span>Con existencias</span><strong>'+number(positive.length)+'</strong><small>'+number(positive.reduce((s,r)=>s+r.stock,0))+' unidades base</small></article>';
-    html+='<article class="ir-kpi"><span>Agotados</span><strong>'+number(zero.length)+'</strong><small>Saldo igual a cero</small></article>';
+    html+='<article class="ir-kpi"><span>Agotados</span><strong>'+number(zero.length)+'</strong><small>Saldo registrado igual a cero</small></article>';
+    html+='<article class="ir-kpi"><span>Sin movimientos</span><strong>'+number(unregistered.length)+'</strong><small>Sin saldo inicial ni movimientos registrados</small></article>';
     html+='<article class="ir-kpi"><span>Negativos</span><strong class="'+(negative.length?'ir-danger':'')+'">'+number(negative.length)+'</strong><small>'+number(negative.reduce((s,r)=>s+Math.abs(r.stock),0))+' unidades por cubrir</small></article>';
     html+='<article class="ir-kpi"><span>Sin costo confiable</span><strong class="'+(missing.length?'ir-warning':'')+'">'+number(missing.length)+'</strong><small>Con saldo positivo</small></article></div>';
     if(missing.length)html+='<p class="ir-alert ir-alert-warning">El valor mostrado es parcial. Los productos con existencias pero sin costo confiable se excluyen de la suma; no se les asigna un costo inventado.</p>';
     if(negative.length)html+='<p class="ir-alert">Los saldos negativos se muestran como faltantes y no se restan del valor de la mercancía disponible.</p>';
+    if(unregistered.length)html+='<p class="ir-alert">Los productos sin movimientos no se consideran agotados: todavía no tienen saldo registrado en el Kardex.</p>';
     if(saleMissing)html+='<p class="ir-alert">El valor potencial de venta es parcial porque hay productos sin precio de venta.</p>';
     if(state.warning)html+='<p class="ir-alert">'+esc(state.warning)+'</p>';
     return html;
@@ -81,9 +84,9 @@
   function renderRows(rows){
     if(!rows.length)return '<div class="ir-empty">No hay productos que coincidan con esta consulta.</div>';
     const cards=rows.slice(0,state.limit).map(r=>{
-      const p=r.product;const status=r.stock<0?'<span class="ir-pill ir-pill-danger">Negativo</span>':r.stock===0?'<span class="ir-pill">Agotado</span>':'<span class="ir-pill ir-pill-good">Disponible</span>';
+      const p=r.product;const status=r.stock===null?'<span class="ir-pill">Sin movimientos</span>':r.stock<0?'<span class="ir-pill ir-pill-danger">Negativo</span>':r.stock===0?'<span class="ir-pill">Agotado</span>':'<span class="ir-pill ir-pill-good">Disponible</span>';
       let html='<article class="ir-product"><div class="ir-product-title"><div><strong>'+esc(p.nombre)+'</strong><small>'+esc(p.codigo||'Sin código')+' · '+esc(p.laboratorio||'Sin laboratorio')+'</small></div>'+status+'</div>';
-      html+='<div class="ir-product-data"><div><span>Existencia</span><b class="'+(r.stock<0?'ir-danger':'')+'">'+number(r.stock)+' unidades</b></div>';
+      html+='<div class="ir-product-data"><div><span>Existencia</span><b class="'+(r.stock!==null&&r.stock<0?'ir-danger':'')+'">'+(r.stock===null?'Sin movimientos':number(r.stock)+' unidades')+'</b></div>';
       html+='<div><span>Costo por unidad</span><b>'+(r.unitCost===null?'<em>Sin costo</em>':money(r.unitCost))+'</b></div>';
       html+='<div><span>Valor al costo</span><b>'+(r.value===null?'—':money(r.value))+'</b></div>';
       html+='<div><span>Valor de venta</span><b>'+(r.saleValue===null?'—':money(r.saleValue))+'</b></div></div>';
@@ -95,19 +98,19 @@
   function render(){
     const rows=filteredRows(),value=state.tab==='valor';
     const title=value?'Detalle del valor del inventario':state.tab==='existencias'?'Existencias por producto':'Productos agotados y negativos';
-    const description=value?'El costo se expresa por unidad base, respetando las presentaciones fraccionables.':state.tab==='existencias'?'Consulta las cantidades actuales calculadas desde los movimientos.':'Se muestran productos con saldo cero o negativo. No se estima un mínimo de stock porque ese parámetro aún no existe en el catálogo.';
+    const description=value?'El costo se expresa por unidad base, respetando las presentaciones fraccionables.':state.tab==='existencias'?'Consulta las cantidades actuales calculadas desde los movimientos.':'Se muestran productos agotados, negativos o sin movimientos registrados. Estos últimos no se consideran agotados. No se estima un mínimo de stock porque ese parámetro aún no existe en el catálogo.';
     let html='<section class="ir-module"><header class="ir-heading"><div><span class="ir-kicker">ANÁLISIS DEL NEGOCIO</span><h2>Informes y reportes</h2><p>Consulta información generada por las operaciones de Drosalud.</p></div><button type="button" class="btn alt" data-ir-refresh>Actualizar</button></header>';
     html+='<div class="ir-tabs" role="tablist" aria-label="Informes de inventario"><button type="button" data-ir-tab="valor" aria-selected="'+(state.tab==='valor')+'">Valor del inventario</button><button type="button" data-ir-tab="existencias" aria-selected="'+(state.tab==='existencias')+'">Existencias</button><button type="button" data-ir-tab="faltantes" aria-selected="'+(state.tab==='faltantes')+'">Faltantes</button></div>';
     if(value)html+=renderKpis();
     html+='<section class="ir-panel"><div class="ir-panel-heading"><h3>'+title+'</h3><p>'+description+'</p></div>';
-    html+='<div class="ir-filters"><input type="search" data-ir-search placeholder="Buscar producto, código o laboratorio" value="'+esc(state.query)+'"><select data-ir-filter aria-label="Filtrar productos"><option value="todos" '+(state.filter==='todos'?'selected':'')+'>Todos</option><option value="positivas" '+(state.filter==='positivas'?'selected':'')+'>Con existencias</option><option value="agotados" '+(state.filter==='agotados'?'selected':'')+'>Agotados</option><option value="negativos" '+(state.filter==='negativos'?'selected':'')+'>Negativos</option><option value="sin-costo" '+(state.filter==='sin-costo'?'selected':'')+'>Con costo pendiente</option></select></div>';
+    html+='<div class="ir-filters"><input type="search" data-ir-search placeholder="Buscar producto, código o laboratorio" value="'+esc(state.query)+'"><select data-ir-filter aria-label="Filtrar productos"><option value="todos" '+(state.filter==='todos'?'selected':'')+'>Todos</option><option value="positivas" '+(state.filter==='positivas'?'selected':'')+'>Con existencias</option><option value="agotados" '+(state.filter==='agotados'?'selected':'')+'>Agotados</option><option value="negativos" '+(state.filter==='negativos'?'selected':'')+'>Negativos</option><option value="sin-movimientos" '+(state.filter==='sin-movimientos'?'selected':'')+'>Sin movimientos</option><option value="sin-costo" '+(state.filter==='sin-costo'?'selected':'')+'>Con costo pendiente</option></select></div>';
     html+='<div class="ir-results-meta"><span>'+number(rows.length)+' productos</span><span>Consulta: '+dateTime(state.loadedAt)+'</span></div><div class="ir-list">'+renderRows(rows)+'</div>';
     html+='<div class="ir-export"><button type="button" class="btn alt" data-ir-excel>Exportar Excel</button><button type="button" class="btn alt" data-ir-pdf>Guardar PDF</button></div></section><p class="ir-footnote">Consulta de solo lectura. No modifica existencias, costos, pedidos ni movimientos del Kardex.</p></section>';
     root.innerHTML=html;
   }
   function exportExcel(){
     if(typeof XLSX==='undefined'){message('No está disponible el componente de Excel en esta versión.',true);return}
-    const data=filteredRows().map(r=>({Codigo:r.product.codigo||'',Producto:r.product.nombre,Laboratorio:r.product.laboratorio||'',Existencias_unidades:r.stock,Costo_unitario_base:r.unitCost,Valor_inventario:r.value,Precio_venta_unitario:r.saleUnit,Valor_potencial_venta:r.saleValue,Fuente_costo:r.costSource||'Sin costo confiable'}));
+    const data=filteredRows().map(r=>({Codigo:r.product.codigo||'',Producto:r.product.nombre,Laboratorio:r.product.laboratorio||'',Existencias_unidades:r.stock,Estado_inventario:r.stock===null?'Sin movimientos':r.stock<0?'Negativo':r.stock===0?'Agotado':'Disponible',Costo_unitario_base:r.unitCost,Valor_inventario:r.value,Precio_venta_unitario:r.saleUnit,Valor_potencial_venta:r.saleValue,Fuente_costo:r.costSource||'Sin costo confiable'}));
     const book=XLSX.utils.book_new();XLSX.utils.book_append_sheet(book,XLSX.utils.json_to_sheet(data),'Inventario');
     XLSX.writeFile(book,'drosalud-inventario-'+new Date().toISOString().slice(0,10)+'.xlsx');
   }
@@ -115,7 +118,7 @@
     const rows=filteredRows(),popup=window.open('','_blank');
     if(!popup){message('El navegador bloqueó la ventana de impresión. Permite las ventanas emergentes para guardar el PDF.',true);return}
     const title=state.tab==='valor'?'Valor del inventario':state.tab==='existencias'?'Existencias':'Faltantes';
-    const body=rows.map(r=>'<tr><td>'+esc(r.product.codigo||'—')+'</td><td>'+esc(r.product.nombre)+'</td><td>'+number(r.stock)+'</td><td>'+(r.unitCost===null?'Sin costo':money(r.unitCost))+'</td><td>'+(r.value===null?'—':money(r.value))+'</td></tr>').join('');
+    const body=rows.map(r=>'<tr><td>'+esc(r.product.codigo||'—')+'</td><td>'+esc(r.product.nombre)+'</td><td>'+(r.stock===null?'Sin movimientos':number(r.stock))+'</td><td>'+(r.unitCost===null?'Sin costo':money(r.unitCost))+'</td><td>'+(r.value===null?'—':money(r.value))+'</td></tr>').join('');
     popup.document.write('<!doctype html><html lang="es"><head><meta charset="utf-8"><title>'+title+' · Drosalud</title><style>body{font:12px Arial,sans-serif;color:#17365c;padding:24px}h1{font-size:20px}p{color:#52657b}table{width:100%;border-collapse:collapse;margin-top:18px}th,td{padding:7px;border-bottom:1px solid #dce7f1;text-align:left}th{background:#edf4fb}td:nth-child(n+3){text-align:right}</style></head><body><h1>Drosalud · '+title+'</h1><p>Generado: '+esc(dateTime(new Date()))+' · Productos: '+number(rows.length)+'</p><table><thead><tr><th>Código</th><th>Producto</th><th>Existencia</th><th>Costo unitario</th><th>Valor al costo</th></tr></thead><tbody>'+body+'</tbody></table><script>window.onload=function(){window.print()}<\/script></body></html>');
     popup.document.close();
   }
