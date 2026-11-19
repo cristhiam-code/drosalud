@@ -818,6 +818,7 @@
     if (modeButton) {
       state.editing = null;
       state.formItems = [];
+      state.selectedPedidoId = null;
       state.mode = modeButton.dataset.mode;
       message('');
       if (state.mode === 'sugerido') {
