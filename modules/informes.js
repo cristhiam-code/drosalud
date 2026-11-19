@@ -33,7 +33,7 @@
     (results[1]||[]).forEach(x=>state.balances[x.producto_id]=Number(x.saldo_unidades)||0);
     let warning='';
     try{
-      const opening=await readAll(()=>sb.from('inventario_movimientos').select('producto_id').eq('tipo','saldo_inicial').order('producto_id'));
+      const opening=await readAll(()=>sb.from('inventario_movimientos').select('producto_id').eq('tipo','saldo_inicial').order('producto_id').order('id'));
       state.openingProducts=new Set((opening||[]).map(x=>x.producto_id).filter(Boolean));
     }catch(e){
       state.openingProducts=new Set();
@@ -96,7 +96,7 @@
     else if(uncountedPositive.length)html+='<p class="ir-alert ir-alert-warning">Valoración parcial: '+number(uncountedPositive.length)+' productos tienen saldo positivo en el Kardex, pero no tienen registro de conteo inicial. No se incluyen en el valor mostrado.</p>';
     if(missing.length)html+='<p class="ir-alert ir-alert-warning">El valor mostrado es parcial. Los productos contados sin costo confiable se excluyen de la suma; no se les asigna un costo inventado.</p>';
     if(negative.length)html+='<p class="ir-alert">Los saldos negativos se muestran como faltantes y no se restan del valor de la mercancía contada.</p>';
-    if(unregistered.length)html+='<p class="ir-alert">Los productos sin movimientos no se consideran agotados: todavía no tienen saldo registrado en el Kardex.</p>';
+    if(unregistered.length)html+='<p class="ir-alert ir-alert-warning">Hay '+number(unregistered.length)+' productos sin movimientos registrados. No se han verificado físicamente y el valor mostrado no representa todo el inventario de la droguería.</p>';
     if(saleMissing)html+='<p class="ir-alert">El valor potencial de venta es parcial porque hay productos contados sin precio de venta calculable.</p>';
     if(state.warning)html+='<p class="ir-alert">'+esc(state.warning)+'</p>';
     return html;
