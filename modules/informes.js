@@ -132,7 +132,8 @@
   root.addEventListener('click',e=>{
     const b=e.target.closest('button');if(!b)return;
     if(b.hasAttribute('data-ir-refresh'))loadData().catch(showError);
-    else if(b.hasAttribute('data-ir-back')){state.tab='menu';state.query='';state.filter='todos';state.limit=50;render()}\n    else if(b.dataset.irTab){state.tab=b.dataset.irTab;state.query='';state.filter='todos';state.limit=50;render()}
+    else if(b.hasAttribute('data-ir-back')){state.tab='menu';state.query='';state.filter='todos';state.limit=50;render()}
+    else if(b.dataset.irTab){state.tab=b.dataset.irTab;state.query='';state.filter='todos';state.limit=50;render()}
     else if(b.hasAttribute('data-ir-more')){state.limit+=50;render()}
     else if(b.hasAttribute('data-ir-excel'))exportExcel();
     else if(b.hasAttribute('data-ir-pdf'))exportPdf();
