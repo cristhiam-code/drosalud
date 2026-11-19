@@ -73,36 +73,65 @@
         + (Number(line.cantidad) || 0) * Math.max(1, Number(line.unidades_por_presentacion) || 1);
     });
 
-    const [balances, orders] = await Promise.all([
+    const [balances, allOrders, authorizedPedidos] = await Promise.all([
       getAll(() => sb.from('inventario_saldos').select('producto_id,saldo_unidades').order('producto_id')),
-      getAll(() => sb.from('ordenes_compra').select('id').in('estado', ['aprobada','parcial']).order('creado_en'))
+      getAll(() => sb.from('ordenes_compra').select('id,pedido_id,estado').neq('estado', 'cancelada').order('creado_en')),
+      getAll(() => sb.from('pedidos').select('id').eq('estado', 'autorizado').order('creado_en'))
     ]);
-    const activeOrderIds = orders.map(order => order.id);
-    const orderItems = activeOrderIds.length
+    const allOrderIds = allOrders.map(order => order.id);
+    const orderItems = allOrderIds.length
       ? await getAll(() => sb.from('ordenes_compra_items')
-          .select('orden_id,producto_id,unidades_solicitadas,unidades_recibidas')
-          .in('orden_id', activeOrderIds).order('creado_en'))
+          .select('orden_id,pedido_item_id,producto_id,unidades_solicitadas,unidades_recibidas')
+          .in('orden_id', allOrderIds).order('creado_en'))
       : [];
-    const activeOrders = new Set(activeOrderIds);
+    const orderById = new Map(allOrders.map(order => [order.id, order]));
     const stock = {};
     balances.forEach(row => { stock[row.producto_id] = Number(row.saldo_unidades) || 0; });
     const pending = {};
+    const assignedByPedidoItem = {};
     orderItems.forEach(row => {
-      if (!activeOrders.has(row.orden_id) || !row.producto_id) return;
-      pending[row.producto_id] = (pending[row.producto_id] || 0)
-        + Math.max(0, (Number(row.unidades_solicitadas) || 0) - (Number(row.unidades_recibidas) || 0));
+      if (!row.producto_id) return;
+      const order = orderById.get(row.orden_id);
+      if (!order) return;
+      const ordered = Number(row.unidades_solicitadas) || 0;
+      const received = Number(row.unidades_recibidas) || 0;
+      if (['aprobada','parcial'].includes(order.estado)) {
+        pending[row.producto_id] = (pending[row.producto_id] || 0) + Math.max(0, ordered - received);
+      }
+      if (row.pedido_item_id) {
+        assignedByPedidoItem[row.pedido_item_id] = (assignedByPedidoItem[row.pedido_item_id] || 0) + ordered;
+      }
     });
+
+    // Lo autorizado y aún no asignado a proveedor también es compromiso de compra.
+    // Así no vuelve a aparecer en el siguiente pedido sugerido.
+    const authorizedPedidoIds = authorizedPedidos.map(row => row.id);
+    if (authorizedPedidoIds.length) {
+      const authorizedItems = await getAll(() => sb.from('pedidos_items')
+        .select('id,producto_id,cantidad_autorizada')
+        .in('pedido_id', authorizedPedidoIds).order('creado_en'));
+      authorizedItems.forEach(item => {
+        if (!item.producto_id) return;
+        const authorized = Number(item.cantidad_autorizada) || 0;
+        const alreadyAssigned = assignedByPedidoItem[item.id] || 0;
+        const notYetOrdered = Math.max(0, authorized - alreadyAssigned);
+        pending[item.producto_id] = (pending[item.producto_id] || 0) + notYetOrdered;
+      });
+    }
 
     state.suggested = state.products
       .map(product => {
         const soldUnits = sold[product.id] || 0;
         const stockUnits = stock[product.id] || 0;
         const pendingUnits = pending[product.id] || 0;
-        // Cobertura inicial: 7 días. Sin stock de seguridad inventado.
-        const suggestedUnits = Math.max(0, Math.ceil(soldUnits - stockUnits - pendingUnits));
+        // Si el saldo es negativo, primero se cubre ese déficit. Las ventas que lo originaron
+        // ya están reflejadas en el saldo; sumarlas otra vez duplicaría la reposición.
+        // Con saldo cero o positivo, se cubre la rotación de 7 días menos stock y compras pendientes.
+        const suggestedUnits = Math.max(0, Math.ceil(
+          stockUnits < 0 ? Math.abs(stockUnits) - pendingUnits : soldUnits - stockUnits - pendingUnits
+        ));
         return { product, soldUnits, stockUnits, pendingUnits, suggestedUnits };
       })
-      // Un saldo negativo también requiere reposición, aunque no haya ventas en los últimos 7 días.
       .filter(row => (row.soldUnits > 0 || row.stockUnits < 0) && row.suggestedUnits > 0)
       .sort((a,b) => (a.product.laboratorio || '').localeCompare(b.product.laboratorio || '', 'es')
         || a.product.nombre.localeCompare(b.product.nombre, 'es'));
@@ -255,7 +284,7 @@
           <div><small>Unidades sugeridas</small><b>${units(total)}</b></div>
           <div><small>Cobertura objetivo</small><b>7 días</b></div>
         </div>
-        <p class="pedidos-note">Cálculo actualizado: ventas de los últimos 7 días − existencia actual − unidades pendientes de recibir. Los saldos negativos también generan reposición, aunque no haya ventas recientes. Recalcular consulta nuevamente los datos; no crea ni duplica pedidos.</p>
+        <p class="pedidos-note">Con saldo negativo, primero se cubre el déficit sin contar dos veces las ventas que lo generaron. Con saldo cero o positivo, se cubre la rotación de 7 días. Se descuentan las órdenes pendientes y los pedidos autorizados aún no asignados a proveedor. Recalcular consulta los datos; no crea pedidos.</p>
         ${state.suggestedCalculatedAt ? '<p class="pedidos-calculated-at">Última consulta: ' + state.suggestedCalculatedAt.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}) + '</p>' : ''}
         <div class="pedidos-suggest-list">${rows || '<p class="pedidos-empty">No hay productos que requieran reposición según los datos actuales.</p>'}</div>
         <div class="pedidos-actions">
@@ -416,10 +445,10 @@
     return `
       <div class="pedidos-admin-box">
         <b>Generar órdenes de compra</b>
-        <p>Asigna cada línea a uno o varios proveedores. El sistema agrupa automáticamente una orden por proveedor.</p>
+        <p>Este pedido ya está autorizado, pero todavía no aumenta el inventario. Asigna cada línea a uno o varios proveedores; Drosalud agrupará una orden por proveedor. El Kardex solo cambiará cuando registres la recepción física.</p>
         ${lines}
         ${items.some(item => item.producto_id && (Number(item.cantidad_autorizada)||0) > alreadyOrdered(item.id))
-        ? `<button type="button" class="btn full" data-action="generate-orders" data-pedido-id="${pedido.id}">Generar órdenes de compra</button>`
+        ? `<button type="button" class="btn full" data-action="generate-orders" data-pedido-id="${pedido.id}">Asignar proveedores y generar órdenes</button>`
         : '<p class="pedidos-done">No quedan unidades autorizadas pendientes de asignar.</p>'}
       </div>`;
   }
