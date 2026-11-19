@@ -70,7 +70,7 @@
     receiptLines.flat().forEach(line => {
       if (!line.producto_id) return;
       sold[line.producto_id] = (sold[line.producto_id] || 0)
-        + (Number(line.cantidad) || 0) * Math.max(1, Number(line.unidades_por_presentacion) || 1);
+        + (Number(line.cantidad) || 0); // cantidad ya está guardada en unidades base; no multiplicar otra vez por la presentación.
     });
 
     const [balances, allOrders, authorizedPedidos] = await Promise.all([
