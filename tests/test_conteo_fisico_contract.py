@@ -7,6 +7,7 @@ BASE_MIGRATION = (ROOT / "supabase/migrations/20261119120000_conteo_fisico_inven
 POINT_OF_SALE_FIX = (ROOT / "supabase/migrations/20261120140000_conteo_fisico_punto_venta.sql").read_text()
 READ_CONTRACT_FIX = (ROOT / "supabase/migrations/20261120141500_conteo_fisico_contrato_sin_ubicaciones.sql").read_text()
 LOCK_ORDER_FIX = (ROOT / "supabase/migrations/20261120143000_conteo_fisico_bloqueo_consistente.sql").read_text()
+MOVEMENT_LOCK_FIX = (ROOT / "supabase/migrations/20261120144500_conteo_fisico_serializar_movimientos.sql").read_text()
 API = (ROOT / "modules/conteo-fisico-api.js").read_text()
 UI = (ROOT / "modules/conteo-fisico.js").read_text()
 FRACTIONING = (ROOT / "supabase/migrations/20261117160000_habilitar_fraccionamiento_con_kardex.sql").read_text()
@@ -76,6 +77,27 @@ class PhysicalCountContractTests(unittest.TestCase):
             self.assertLess(product_lock.start(), session_lock.start())
         self.assertIn("revoke all on function public.registrar_conteo_inventario", LOCK_ORDER_FIX)
 
+
+    def test_sales_and_receipts_share_product_and_location_locks_with_count(self):
+        central = MOVEMENT_LOCK_FIX.split("create or replace function public.proteger_movimiento_durante_conteo()", 1)[1]
+        central = central.split("$function$;", 1)[0].lower()
+        central_product = re.search(r"from public\.productos p\s+where p\.id\s*=\s*new\.producto_id\s+for update", central)
+        self.assertIsNotNone(central_product)
+        self.assertLess(central_product.start(), central.index("if new.tipo='recepcion'"))
+        self.assertIn("from public.inventario_conteos_bloqueos b", central)
+
+        mirror = MOVEMENT_LOCK_FIX.split("create or replace function public.proteger_movimiento_sucursal_durante_conteo()", 1)[1]
+        mirror = mirror.split("$function$;", 1)[0].lower()
+        mirror_product = re.search(r"from public\.productos p\s+where p\.id\s*=\s*new\.producto_id\s+for update", mirror)
+        self.assertIsNotNone(mirror_product)
+        self.assertLess(mirror_product.start(), mirror.index("pg_advisory_xact_lock_shared"))
+
+        start = MOVEMENT_LOCK_FIX.split("create or replace function public.iniciar_linea_conteo", 1)[1]
+        start = start.split("$function$;", 1)[0].lower()
+        start_product = re.search(r"from public\.productos where id\s*=\s*v_producto\s+for update", start)
+        self.assertIsNotNone(start_product)
+        self.assertLess(start_product.start(), start.index("pg_advisory_xact_lock("))
+
     def test_kardex_guard_and_immutability_remain_in_base_migration(self):
         self.assertIn("from public.productos p where p.id=new.producto_id for update", BASE_MIGRATION)
         self.assertIn("public.inventario_conteos_bloqueos b where b.producto_id=new.producto_id", BASE_MIGRATION)
@@ -86,13 +108,15 @@ class PhysicalCountContractTests(unittest.TestCase):
     def test_fractioning_adjustment_contract_is_not_replaced(self):
         self.assertIn("'ajuste',", FRACTIONING)
         self.assertIn("habilitar_fraccionamiento_producto", FRACTIONING)
-        for migration in (POINT_OF_SALE_FIX, READ_CONTRACT_FIX, LOCK_ORDER_FIX):
+        for migration in (POINT_OF_SALE_FIX, READ_CONTRACT_FIX, LOCK_ORDER_FIX, MOVEMENT_LOCK_FIX):
             self.assertNotIn("create or replace function public.habilitar_fraccionamiento_producto", migration)
 
     def test_existing_purchase_and_sales_modules_are_out_of_scope(self):
         for migration in (POINT_OF_SALE_FIX, READ_CONTRACT_FIX, LOCK_ORDER_FIX):
             self.assertNotIn("create or replace function public.registrar_recepcion_compra", migration)
             self.assertNotIn("create or replace function public.registrar_venta_drosalud", migration)
+            self.assertNotIn("create or replace function public.fn_inventario_descuenta_venta", migration)
+            self.assertNotIn("create or replace function public.ps_sync_movimiento_inventario", migration)
             self.assertNotIn("alter table public.usuarios_drosalud", migration)
 
     def test_request_ids_are_kept_for_safe_retries(self):
