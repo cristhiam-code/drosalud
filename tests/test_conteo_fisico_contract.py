@@ -45,7 +45,7 @@ class PhysicalCountContractTests(unittest.TestCase):
     def test_approval_holds_product_lock_until_adjustment_and_release(self):
         approval = POINT_OF_SALE_FIX.split("create or replace function public.aprobar_linea_conteo", 1)[1]
         approval = approval.split("$function$;", 1)[0].lower()
-        self.assertRegex(approval, r"from public\.productos p where p\.id\s*=\s*v_producto for update")
+        self.assertRegex(approval, r"from public\.productos p\s+where p\.id\s*=\s*v_producto\s+for update")
         self.assertIn("delete from public.inventario_conteos_bloqueos", approval)
         self.assertIn("insert into public.inventario_movimientos", approval)
         self.assertIn("update public.inventario_conteos_items set movimiento_id=v_movimiento", approval)
@@ -55,7 +55,7 @@ class PhysicalCountContractTests(unittest.TestCase):
         cancel = POINT_OF_SALE_FIX.split("create or replace function public.cancelar_conteo_inventario", 1)[1]
         cancel = cancel.split("$function$;", 1)[0].lower()
         self.assertIn("order by b.producto_id", cancel)
-        self.assertIn("from public.productos p where p.id=v_producto for update", cancel)
+        self.assertIn("from public.productos p where p.id = v_producto for update", cancel)
         self.assertRegex(cancel, r"where id\s*=\s*p_conteo_id for update")
 
     def test_list_rpc_no_longer_exposes_location_fields(self):
@@ -70,7 +70,7 @@ class PhysicalCountContractTests(unittest.TestCase):
             body = body.split("$function$;", 1)[0].lower()
             self.assertRegex(body, r"from public\.productos p where p\.id\s*=\s*v_producto for update")
             product_lock = re.search(r"from public\.productos p where p\.id\s*=\s*v_producto for update", body)
-            session_lock = re.search(r"from public\.inventario_conteos where id\s*=\s*v_item\.conteo_id for update", body)
+            session_lock = re.search(r"from public\.inventario_conteos\s+where id\s*=\s*v_item\.conteo_id\s+for update", body)
             self.assertIsNotNone(product_lock)
             self.assertIsNotNone(session_lock)
             self.assertLess(product_lock.start(), session_lock.start())
