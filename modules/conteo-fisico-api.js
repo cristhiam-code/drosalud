@@ -6,28 +6,49 @@
     const r = Math.random() * 16 | 0;
     return (c === 'x' ? r : (r & 3 | 8)).toString(16);
   });
-  function requestId(scope) {
+  function requestId(scope, legacyKey=null) {
     const key = KEY_PREFIX + scope;
     const existing = localStorage.getItem(key);
-    if (existing) return { key, id: existing };
-    const id = uuid();
+    const legacy = legacyKey ? localStorage.getItem(legacyKey) : null;
+    if (existing && legacy && existing !== legacy) {
+      throw new Error('Hay dos solicitudes de conteo pendientes para los mismos productos. Actualiza la pantalla antes de continuar.');
+    }
+    if (existing) return { key, id: existing, legacyKey };
+    const id = legacy || uuid();
     localStorage.setItem(key, id);
-    return { key, id };
+    return { key, id, legacyKey: legacy ? legacyKey : null };
   }
-  async function operation(scope, rpcName, params, requestField='p_solicitud_id') {
+  async function operation(scope, rpcName, params, requestField='p_solicitud_id', legacyKeyForUser=null) {
     const { data: authData, error: authError } = await sb.auth.getUser();
     if(authError)throw authError;
     if(!authData?.user?.id)throw new Error('Inicia sesión para continuar.');
-    const request = requestId(authData.user.id + ':' + scope);
+    const legacyKey = legacyKeyForUser?.(authData.user.id) || null;
+    const request = requestId(authData.user.id + ':' + scope, legacyKey);
     try {
       const { data, error } = await sb.rpc(rpcName, { ...params, [requestField]: request.id });
       if (error) throw error;
       localStorage.removeItem(request.key);
+      if (request.legacyKey) localStorage.removeItem(request.legacyKey);
       return data;
     } catch (error) {
       // Keep this request UUID so the user can retry safely after a lost response.
       throw error;
     }
+  }
+  function legacyCreateRequestKey(userId, ids, reason) {
+    const prefix = KEY_PREFIX + userId + ':crear:';
+    const suffix = ':' + [...ids].sort().join(',') + ':' + reason.trim();
+    const candidates = [];
+    for (let index = 0; index < localStorage.length; index++) {
+      const key = localStorage.key(index);
+      if (!key?.startsWith(prefix) || !key.endsWith(suffix)) continue;
+      const legacyLocationId = key.slice(prefix.length, key.length - suffix.length);
+      if (/^[0-9a-f-]{36}$/i.test(legacyLocationId)) candidates.push(key);
+    }
+    if (candidates.length > 1) {
+      throw new Error('Hay varias solicitudes de conteo pendientes para los mismos productos. Actualiza la pantalla antes de continuar.');
+    }
+    return candidates[0] || null;
   }
   window.DrosaludConteoApi = Object.freeze({
     capabilities: () => sb.rpc('consultar_capacidades_conteo'),
@@ -47,7 +68,8 @@
       return rows;
     },
     create: (ids, reason) => operation('crear:' + [...ids].sort().join(',') + ':' + reason.trim(),
-      'crear_conteo_inventario', { p_productos: ids, p_motivo: reason.trim() }),
+      'crear_conteo_inventario', { p_productos: ids, p_motivo: reason.trim() }, 'p_solicitud_id',
+      userId => legacyCreateRequestKey(userId, ids, reason)),
     start: itemId => operation('inicio:' + itemId, 'iniciar_linea_conteo', { p_item_id: itemId }),
     save: (itemId, quantity) => operation('captura:' + itemId, 'guardar_conteo_fisico',
       { p_item_id: itemId, p_cantidad_base: quantity }),
