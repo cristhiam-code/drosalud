@@ -112,7 +112,7 @@ class PhysicalCountContractTests(unittest.TestCase):
             self.assertNotIn("create or replace function public.habilitar_fraccionamiento_producto", migration)
 
     def test_existing_purchase_and_sales_modules_are_out_of_scope(self):
-        for migration in (POINT_OF_SALE_FIX, READ_CONTRACT_FIX, LOCK_ORDER_FIX):
+        for migration in (POINT_OF_SALE_FIX, READ_CONTRACT_FIX, LOCK_ORDER_FIX, MOVEMENT_LOCK_FIX):
             self.assertNotIn("create or replace function public.registrar_recepcion_compra", migration)
             self.assertNotIn("create or replace function public.registrar_venta_drosalud", migration)
             self.assertNotIn("create or replace function public.fn_inventario_descuenta_venta", migration)
