@@ -69,7 +69,11 @@ class PhysicalCountContractTests(unittest.TestCase):
             body = LOCK_ORDER_FIX.split(f"create or replace function public.{name}", 1)[1]
             body = body.split("$function$;", 1)[0].lower()
             self.assertRegex(body, r"from public\.productos p where p\.id\s*=\s*v_producto for update")
-            self.assertLess(body.index("for update"), body.index("from public.inventario_conteos where id=v_item.conteo_id for update"))
+            product_lock = re.search(r"from public\.productos p where p\.id\s*=\s*v_producto for update", body)
+            session_lock = re.search(r"from public\.inventario_conteos where id\s*=\s*v_item\.conteo_id for update", body)
+            self.assertIsNotNone(product_lock)
+            self.assertIsNotNone(session_lock)
+            self.assertLess(product_lock.start(), session_lock.start())
         self.assertIn("revoke all on function public.registrar_conteo_inventario", LOCK_ORDER_FIX)
 
     def test_kardex_guard_and_immutability_remain_in_base_migration(self):
