@@ -422,9 +422,14 @@ nav button{font-size:.78rem}
   background:transparent!important;
   color:#52677d!important;
 }
+ .qa-env-banner{position:sticky;top:0;z-index:9;display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 14px;background:#FFF2D6;color:#8A4B08;border-bottom:1px solid #F2C66D;font-size:.82rem;line-height:1.25;text-align:center}
+.qa-env-banner strong{font-weight:800;letter-spacing:.045em}
+.qa-env-banner span{font-weight:600}
+@media(max-width:480px){.qa-env-banner{flex-direction:column;gap:2px;padding:7px 10px;font-size:.76rem}}
 </style>
 </head>
 <body>
+<div id="qa-env-banner" class="qa-env-banner" hidden role="status" aria-live="polite"><strong>ENTORNO DE PRUEBAS</strong><span>Los datos y movimientos de este entorno no afectan producción.</span></div>
 <div id="spl"><img src="assets/logo-drosalud.png" alt="Drosalud" style="width:min(240px,60%)"><div class="spin" role="status" aria-label="Cargando"></div></div>
 <section id="lg" hidden>
  <img class="brand" src="assets/logo-drosalud.png" alt="Drosalud">
@@ -822,6 +827,7 @@ nav button{font-size:.78rem}
 <script src="qrcode.js"></script>
 <script>
 const esPreviewKardex=location.hostname!=='drosalud.vercel.app';
+if(esPreviewKardex){document.title='[PRUEBAS] Drosalud';const qaBanner=document.getElementById('qa-env-banner');if(qaBanner)qaBanner.hidden=false;}
 const sb=supabase.createClient(esPreviewKardex?'https://uorhpljsofnfgzblxcga.supabase.co':'https://fwkaqxzdhqpvvjhixeod.supabase.co',esPreviewKardex?'sb_publishable_wraiN0CZckSyFOp97eIIbQ_-_8NPKZb':'sb_publishable_ZJ24N_m8fFJDa2NZvERl5g_gvd4xbFz');
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
