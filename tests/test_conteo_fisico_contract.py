@@ -10,6 +10,7 @@ LOCK_ORDER_FIX = (ROOT / "supabase/migrations/20261120143000_conteo_fisico_bloqu
 MOVEMENT_LOCK_FIX = (ROOT / "supabase/migrations/20261120144500_conteo_fisico_serializar_movimientos.sql").read_text()
 API = (ROOT / "modules/conteo-fisico-api.js").read_text()
 UI = (ROOT / "modules/conteo-fisico.js").read_text()
+INDEX = (ROOT / "index.html").read_text()
 FRACTIONING = (ROOT / "supabase/migrations/20261117160000_habilitar_fraccionamiento_con_kardex.sql").read_text()
 
 
@@ -20,6 +21,15 @@ class PhysicalCountContractTests(unittest.TestCase):
         self.assertNotIn("p_bodega_id", API)
         self.assertNotIn("cf-warehouse", UI)
         self.assertNotIn("bodega", UI.lower())
+
+
+    def test_preview_is_visibly_marked_and_uses_qa_project(self):
+        self.assertIn('id="qa-env-banner"', INDEX)
+        self.assertIn("ENTORNO DE PRUEBAS", INDEX)
+        self.assertIn("document.title='[PRUEBAS] Drosalud'", INDEX)
+        self.assertIn("location.hostname!=='drosalud.vercel.app'", INDEX)
+        self.assertIn("https://uorhpljsofnfgzblxcga.supabase.co", INDEX)
+        self.assertIn("https://fwkaqxzdhqpvvjhixeod.supabase.co", INDEX)
 
     def test_qa_create_rpc_matches_client_signature(self):
         self.assertIn("drop function if exists public.crear_conteo_inventario(uuid[], text, uuid, uuid)", POINT_OF_SALE_FIX)
