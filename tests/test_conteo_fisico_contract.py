@@ -45,7 +45,7 @@ class PhysicalCountContractTests(unittest.TestCase):
     def test_approval_holds_product_lock_until_adjustment_and_release(self):
         approval = POINT_OF_SALE_FIX.split("create or replace function public.aprobar_linea_conteo", 1)[1]
         approval = approval.split("$function$;", 1)[0].lower()
-        self.assertRegex(approval, r"from public\\.productos p where p\\.id\\s*=\\s*v_producto for update")
+        self.assertRegex(approval, r"from public\.productos p where p\.id\s*=\s*v_producto for update")
         self.assertIn("delete from public.inventario_conteos_bloqueos", approval)
         self.assertIn("insert into public.inventario_movimientos", approval)
         self.assertIn("update public.inventario_conteos_items set movimiento_id=v_movimiento", approval)
@@ -56,7 +56,7 @@ class PhysicalCountContractTests(unittest.TestCase):
         cancel = cancel.split("$function$;", 1)[0].lower()
         self.assertIn("order by b.producto_id", cancel)
         self.assertIn("from public.productos p where p.id=v_producto for update", cancel)
-        self.assertRegex(cancel, r"where id\\s*=\\s*p_conteo_id for update")
+        self.assertRegex(cancel, r"where id\s*=\s*p_conteo_id for update")
 
     def test_list_rpc_no_longer_exposes_location_fields(self):
         self.assertIn("drop function public.listar_conteos_inventario()", READ_CONTRACT_FIX)
@@ -68,7 +68,7 @@ class PhysicalCountContractTests(unittest.TestCase):
         for name in ("guardar_conteo_fisico", "enviar_linea_conteo_a_revision", "registrar_reconteo_fisico"):
             body = LOCK_ORDER_FIX.split(f"create or replace function public.{name}", 1)[1]
             body = body.split("$function$;", 1)[0].lower()
-            self.assertRegex(body, r"from public\\.productos p where p\\.id\\s*=\\s*v_producto for update")
+            self.assertRegex(body, r"from public\.productos p where p\.id\s*=\s*v_producto for update")
             self.assertLess(body.index("for update"), body.index("from public.inventario_conteos where id=v_item.conteo_id for update"))
         self.assertIn("revoke all on function public.registrar_conteo_inventario", LOCK_ORDER_FIX)
 
