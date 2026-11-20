@@ -6,6 +6,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 BASE_MIGRATION = (ROOT / "supabase/migrations/20261119120000_conteo_fisico_inventario.sql").read_text()
 POINT_OF_SALE_FIX = (ROOT / "supabase/migrations/20261120140000_conteo_fisico_punto_venta.sql").read_text()
 READ_CONTRACT_FIX = (ROOT / "supabase/migrations/20261120141500_conteo_fisico_contrato_sin_ubicaciones.sql").read_text()
+LOCK_ORDER_FIX = (ROOT / "supabase/migrations/20261120143000_conteo_fisico_bloqueo_consistente.sql").read_text()
 API = (ROOT / "modules/conteo-fisico-api.js").read_text()
 UI = (ROOT / "modules/conteo-fisico.js").read_text()
 FRACTIONING = (ROOT / "supabase/migrations/20261117160000_habilitar_fraccionamiento_con_kardex.sql").read_text()
@@ -63,6 +64,14 @@ class PhysicalCountContractTests(unittest.TestCase):
         self.assertNotIn("bodega_id", READ_CONTRACT_FIX)
         self.assertIn("revoke all on function public.listar_bodegas_conteo()", READ_CONTRACT_FIX)
 
+    def test_all_count_mutations_follow_product_session_item_lock_order(self):
+        for name in ("guardar_conteo_fisico", "enviar_linea_conteo_a_revision", "registrar_reconteo_fisico"):
+            body = LOCK_ORDER_FIX.split(f"create or replace function public.{name}", 1)[1]
+            body = body.split("$function$;", 1)[0].lower()
+            self.assertRegex(body, r"from public\\.productos p where p\\.id\\s*=\\s*v_producto for update")
+            self.assertLess(body.index("for update"), body.index("from public.inventario_conteos where id=v_item.conteo_id for update"))
+        self.assertIn("revoke all on function public.registrar_conteo_inventario", LOCK_ORDER_FIX)
+
     def test_kardex_guard_and_immutability_remain_in_base_migration(self):
         self.assertIn("from public.productos p where p.id=new.producto_id for update", BASE_MIGRATION)
         self.assertIn("public.inventario_conteos_bloqueos b where b.producto_id=new.producto_id", BASE_MIGRATION)
@@ -73,11 +82,11 @@ class PhysicalCountContractTests(unittest.TestCase):
     def test_fractioning_adjustment_contract_is_not_replaced(self):
         self.assertIn("'ajuste',", FRACTIONING)
         self.assertIn("habilitar_fraccionamiento_producto", FRACTIONING)
-        for migration in (POINT_OF_SALE_FIX, READ_CONTRACT_FIX):
+        for migration in (POINT_OF_SALE_FIX, READ_CONTRACT_FIX, LOCK_ORDER_FIX):
             self.assertNotIn("create or replace function public.habilitar_fraccionamiento_producto", migration)
 
     def test_existing_purchase_and_sales_modules_are_out_of_scope(self):
-        for migration in (POINT_OF_SALE_FIX, READ_CONTRACT_FIX):
+        for migration in (POINT_OF_SALE_FIX, READ_CONTRACT_FIX, LOCK_ORDER_FIX):
             self.assertNotIn("create or replace function public.registrar_recepcion_compra", migration)
             self.assertNotIn("create or replace function public.registrar_venta_drosalud", migration)
             self.assertNotIn("alter table public.usuarios_drosalud", migration)
