@@ -4,10 +4,10 @@ import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 BASE_MIGRATION = (ROOT / "supabase/migrations/20261119120000_conteo_fisico_inventario.sql").read_text()
-POINT_OF_SALE_FIX = (ROOT / "supabase/migrations/20261120140000_conteo_fisico_punto_venta.sql").read_text()
-READ_CONTRACT_FIX = (ROOT / "supabase/migrations/20261120141500_conteo_fisico_contrato_sin_ubicaciones.sql").read_text()
-LOCK_ORDER_FIX = (ROOT / "supabase/migrations/20261120143000_conteo_fisico_bloqueo_consistente.sql").read_text()
-MOVEMENT_LOCK_FIX = (ROOT / "supabase/migrations/20261120144500_conteo_fisico_serializar_movimientos.sql").read_text()
+POINT_OF_SALE_FIX = (ROOT / "supabase/migrations/20261120181528_conteo_fisico_punto_venta.sql").read_text()
+READ_CONTRACT_FIX = (ROOT / "supabase/migrations/20261120181609_conteo_fisico_contrato_sin_ubicaciones.sql").read_text()
+LOCK_ORDER_FIX = (ROOT / "supabase/migrations/20261120181751_conteo_fisico_bloqueo_consistente.sql").read_text()
+MOVEMENT_LOCK_FIX = (ROOT / "supabase/migrations/20261120182237_conteo_fisico_serializar_movimientos.sql").read_text()
 API = (ROOT / "modules/conteo-fisico-api.js").read_text()
 UI = (ROOT / "modules/conteo-fisico.js").read_text()
 INDEX = (ROOT / "index.html").read_text()
