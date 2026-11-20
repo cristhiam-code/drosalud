@@ -56,7 +56,7 @@ class PhysicalCountContractTests(unittest.TestCase):
         cancel = cancel.split("$function$;", 1)[0].lower()
         self.assertIn("order by b.producto_id", cancel)
         self.assertRegex(cancel, r"from public\.productos p\s+where p\.id\s*=\s*v_producto\s+for update")
-        self.assertRegex(cancel, r"where id\s*=\s*p_conteo_id for update")
+        self.assertRegex(cancel, r"where id\s*=\s*p_conteo_id\s+for update")
 
     def test_list_rpc_no_longer_exposes_location_fields(self):
         self.assertIn("drop function public.listar_conteos_inventario()", READ_CONTRACT_FIX)
