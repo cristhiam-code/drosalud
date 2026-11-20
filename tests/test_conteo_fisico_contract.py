@@ -55,7 +55,7 @@ class PhysicalCountContractTests(unittest.TestCase):
         cancel = POINT_OF_SALE_FIX.split("create or replace function public.cancelar_conteo_inventario", 1)[1]
         cancel = cancel.split("$function$;", 1)[0].lower()
         self.assertIn("order by b.producto_id", cancel)
-        self.assertIn("from public.productos p where p.id = v_producto for update", cancel)
+        self.assertRegex(cancel, r"from public\.productos p\s+where p\.id\s*=\s*v_producto\s+for update")
         self.assertRegex(cancel, r"where id\s*=\s*p_conteo_id for update")
 
     def test_list_rpc_no_longer_exposes_location_fields(self):
