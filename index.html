@@ -826,9 +826,36 @@ nav button{font-size:.78rem}
 <script src="html5-qrcode.min.js"></script>
 <script src="qrcode.js"></script>
 <script>
-const esPreviewKardex=location.hostname!=='drosalud.vercel.app';
-if(esPreviewKardex){document.title='[PRUEBAS] Drosalud';const qaBanner=document.getElementById('qa-env-banner');if(qaBanner)qaBanner.hidden=false;}
-const sb=supabase.createClient(esPreviewKardex?'https://uorhpljsofnfgzblxcga.supabase.co':'https://fwkaqxzdhqpvvjhixeod.supabase.co',esPreviewKardex?'sb_publishable_wraiN0CZckSyFOp97eIIbQ_-_8NPKZb':'sb_publishable_ZJ24N_m8fFJDa2NZvERl5g_gvd4xbFz');
+// Selección de entorno cerrada: solo se permiten hosts expresamente conocidos.
+const HOSTS_QA = new Set([
+  'drosalud-git-feature-conteo-fisico-inventario-drosalud.vercel.app',
+  'drosalud-git-qa-entorno-seguro-ci-drosalud.vercel.app',
+  'localhost',
+  '127.0.0.1'
+]);
+const HOSTS_PRODUCCION = new Set([
+  'drosalud.vercel.app',
+  'drosalud-drosalud.vercel.app',
+  'drosalud-git-main-drosalud.vercel.app'
+]);
+const hostActual = location.hostname.toLowerCase();
+const entornoDrosalud = HOSTS_PRODUCCION.has(hostActual) ? 'produccion'
+  : HOSTS_QA.has(hostActual) ? 'pruebas' : null;
+if (!entornoDrosalud) {
+  document.title = 'Drosalud | Entorno no autorizado';
+  document.body.innerHTML = '<main style="max-width:620px;margin:12vh auto;padding:28px;font:16px system-ui;color:#17365C"><h1>Entorno no reconocido</h1><p>Por seguridad, DROSalud no se conectó a ninguna base de datos.</p><p>Abre la dirección oficial de producción o el enlace autorizado de pruebas.</p></main>';
+  throw new Error('Host no autorizado para seleccionar el entorno de DROSalud: ' + hostActual);
+}
+const esPreviewKardex = entornoDrosalud === 'pruebas';
+if (esPreviewKardex) {
+  document.title = '[PRUEBAS] Drosalud';
+  const qaBanner = document.getElementById('qa-env-banner');
+  if (qaBanner) qaBanner.hidden = false;
+}
+const sb = supabase.createClient(
+  esPreviewKardex ? 'https://uorhpljsofnfgzblxcga.supabase.co' : 'https://fwkaqxzdhqpvvjhixeod.supabase.co',
+  esPreviewKardex ? 'sb_publishable_wraiN0CZckSyFOp97eIIbQ_-_8NPKZb' : 'sb_publishable_ZJ24N_m8fFJDa2NZvERl5g_gvd4xbFz'
+);
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
