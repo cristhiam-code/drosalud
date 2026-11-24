@@ -111,7 +111,9 @@ class ArchitectureContractTests(unittest.TestCase):
         module = (MODULES / "recepcion-mercancia.js").read_text(encoding="utf-8")
         self.assertIn("cliente", service)
         self.assertNotIn("window.sb", service)
-        self.assertNotIn("sb.rpc(", module)
+        self.assertNotRegex(module, r"sb\\.(rpc|from)\\s*\\(")
+        self.assertIn("listarDatos", service)
+        self.assertIn("DrosaludPurchasesService.listarDatos", module)
         self.assertIn("DrosaludPurchasesService.registrarDocumentoProveedor", module)
         self.assertIn("DrosaludPurchasesService.registrarRecepcionDocumentada", module)
 
