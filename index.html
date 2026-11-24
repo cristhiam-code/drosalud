@@ -825,6 +825,7 @@ nav button{font-size:.78rem}
 <script src="base.js"></script>
 <script src="domain/formatters.js"></script>
 <script src="domain/presentaciones.js"></script>
+<script src="domain/precios.js"></script>
 <script src="xlsx.mini.min.js"></script>
 <script src="html5-qrcode.min.js"></script>
 <script src="qrcode.js"></script>
@@ -875,8 +876,9 @@ async function saveCfgDb(d){const canon=v=>v&&typeof v==='object'?(Array.isArray
 function applyPalette(){const root=document.documentElement;const keys=[['--pri','colorPri'],['--bg','colorBg'],['--card','colorCard'],['--ink','colorInk'],['--secondary','colorSecondary'],['--accent','colorAccent'],['--mut','colorMuted'],['--line','colorBorder'],['--soft','colorSoft'],['--nav-bg','colorNavBg'],['--nav-ink','colorNavInk'],['--hover','colorHover'],['--selected','colorSelected'],['--focus','colorFocus'],['--gain','colorSuccess'],['--success','colorSuccess'],['--warning','colorWarning'],['--bad','colorError']];keys.forEach(([css,k])=>{const v=draft?.[k]||cfg[k]||DEF[k];if(v&&/^#[0-9a-f]{6}$/i.test(v))root.style.setProperty(css,v)});const hex=draft?.colorPri||cfg.colorPri||DEF.colorPri,n=parseInt(hex.slice(1),16),lum=.299*(n>>16&255)+.587*(n>>8&255)+.114*(n&255);root.style.setProperty('--pri-ink',lum>160?'#17365C':'#FFFFFF')}
 function fillAju(){$('#aju-menu').hidden=false;$('#aju-pages').hidden=true;document.querySelectorAll('[data-aju-page]').forEach(x=>x.hidden=true);$('#ver').textContent='Versión de la app: '+VERSION;$('#bkt').textContent=cfg.ultimoRespaldo?'Último respaldo: '+fd(cfg.ultimoRespaldo):'Todavía no has descargado un respaldo.';draft={...cfg};applyPalette();document.querySelectorAll('#v-aju [data-k]').forEach(e=>{const v=draft[e.dataset.k];if(e.type==='checkbox')e.checked=!!v;else e.value=v==null?'':v});qrStatus();renderPrev();if(esAdminDrosalud())mfaEstado()}
 function renderPrev(){const it=[{nombre:'ACETAMINOFEN 500 MG * 100 TAB',cantidad:2,precio_venta:12500},{nombre:'SUERO ORAL SABOR UVA',cantidad:1,precio_venta:5600}];const r={numero:1,creado_en:new Date().toISOString(),cliente_nombre:'Cliente de ejemplo',vendedor:'Cristhiam',forcePago:true,cliente_cedula:'123456789',cliente_telefono:'3001234567',cliente_direccion:'Calle 10 # 12-34',descuento:1000,domicilio:3000,forma_pago:'Efectivo',recibido:50000,total:sub(it)+2000};const sv=cfg;cfg=draft;try{$('#prev').innerHTML=tkt(r,it)}finally{cfg=sv}}
-const price=c=>{const v=c*(1+cfg.m/100);return cfg.r?Math.ceil(v/cfg.r-1e-9)*cfg.r:Math.round(v)};
-const pv=p=>p.precio_venta!=null?Number(p.precio_venta):(Number(p.precio_compra)>0?price(Number(p.precio_compra)):null);
+const {precioSugerido,precioVentaProducto}=window.DrosaludPricing;
+const price=c=>precioSugerido(c,cfg);
+const pv=p=>precioVentaProducto(p,cfg);
 const sub=it=>it.reduce((s,i)=>s+Number(i.precio_venta)*i.cantidad,0);
 let tt;function toast(m){let e=$('#toast');if(!e){e=document.createElement('div');e.id='toast';document.body.appendChild(e)}e.textContent=m;e.hidden=false;clearTimeout(tt);tt=setTimeout(()=>{e.hidden=true},String(m).length>70?7000:2600)}
 const msgErr=e=>{const m=String((e&&e.message)||e||''),c=String((e&&e.code)||'');
