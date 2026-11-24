@@ -151,9 +151,10 @@
         <p class="rm-note">Solo registra las unidades que llegaron y fueron aceptadas. No incluyas faltantes, averías ni mercancía rechazada como si hubiera ingresado.</p>
         <div class="rm-lines">${items.map(i=>{
           const got=receivedFor(i.orden_item_id),left=Math.max(0,Number(i.unidades_documentadas)-got),orderItem=linked?.items?.find(x=>x.id===i.orden_item_id),orderLeft=orderItem?Math.max(0,Number(orderItem.unidades_solicitadas)-Number(orderItem.unidades_recibidas)):left,max=Math.min(left,orderLeft);
-          return '<article class="rm-line"><b>'+esc(i.descripcion_documento||i.producto?.nombre||'Producto')+'</b><small>Documento: '+i.unidades_documentadas+' unidades · Ya aceptadas: '+got+' · Costo: '+money(i.costo_unitario_base)+' por unidad</small><label>Unidades aceptadas hoy</label><input type="number" min="0" max="'+max+'" step="1" value="'+max+'" data-rcv="'+esc(i.orden_item_id)+'" data-cost="'+Number(i.costo_unitario_base)+'"><small>Máximo permitido ahora: '+max+' unidades</small></article>';
+          const orderCost=Number(orderItem?.costo_unitario_base||0),documentCost=Number(i.costo_unitario_base||0),costDiff=Math.abs(orderCost-documentCost)>0.01;
+          return '<article class="rm-line"><b>'+esc(i.descripcion_documento||i.producto?.nombre||'Producto')+'</b><small>Documento: '+i.unidades_documentadas+' unidades · Ya aceptadas: '+got+' · Costo factura: '+money(documentCost)+' por unidad</small>'+(costDiff?'<small class="rm-cost-diff">Diferencia frente a la orden: '+money(orderCost)+' por unidad. '+(esAdminDrosalud()?'Administración debe autorizar y registrar el motivo.':'Requiere autorización de administración.')+'</small>':'')+'<label>Unidades aceptadas hoy</label><input type="number" min="0" max="'+max+'" step="1" value="'+max+'" data-rcv="'+esc(i.orden_item_id)+'" data-cost="'+documentCost+'"><small>Máximo permitido ahora: '+max+' unidades</small></article>';
         }).join('')}</div>
-        <label>Observaciones de recepción</label><textarea data-rcv-notes rows="2" maxlength="500" placeholder="Ej. llegaron 2 de 3 cajas; una queda pendiente"></textarea>
+        <label>Motivo / observaciones de recepción</label><textarea data-rcv-notes rows="2" maxlength="500" placeholder="Si cambia el costo frente a la orden, administración debe explicar y autorizar la diferencia."></textarea>
         <div class="rm-actions"><button class="btn full" data-rcv-save>Confirmar unidades aceptadas e ingresar al inventario</button><button class="btn alt full" data-rm-close>Cancelar</button></div>
       </section></div>`);
     const overlay=$('[data-rm-overlay]');$('[data-rm-close]',overlay).onclick=()=>overlay.remove();
@@ -161,6 +162,9 @@
       if(busy)return;const b=e.currentTarget;
       const payload=items.map(i=>({orden_item_id:i.orden_item_id,unidades:Number($('[data-rcv="'+i.orden_item_id+'"]',overlay).value),costo_unitario_base:Number(i.costo_unitario_base)})).filter(x=>x.unidades>0);
       if(!payload.length||payload.some(x=>!Number.isInteger(x.unidades)||x.unidades<1)){status('Indica al menos una cantidad aceptada válida.',true);return}
+      const costDiffs=payload.filter(x=>{const line=items.find(i=>i.orden_item_id===x.orden_item_id),orderItem=linked?.items?.find(i=>i.id===x.orden_item_id);return Math.abs(Number(line?.costo_unitario_base||0)-Number(orderItem?.costo_unitario_base||0))>0.01});
+      const reason=$('[data-rcv-notes]',overlay).value.trim();
+      if(costDiffs.length&&(!esAdminDrosalud()||!reason)){status('El costo de la factura difiere de la orden. Se requiere autorización de administración y un motivo escrito.',true);return}
       busy=true;b.disabled=true;b.textContent='Registrando recepción…';
       try{
         const {error}=await sb.rpc('registrar_recepcion_compra_documentada',{p_orden_id:linked?.id||doc.ordenes?.[0],p_documento_id:doc.id,p_items:payload,p_operacion_id:op,p_notas:$('[data-rcv-notes]',overlay).value.trim()||null});
