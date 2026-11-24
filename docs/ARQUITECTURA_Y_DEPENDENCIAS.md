@@ -247,3 +247,10 @@ El módulo `modules/pedidos.js` conserva la regla de negocio y el armado visual 
 Se creó `services/gestion-negocio.js` para consultas y operaciones del módulo Compras y proveedores: listado de proveedores, solicitudes por conseguir, cotizaciones, altas/ediciones/bajas de proveedores, guardado de solicitudes, consulta de recibos y sus líneas y registro de cotizaciones.
 
 El módulo conserva validaciones de duplicados, vínculos históricos, formularios y presentación. El servicio recibe el cliente Supabase y los argumentos explícitamente; no conoce el DOM ni crea clientes. No se modifica el proceso formal de Pedidos ni el de Recepción.
+
+
+## Novena separación de servicios: catálogo y precios
+
+Se creó `services/catalogo.js` para operaciones de persistencia del catálogo: actualización de precios con motivo, habilitación de fraccionamiento, edición/creación/eliminación de productos, consulta de auditoría de precios, conteo de productos e importación por lotes.
+
+El shell mantiene la validación de campos, códigos duplicados, equivalencias, permisos visibles, confirmación del fraccionamiento y mensajes de usuario. El servicio conserva las mismas tablas, RPC, argumentos y respuestas del backend. El cálculo de precios y conversiones continúa en `domain/`; el servicio no calcula precios ni depende del DOM.
