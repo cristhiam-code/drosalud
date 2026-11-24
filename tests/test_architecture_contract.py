@@ -186,7 +186,7 @@ class ArchitectureContractTests(unittest.TestCase):
             self.assertIn(method, service)
         for table in ("cotizaciones_venta_app", "cotizacion_venta_items_app", "historial_precios"):
             self.assertNotRegex(INDEX, r"sb\.from\(['\"]" + table + r"['\"]\)")
-        self.assertNotRegex(INDEX, r"sb\\.from\\(['\"]recibos['\"]\\)")
+        self.assertNotRegex(INDEX, r"sb\.from\(['\"]recibos['\"]\)")
         scripts = re.findall(r'<script[^>]*src=["\']([^"\']+)["\'][^>]*>', INDEX, re.I)
         self.assertIn("services/historial.js", scripts)
         self.assertGreater(scripts.index("services/historial.js"), scripts.index("services/configuracion.js"))
@@ -198,7 +198,7 @@ class ArchitectureContractTests(unittest.TestCase):
         for method in ("listarProductosConLinea", "listarProductosSinLinea", "listarSaldos", "listarVentasSemana", "comprobarPedidos", "registrarRecepcion"):
             self.assertIn(method, service)
         for table in ("productos_app", "inventario_saldos", "recibos_app", "recibo_items_app", "pedidos_resumen"):
-            self.assertNotRegex(INDEX, r"sb\\.from\\(['\"]" + table + r"['\"]\\)")
+            self.assertNotRegex(INDEX, r"sb\.from\(['\"]" + table + r"['\"]\)")
         self.assertNotIn("sb.rpc('registrar_recepcion_inventario'", INDEX)
         scripts = re.findall(r'<script[^>]*src=["\']([^"\']+)["\'][^>]*>', INDEX, re.I)
         self.assertIn("services/inventario.js", scripts)
