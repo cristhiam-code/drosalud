@@ -173,7 +173,7 @@ class ArchitectureContractTests(unittest.TestCase):
         self.assertNotIn("document.", service)
         for method in ("cargar", "guardar", "comprobar"):
             self.assertIn(method, service)
-        self.assertNotRegex(INDEX, r"sb\\.from\\(['\"]ajustes['\"]\\)")
+        self.assertNotRegex(INDEX, r"sb\.from\(['\"]ajustes['\"]\)")
         scripts = re.findall(r'<script[^>]*src=["\']([^"\']+)["\'][^>]*>', INDEX, re.I)
         self.assertIn("services/configuracion.js", scripts)
         self.assertGreater(scripts.index("services/configuracion.js"), scripts.index("services/clientes.js"))
