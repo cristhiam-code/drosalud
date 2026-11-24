@@ -67,7 +67,7 @@ Una factura puede documentar más unidades que las solicitadas, o más unidades 
 ## Caja e informes
 
 - Caja resume ventas, medios de pago, gastos y cierre de la jornada. El efectivo esperado se calcula como base inicial + ventas en efectivo − gastos en efectivo; las transferencias y otros medios no forman parte del efectivo contado. La diferencia es efectivo contado − efectivo esperado. Verifica efectivo contado y valores electrónicos antes de cerrar. Los gastos no registrados no aparecerán en el resumen.
-- Los informes dependen de los filtros y del período seleccionado. Revisa fechas y alcance antes de exportar.
+- Informes ofrece actualmente tres consultas de inventario: Valor del inventario, Existencias y Faltantes. No es un informe de ventas por período. Busca por producto, código o laboratorio; revisa si el saldo es positivo, cero, negativo o sin movimientos. El costo unitario de referencia puede mostrarse, pero la valoración física total y el valor potencial de venta permanecen no disponibles cuando las cantidades reales no están validadas.
 - Margen bruto estimado no equivale a utilidad neta: no descuenta necesariamente gastos, comisiones, domicilios ni otros costos.
 - El valor del inventario solo es confiable si los saldos y costos de referencia son completos y consistentes.
 
