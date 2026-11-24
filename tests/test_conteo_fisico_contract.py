@@ -173,5 +173,22 @@ class PhysicalCountContractTests(unittest.TestCase):
         self.assertIn("case when p_aprobar then p.puede_aprobar else p.puede_contar end", helper)
 
 
+    def test_approval_permission_guard_runs_before_validation_or_data_access(self):
+        approval = POINT_OF_SALE_FIX.split("create or replace function public.aprobar_linea_conteo", 1)[1]
+        approval = approval.split("$function$;", 1)[0].lower()
+
+        permission_guard = approval.index("not public.inventario_conteo_tiene_permiso(true)")
+        permission_error = approval.index("no tienes permiso para aprobar conteos")
+        argument_validation = approval.index("if p_solicitud_id is null")
+        item_lookup = approval.index("select producto_id, conteo_id")
+        first_mutation = approval.index("delete from public.inventario_conteos_bloqueos")
+
+        self.assertLess(permission_guard, permission_error)
+        self.assertLess(permission_error, argument_validation)
+        self.assertLess(argument_validation, item_lookup)
+        self.assertLess(item_lookup, first_mutation)
+        self.assertIn("raise exception 'no tienes permiso para aprobar conteos'", approval)
+
+
 if __name__ == "__main__":
     unittest.main()
