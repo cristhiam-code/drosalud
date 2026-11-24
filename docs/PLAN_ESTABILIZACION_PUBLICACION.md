@@ -19,7 +19,7 @@ Actualizado: 24 de noviembre de 2026.
 
 ## Última validación automatizada
 
-- GitHub Actions: Pruebas y sintaxis SUCCESS en commit 70aa573 (run 45432028559), con 41 pruebas Python y Node más chequeo de sintaxis.
+- GitHub Actions: Pruebas y sintaxis SUCCESS en commit 70aa573 (run 45432028559), con 42 pruebas Python, 33 pruebas Node y chequeo de sintaxis JavaScript.
 - El último despliegue de código de QA READY es 30416b1 y conserva el alias de preview. Un commit posterior solo de pruebas recibió el límite temporal de compilaciones de Vercel; no cambió la aplicación.
 - El PR #91 sigue en borrador y no se ha integrado ni desplegado a producción.
 
