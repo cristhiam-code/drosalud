@@ -37,59 +37,23 @@
     el.hidden = !text;
   }
 
-  async function getAll(build) {
-    const rows = [];
-    let from = 0;
-    while (true) {
-      const { data, error } = await build().range(from, from + 999);
-      if (error) throw error;
-      const page = data || [];
-      rows.push(...page);
-      if (page.length < 1000) break;
-      from += 1000;
-    }
-    return rows;
-  }
-
   async function loadSuggested() {
     const now = new Date();
     const since = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const receipts = await getAll(() => sb.from('recibos_app')
-      .select('id').eq('anulado', false).gte('creado_en', since)
-      .lte('creado_en', now.toISOString()).order('creado_en').order('id'));
+    const data = await window.DrosaludOrdersService.cargarDatosSugerencia(sb, since, now.toISOString());
     const sold = {};
-    const receiptBatches = [];
-    for (let offset = 0; offset < receipts.length; offset += 100) {
-      receiptBatches.push(receipts.slice(offset, offset + 100).map(row => row.id));
-    }
-    const receiptLines = await Promise.all(receiptBatches.map(ids => getAll(() =>
-      sb.from('recibo_items_app')
-        .select('producto_id,cantidad,unidades_por_presentacion')
-        .in('recibo_id', ids).order('id')
-    )));
-    receiptLines.flat().forEach(line => {
+    data.lineasRecibo.forEach(line => {
       if (!line.producto_id) return;
       sold[line.producto_id] = (sold[line.producto_id] || 0)
         + (Number(line.cantidad) || 0) * Math.max(1, Number(line.unidades_por_presentacion) || 1);
     });
 
-    const [balances, allOrders, authorizedPedidos] = await Promise.all([
-      getAll(() => sb.from('inventario_saldos').select('producto_id,saldo_unidades').order('producto_id')),
-      getAll(() => sb.from('ordenes_compra').select('id,pedido_id,estado').neq('estado', 'cancelada').order('creado_en')),
-      getAll(() => sb.from('pedidos').select('id').eq('estado', 'autorizado').order('creado_en'))
-    ]);
-    const allOrderIds = allOrders.map(order => order.id);
-    const orderItems = allOrderIds.length
-      ? await getAll(() => sb.from('ordenes_compra_items')
-          .select('orden_id,pedido_item_id,producto_id,unidades_solicitadas,unidades_recibidas')
-          .in('orden_id', allOrderIds).order('creado_en'))
-      : [];
-    const orderById = new Map(allOrders.map(order => [order.id, order]));
+    const orderById = new Map(data.ordenes.map(order => [order.id, order]));
     const stock = {};
-    balances.forEach(row => { stock[row.producto_id] = Number(row.saldo_unidades) || 0; });
+    data.saldos.forEach(row => { stock[row.producto_id] = Number(row.saldo_unidades) || 0; });
     const pending = {};
     const assignedByPedidoItem = {};
-    orderItems.forEach(row => {
+    data.itemsOrden.forEach(row => {
       if (!row.producto_id) return;
       const order = orderById.get(row.orden_id);
       if (!order) return;
@@ -105,19 +69,13 @@
 
     // Lo autorizado y aún no asignado a proveedor también es compromiso de compra.
     // Así no vuelve a aparecer en el siguiente pedido sugerido.
-    const authorizedPedidoIds = authorizedPedidos.map(row => row.id);
-    if (authorizedPedidoIds.length) {
-      const authorizedItems = await getAll(() => sb.from('pedidos_items')
-        .select('id,producto_id,cantidad_autorizada')
-        .in('pedido_id', authorizedPedidoIds).order('creado_en'));
-      authorizedItems.forEach(item => {
-        if (!item.producto_id) return;
-        const authorized = Number(item.cantidad_autorizada) || 0;
-        const alreadyAssigned = assignedByPedidoItem[item.id] || 0;
-        const notYetOrdered = Math.max(0, authorized - alreadyAssigned);
-        pending[item.producto_id] = (pending[item.producto_id] || 0) + notYetOrdered;
-      });
-    }
+    data.itemsAutorizados.forEach(item => {
+      if (!item.producto_id) return;
+      const authorized = Number(item.cantidad_autorizada) || 0;
+      const alreadyAssigned = assignedByPedidoItem[item.id] || 0;
+      const notYetOrdered = Math.max(0, authorized - alreadyAssigned);
+      pending[item.producto_id] = (pending[item.producto_id] || 0) + notYetOrdered;
+    });
 
     state.suggested = state.products
       .map(product => {
@@ -144,51 +102,22 @@
     if (!auth?.user) throw new Error('Inicia sesión nuevamente.');
     state.user = auth.user;
 
-    const { data: profile, error: profileError } = await sb.from('usuarios_drosalud')
-      .select('rol,activo').eq('user_id', auth.user.id).maybeSingle();
-    if (profileError) throw profileError;
+    const data = await window.DrosaludOrdersService.cargarDatosModulo(sb, auth.user.id);
+    const profile = data.perfil;
     if (!profile || profile.activo !== true || !['admin','vendedor'].includes(profile.rol)) {
       throw new Error('Tu usuario no tiene un rol activo en Drosalud.');
     }
     state.role = profile.rol;
-
-    const [products, providers, pedidos, balances] = await Promise.all([
-      getAll(() => sb.from('productos_app')
-        .select('id,codigo,nombre,laboratorio,precio_compra,unidades_por_caja,unidades_por_venta')
-        .order('nombre').order('id')),
-      getAll(() => sb.from('proveedores').select('id,nombre,activo')
-        .eq('activo', true).order('nombre')),
-      getAll(() => sb.from('pedidos_resumen').select('*').order('creado_en', { ascending:false })),
-      getAll(() => sb.from('inventario_saldos').select('producto_id,saldo_unidades').order('producto_id'))
-    ]);
-    state.products = products || [];
-    const negativeIds = new Set((balances || [])
+    state.products = data.productos;
+    const negativeIds = new Set(data.saldos
       .filter(row => Number(row.saldo_unidades) < 0)
       .map(row => row.producto_id));
     state.negativeProducts = state.products.filter(product => negativeIds.has(product.id));
-    state.providers = providers || [];
-    state.pedidos = pedidos || [];
-
-    const ids = state.pedidos.map(row => row.id);
-    if (ids.length) {
-      state.items = await getAll(() => sb.from('pedidos_items')
-        .select('*').in('pedido_id', ids).order('creado_en'));
-    } else state.items = [];
-
-    const pedidoIds = ids;
-    state.orders = pedidoIds.length
-      ? await getAll(() => sb.from('ordenes_compra')
-          .select('id,numero,pedido_id,proveedor_id,estado,creado_en')
-          .in('pedido_id', pedidoIds)
-          .order('creado_en', { ascending:false }))
-      : [];
-    const orderIds = state.orders.map(order => order.id);
-    state.orderItems = orderIds.length
-      ? await getAll(() => sb.from('ordenes_compra_items')
-          .select('id,orden_id,pedido_item_id,producto_id,unidades_solicitadas,unidades_recibidas,costo_unitario_base')
-          .in('orden_id', orderIds)
-          .order('creado_en'))
-      : [];
+    state.providers = data.proveedores;
+    state.pedidos = data.pedidos;
+    state.items = data.items;
+    state.orders = data.ordenes;
+    state.orderItems = data.itemsOrden;
   }
 
   function itemsFor(pedidoId) {
