@@ -15,6 +15,7 @@ Actualizado: 24 de noviembre de 2026.
 - Auditoría de catálogo: dos precios manuales inferiores al costo requieren validación comercial; diez saldos negativos requieren conciliación física/documental.
 - Auditoría de caja/cotizaciones: 16 cierres conciliados, uno reabierto por prueba, cero gastos registrados y 16 cotizaciones vencidas sin conversión a recibo.
 - Auditoría de Informes: módulo de solo lectura con tres consultas de inventario; la valoración total está desactivada y no hay informes de ventas, margen, compras o rotación.
+- Auditoría de seguridad: RLS activo en todas las tablas públicas revisadas, ninguna función SECURITY DEFINER ejecutable por anon y roles admin/vendedor activos.
 
 ## Pendiente antes de considerar listo
 1. Confirmar el resultado de GitHub Actions para el último commit que contiene el servicio de ventas y las aclaraciones de exportación.
