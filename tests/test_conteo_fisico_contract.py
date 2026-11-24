@@ -26,8 +26,14 @@ class PhysicalCountContractTests(unittest.TestCase):
     def test_preview_is_visibly_marked_and_uses_qa_project(self):
         self.assertIn('id="qa-env-banner"', INDEX)
         self.assertIn("ENTORNO DE PRUEBAS", INDEX)
-        self.assertIn("document.title='[PRUEBAS] Drosalud'", INDEX)
-        self.assertIn("location.hostname!=='drosalud.vercel.app'", INDEX)
+        self.assertIn("document.title = '[PRUEBAS] Drosalud'", INDEX)
+        self.assertIn("HOSTS_QA = new Set([", INDEX)
+        self.assertIn("'drosalud-git-feature-conteo-fisico-inventario-drosalud.vercel.app'", INDEX)
+        self.assertIn("'drosalud.vercel.app'", INDEX)
+        self.assertIn("const entornoDrosalud =", INDEX)
+        self.assertIn("throw new Error('Host no autorizado", INDEX)
+        self.assertIn("esPreviewKardex ? 'https://uorhpljsofnfgzblxcga.supabase.co'", INDEX)
+        self.assertIn(": 'https://fwkaqxzdhqpvvjhixeod.supabase.co'", INDEX)
         self.assertIn("https://uorhpljsofnfgzblxcga.supabase.co", INDEX)
         self.assertIn("https://fwkaqxzdhqpvvjhixeod.supabase.co", INDEX)
 
@@ -59,7 +65,7 @@ class PhysicalCountContractTests(unittest.TestCase):
         self.assertRegex(approval, r"from public\.productos p\s+where p\.id\s*=\s*v_producto\s+for update")
         self.assertIn("delete from public.inventario_conteos_bloqueos", approval)
         self.assertIn("insert into public.inventario_movimientos", approval)
-        self.assertIn("update public.inventario_conteos_items set movimiento_id=v_movimiento", approval)
+        self.assertRegex(approval, r"update public\.inventario_conteos_items\s+set movimiento_id\s*=\s*v_movimiento")
         self.assertLess(approval.index("for update"), approval.index("delete from public.inventario_conteos_bloqueos"))
 
     def test_cancellation_locks_products_in_stable_order(self):
@@ -133,6 +139,124 @@ class PhysicalCountContractTests(unittest.TestCase):
         self.assertIn("localStorage.setItem(key, id)", API)
         self.assertIn("localStorage.removeItem(request.key)", API)
         self.assertIn("Keep this request UUID so the user can retry safely after a lost response", API)
+
+
+    def test_approval_rpc_requires_authenticated_count_approval_permission(self):
+        approval = POINT_OF_SALE_FIX.split("create or replace function public.aprobar_linea_conteo", 1)[1]
+        approval = approval.split("$function$;", 1)[0].lower()
+        self.assertIn("auth.uid() is null", approval)
+        self.assertIn("not public.es_usuario_drosalud()", approval)
+        self.assertIn("not public.inventario_conteo_tiene_permiso(true)", approval)
+        self.assertIn("no tienes permiso para aprobar conteos", approval)
+        self.assertIn("quien contó o recontó el producto no puede aprobarlo", approval)
+
+    def test_permission_management_and_cancellation_are_admin_only(self):
+        permission = BASE_MIGRATION.split("create or replace function public.gestionar_permiso_conteo", 1)[1]
+        permission = permission.split("$function$;", 1)[0].lower()
+        self.assertIn("auth.uid() is null", permission)
+        self.assertIn("not public.es_usuario_drosalud()", permission)
+        self.assertIn("not public.es_admin_drosalud()", permission)
+        self.assertIn("solo administración puede cambiar permisos", permission)
+
+        cancel = POINT_OF_SALE_FIX.split("create or replace function public.cancelar_conteo_inventario", 1)[1]
+        cancel = cancel.split("$function$;", 1)[0].lower()
+        self.assertIn("not public.es_admin_drosalud()", cancel)
+        self.assertIn("solo administración puede cancelar un conteo", cancel)
+
+    def test_permission_helper_requires_active_user_and_explicit_capability_or_admin(self):
+        helper = BASE_MIGRATION.split("create or replace function public.inventario_conteo_tiene_permiso", 1)[1]
+        helper = helper.split("$function$;", 1)[0].lower()
+        self.assertIn("auth.uid() is not null", helper)
+        self.assertIn("public.es_usuario_drosalud()", helper)
+        self.assertIn("public.es_admin_drosalud()", helper)
+        self.assertIn("p.revocado_en is null", helper)
+        self.assertIn("case when p_aprobar then p.puede_aprobar else p.puede_contar end", helper)
+
+
+    def test_approval_permission_guard_runs_before_validation_or_data_access(self):
+        approval = POINT_OF_SALE_FIX.split("create or replace function public.aprobar_linea_conteo", 1)[1]
+        approval = approval.split("$function$;", 1)[0].lower()
+
+        permission_guard = approval.index("not public.inventario_conteo_tiene_permiso(true)")
+        permission_error = approval.index("no tienes permiso para aprobar conteos")
+        argument_validation = approval.index("if p_solicitud_id is null")
+        item_lookup = approval.index("select producto_id, conteo_id")
+        first_mutation = approval.index("delete from public.inventario_conteos_bloqueos")
+
+        self.assertLess(permission_guard, permission_error)
+        self.assertLess(permission_error, argument_validation)
+        self.assertLess(argument_validation, item_lookup)
+        self.assertLess(item_lookup, first_mutation)
+        self.assertIn("raise exception 'no tienes permiso para aprobar conteos'", approval)
+
+
+    def test_cancellation_requires_active_admin_before_validation_or_data_access(self):
+        cancel = POINT_OF_SALE_FIX.split("create or replace function public.cancelar_conteo_inventario", 1)[1]
+        cancel = cancel.split("$function$;", 1)[0].lower()
+
+        auth_guard = cancel.index("not public.es_admin_drosalud()")
+        auth_error = cancel.index("solo administración puede cancelar un conteo")
+        argument_validation = cancel.index("if p_solicitud_id is null")
+        first_product_lookup = cancel.index("from public.inventario_conteos_bloqueos")
+        first_write = cancel.index("update public.inventario_conteos_items")
+
+        self.assertLess(auth_guard, auth_error)
+        self.assertLess(auth_error, argument_validation)
+        self.assertLess(argument_validation, first_product_lookup)
+        self.assertLess(first_product_lookup, first_write)
+        self.assertIn("auth.uid() is null", cancel)
+        self.assertIn("not public.es_usuario_drosalud()", cancel)
+
+    def test_cancellation_locks_products_in_uuid_order_before_session(self):
+        cancel = POINT_OF_SALE_FIX.split("create or replace function public.cancelar_conteo_inventario", 1)[1]
+        cancel = cancel.split("$function$;", 1)[0].lower()
+
+        ordered_products = re.search(
+            r"select distinct b\.producto_id.*?order by b\.producto_id",
+            cancel,
+            re.S,
+        )
+        product_lock = re.search(
+            r"from public\.productos p\s+where p\.id = v_producto\s+for update",
+            cancel,
+        )
+        session_lock = re.search(
+            r"from public\.inventario_conteos\s+where id = p_conteo_id\s+for update",
+            cancel,
+        )
+        self.assertIsNotNone(ordered_products)
+        self.assertIsNotNone(product_lock)
+        self.assertIsNotNone(session_lock)
+        self.assertLess(ordered_products.start(), product_lock.start())
+        self.assertLess(product_lock.start(), session_lock.start())
+
+    def test_cancellation_preserves_approved_items_and_cancels_only_unapproved(self):
+        cancel = POINT_OF_SALE_FIX.split("create or replace function public.cancelar_conteo_inventario", 1)[1]
+        cancel = cancel.split("$function$;", 1)[0].lower()
+
+        self.assertRegex(
+            cancel,
+            r"update public\.inventario_conteos_items\s+set estado = 'cancelado'\s+where conteo_id = p_conteo_id\s+and estado <> 'aprobado'",
+        )
+        self.assertIn("delete from public.inventario_conteos_bloqueos", cancel)
+        self.assertIn("where conteo_id = p_conteo_id", cancel)
+        self.assertIn("set estado = 'cancelado'", cancel)
+        self.assertIn("cancelado_por = auth.uid()", cancel)
+        self.assertIn("cancelado_en = now()", cancel)
+        self.assertIn("motivo_cancelacion", cancel)
+        self.assertIn("solicitud_cancelacion_id", cancel)
+
+    def test_cancellation_never_creates_kardex_adjustments_and_is_idempotent(self):
+        cancel = POINT_OF_SALE_FIX.split("create or replace function public.cancelar_conteo_inventario", 1)[1]
+        cancel = cancel.split("$function$;", 1)[0].lower()
+
+        self.assertNotIn("insert into public.inventario_movimientos", cancel)
+        self.assertNotIn("tipo = 'ajuste'", cancel)
+        self.assertIn("if v_sesion.estado = 'cancelado' then", cancel)
+        self.assertIn("v_sesion.solicitud_cancelacion_id <> p_solicitud_id", cancel)
+        self.assertIn("v_sesion.cancelado_por <> auth.uid()", cancel)
+        self.assertIn("v_sesion.motivo_cancelacion <> btrim(p_motivo)", cancel)
+        self.assertIn("if v_sesion.estado <> 'abierto' then", cancel)
 
 
 if __name__ == "__main__":

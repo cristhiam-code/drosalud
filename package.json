@@ -1,0 +1,12 @@
+{
+  "name": "drosalud",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Aplicación estática DROSalud con verificaciones automatizadas",
+  "scripts": {
+    "check:js": "node scripts/check-js.cjs",
+    "test:python": "python -m unittest discover -s tests -v",
+    "test": "npm run test:python && npm run test:domain && npm run check:js",
+    "test:domain": "node --test tests/*.test.cjs"
+  }
+}

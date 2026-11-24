@@ -20,21 +20,12 @@
     return '<span class="rm-state '+cls+'">'+esc(map[state]||state||'—')+'</span>';
   }
   async function fetchData(){
-    const [o,d,l,r,c,a]=await Promise.all([
-      sb.from('ordenes_compra').select('id,numero,proveedor_id,estado,documento_proveedor,creado_en,proveedor:proveedores(nombre),items:ordenes_compra_items(id,producto_id,unidades_solicitadas,unidades_recibidas,costo_unitario_base,producto:productos(id,nombre,codigo,unidades_por_caja))').in('estado',['aprobada','parcial','recibida']).order('creado_en',{ascending:false}),
-      sb.from('documentos_proveedor').select('id,proveedor_id,tipo_documento,numero_documento,fecha_emision,subtotal,descuentos,impuestos,flete,total,estado,notas,creado_en,proveedor:proveedores(nombre)').order('creado_en',{ascending:false}).limit(300),
-      sb.from('documentos_proveedor_items').select('id,documento_id,orden_item_id,producto_id,descripcion_documento,presentacion_documento,unidades_por_presentacion,cantidad_documentada,unidades_documentadas,precio_por_presentacion,costo_unitario_base,producto:productos(nombre,codigo)').order('creado_en',{ascending:true}).limit(1500),
-      sb.from('recepciones_compra').select('id,numero,orden_id,proveedor_id,documento_id,documento_proveedor,recibido_en,proveedor:proveedores(nombre),items:recepciones_compra_items(id,orden_item_id,producto_id,unidades,costo_unitario_base,producto:productos(nombre,codigo))').order('recibido_en',{ascending:false}).limit(500),
-      sb.from('historial_costos').select('id,producto_id,proveedor_id,costo_unitario_base,costo_presentacion,unidades_por_presentacion,origen,referencia_id,registrado_por,registrado_en').order('registrado_en',{ascending:false}).limit(300),
-      esAdminDrosalud() ? sb.from('auditoria_precios').select('id,producto_id,producto_nombre,campo,valor_anterior,valor_nuevo,usuario_email,rol,motivo,creado_en').order('creado_en',{ascending:false}).limit(300) : Promise.resolve({data:[],error:null})
-    ]);
-    for(const x of [o,d,l,r,c,a]) if(x.error) throw x.error;
-    orders=o.data||[]; docs=d.data||[]; receipts=r.data||[]; costs=c.data||[]; audit=a.data||[];
-    const links=await sb.from('documentos_proveedor_ordenes').select('documento_id,orden_id');
-    if(links.error) throw links.error;
-    const linesByDoc=new Map();
-    (l.data||[]).forEach(x=>{if(!linesByDoc.has(x.documento_id))linesByDoc.set(x.documento_id,[]);linesByDoc.get(x.documento_id).push(x)});
-    docs=docs.map(x=>({...x,items:linesByDoc.get(x.id)||[],ordenes:(links.data||[]).filter(y=>y.documento_id===x.id).map(y=>y.orden_id)}));
+    const datos = await window.DrosaludPurchasesService.listarDatos(sb, esAdminDrosalud());
+    orders = datos.ordenes;
+    docs = datos.documentos;
+    receipts = datos.recepciones;
+    costs = datos.costos;
+    audit = datos.auditoria;
   }
   function exportExcel(){
     if(typeof XLSX==='undefined'||!XLSX.utils?.aoa_to_sheet){status('No está disponible la librería de Excel.',true);return}
@@ -132,8 +123,7 @@
       if(vals.some(v=>v!==''&&(!Number.isFinite(Number(v))||Number(v)<0))){status('Los importes no pueden ser negativos.',true);return}
       busy=true;b.disabled=true;b.textContent='Guardando documento…';
       try{
-        const {error}=await sb.rpc('registrar_documento_proveedor',{p_orden_id:order.id,p_tipo_documento:$('[data-doc-type]',overlay).value,p_numero_documento:number,p_fecha_emision:$('[data-doc-date]',overlay).value||null,p_subtotal:vals[0]===''?null:Number(vals[0]),p_descuentos:Number(vals[1]||0),p_impuestos:Number(vals[2]||0),p_flete:Number(vals[3]||0),p_total:vals[4]===''?null:Number(vals[4]),p_notas:$('[data-doc-notes]',overlay).value.trim()||null,p_items:items});
-        if(error)throw error;
+        await window.DrosaludPurchasesService.registrarDocumentoProveedor(sb,{p_orden_id:order.id,p_tipo_documento:$('[data-doc-type]',overlay).value,p_numero_documento:number,p_fecha_emision:$('[data-doc-date]',overlay).value||null,p_subtotal:vals[0]===''?null:Number(vals[0]),p_descuentos:Number(vals[1]||0),p_impuestos:Number(vals[2]||0),p_flete:Number(vals[3]||0),p_total:vals[4]===''?null:Number(vals[4]),p_notas:$('[data-doc-notes]',overlay).value.trim()||null,p_items:items});
         overlay.remove();active='documentos';await load();status('Documento guardado. Aún no se ha modificado el inventario.');
       }catch(err){status(err.message||'No se pudo guardar el documento.',true);b.disabled=false;b.textContent='Reintentar guardar'}
       finally{busy=false}
@@ -151,9 +141,10 @@
         <p class="rm-note">Solo registra las unidades que llegaron y fueron aceptadas. No incluyas faltantes, averías ni mercancía rechazada como si hubiera ingresado.</p>
         <div class="rm-lines">${items.map(i=>{
           const got=receivedFor(i.orden_item_id),left=Math.max(0,Number(i.unidades_documentadas)-got),orderItem=linked?.items?.find(x=>x.id===i.orden_item_id),orderLeft=orderItem?Math.max(0,Number(orderItem.unidades_solicitadas)-Number(orderItem.unidades_recibidas)):left,max=Math.min(left,orderLeft);
-          return '<article class="rm-line"><b>'+esc(i.descripcion_documento||i.producto?.nombre||'Producto')+'</b><small>Documento: '+i.unidades_documentadas+' unidades · Ya aceptadas: '+got+' · Costo: '+money(i.costo_unitario_base)+' por unidad</small><label>Unidades aceptadas hoy</label><input type="number" min="0" max="'+max+'" step="1" value="'+max+'" data-rcv="'+esc(i.orden_item_id)+'" data-cost="'+Number(i.costo_unitario_base)+'"><small>Máximo permitido ahora: '+max+' unidades</small></article>';
+          const orderCost=Number(orderItem?.costo_unitario_base||0),documentCost=Number(i.costo_unitario_base||0),costDiff=Math.abs(orderCost-documentCost)>0.01;
+          return '<article class="rm-line"><b>'+esc(i.descripcion_documento||i.producto?.nombre||'Producto')+'</b><small>Documento: '+i.unidades_documentadas+' unidades · Ya aceptadas: '+got+' · Costo factura: '+money(documentCost)+' por unidad</small>'+(costDiff?'<small class="rm-cost-diff">Diferencia frente a la orden: '+money(orderCost)+' por unidad. '+(esAdminDrosalud()?'Administración debe autorizar y registrar el motivo.':'Requiere autorización de administración.')+'</small>':'')+'<label>Unidades aceptadas hoy</label><input type="number" min="0" max="'+max+'" step="1" value="'+max+'" data-rcv="'+esc(i.orden_item_id)+'" data-cost="'+documentCost+'"><small>Máximo permitido ahora: '+max+' unidades</small></article>';
         }).join('')}</div>
-        <label>Observaciones de recepción</label><textarea data-rcv-notes rows="2" maxlength="500" placeholder="Ej. llegaron 2 de 3 cajas; una queda pendiente"></textarea>
+        <label>Motivo / observaciones de recepción</label><textarea data-rcv-notes rows="2" maxlength="500" placeholder="Si cambia el costo frente a la orden, administración debe explicar y autorizar la diferencia."></textarea>
         <div class="rm-actions"><button class="btn full" data-rcv-save>Confirmar unidades aceptadas e ingresar al inventario</button><button class="btn alt full" data-rm-close>Cancelar</button></div>
       </section></div>`);
     const overlay=$('[data-rm-overlay]');$('[data-rm-close]',overlay).onclick=()=>overlay.remove();
@@ -161,10 +152,12 @@
       if(busy)return;const b=e.currentTarget;
       const payload=items.map(i=>({orden_item_id:i.orden_item_id,unidades:Number($('[data-rcv="'+i.orden_item_id+'"]',overlay).value),costo_unitario_base:Number(i.costo_unitario_base)})).filter(x=>x.unidades>0);
       if(!payload.length||payload.some(x=>!Number.isInteger(x.unidades)||x.unidades<1)){status('Indica al menos una cantidad aceptada válida.',true);return}
+      const costDiffs=payload.filter(x=>{const line=items.find(i=>i.orden_item_id===x.orden_item_id),orderItem=linked?.items?.find(i=>i.id===x.orden_item_id);return Math.abs(Number(line?.costo_unitario_base||0)-Number(orderItem?.costo_unitario_base||0))>0.01});
+      const reason=$('[data-rcv-notes]',overlay).value.trim();
+      if(costDiffs.length&&(!esAdminDrosalud()||!reason)){status('El costo de la factura difiere de la orden. Se requiere autorización de administración y un motivo escrito.',true);return}
       busy=true;b.disabled=true;b.textContent='Registrando recepción…';
       try{
-        const {error}=await sb.rpc('registrar_recepcion_compra_documentada',{p_orden_id:linked?.id||doc.ordenes?.[0],p_documento_id:doc.id,p_items:payload,p_operacion_id:op,p_notas:$('[data-rcv-notes]',overlay).value.trim()||null});
-        if(error)throw error;
+        await window.DrosaludPurchasesService.registrarRecepcionDocumentada(sb,{p_orden_id:linked?.id||doc.ordenes?.[0],p_documento_id:doc.id,p_items:payload,p_operacion_id:op,p_notas:$('[data-rcv-notes]',overlay).value.trim()||null});
         overlay.remove();active='recepciones';await load();window.invCargarDatos?.();status('Recepción confirmada. Las unidades aceptadas ingresaron al inventario y Kardex.');
       }catch(err){status(err.message||'No se pudo registrar la recepción.',true);b.disabled=false;b.textContent='Reintentar recepción'}
       finally{busy=false}
