@@ -86,7 +86,7 @@ class ArchitectureContractTests(unittest.TestCase):
         help_view = INDEX[start:end]
         for topic in ("Facturación POS", "Productos", "Clientes", "Pedidos", "Compras y proveedores", "Recepción", "Generar Kardex", "Informes y reportes", "Historial", "Cotizaciones", "Caja", "Ajustes", "Usuarios y permisos", "Exportaciones y respaldo"):
             self.assertIn(topic, help_view)
-        self.assertNotRegex(help_view.lower(), r"conteo\\s+(físico|fisico|inicial)")
+        self.assertNotRegex(help_view.lower(), r"conteo\s+(físico|fisico|inicial)")
 
     def test_architecture_and_operating_guides_are_versioned(self):
         self.assertTrue((ROOT / "docs/ARQUITECTURA_Y_DEPENDENCIAS.md").is_file())
