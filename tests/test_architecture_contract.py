@@ -33,6 +33,8 @@ class ArchitectureContractTests(unittest.TestCase):
         self.assertGreater(scripts.index("services/compras.js"), scripts.index("services/informes.js"))
         self.assertIn("services/pedidos.js", scripts)
         self.assertGreater(scripts.index("services/pedidos.js"), scripts.index("services/compras.js"))
+        self.assertIn("services/gestion-negocio.js", scripts)
+        self.assertGreater(scripts.index("services/gestion-negocio.js"), scripts.index("services/pedidos.js"))
         self.assertGreater(scripts.index("domain/precios.js"), scripts.index("domain/presentaciones.js"))
         self.assertGreater(scripts.index("domain/presentaciones.js"), scripts.index("domain/formatters.js"))
         self.assertGreater(scripts.index("domain/formatters.js"), scripts.index("base.js"))
@@ -129,6 +131,15 @@ class ArchitectureContractTests(unittest.TestCase):
         self.assertIn("DrosaludOrdersService.cargarDatosSugerencia", module)
         for method in ("guardarPedido", "enviarPedido", "autorizarPedido", "rechazarPedido", "generarOrdenesCompra"):
             self.assertIn("DrosaludOrdersService." + method, module)
+
+    def test_business_management_module_delegates_database_access(self):
+        service = (SERVICES / "gestion-negocio.js").read_text(encoding="utf-8")
+        module = (MODULES / "gestion-negocio.js").read_text(encoding="utf-8")
+        self.assertIn("cliente", service)
+        self.assertNotIn("window.sb", service)
+        self.assertNotRegex(module, r"sb\\.(rpc|from)\\s*\\(")
+        for method in ("cargar", "guardarProveedor", "eliminarProveedor", "guardarCompra", "listarRecibos", "listarLineasRecibo", "registrarCotizacion"):
+            self.assertIn("DrosaludBusinessManagementService." + method, module)
 
     def test_help_covers_operational_modules_without_count_references(self):
         start = INDEX.index('id="v-ayuda"')
