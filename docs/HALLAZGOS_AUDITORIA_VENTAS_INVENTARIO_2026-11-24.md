@@ -35,7 +35,12 @@ La referencia de los movimientos tipo venta apunta a la línea de recibo (recibo
 - Códigos de producto duplicados: 0.
 - Productos sin código: 13.
 
-Los saldos negativos no se clasifican automáticamente como errores. Pueden indicar ventas anteriores a la carga de entradas, saldo inicial aún no registrado o movimientos que necesitan investigación. Entre los registros sin código hay servicios y referencias comerciales; no se debe asignar un código en bloque sin revisar cada ficha.
+Los saldos negativos no se clasifican automáticamente como errores. El detalle de los 10 productos muestra:
+- 6 tienen movimientos de venta, pero ninguna recepción registrada: PAXAN, DEXAMETASONA, DICLOFENACO, DOMICILIO, JERINGA 5 ML y SPIOLTO. Esto puede indicar saldo inicial no cargado o venta anterior a la primera compra registrada.
+- 4 sí tienen recepciones, pero las ventas registradas superan las entradas: Ashwagandha (-2 ventas y +1 recepción), BEDOYECTA (-3 y +2), FUROATO DE MOMETASONA (-2 y +1) y GINKGO BILOBA (-3 y +2).
+- Ninguno de estos diez productos tiene un movimiento de ajuste que explique el saldo.
+
+La diferencia debe compararse con existencias físicas y documentos históricos antes de decidir si falta un saldo inicial o si hubo un movimiento mal registrado. Entre los registros sin código hay servicios y referencias comerciales; no se debe asignar un código en bloque sin revisar cada ficha.
 
 ## Costos guardados en ventas
 En las 55 líneas de ventas activas:
