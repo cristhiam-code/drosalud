@@ -81,6 +81,7 @@ Una factura puede documentar más unidades que las solicitadas, o más unidades 
 
 - **Ayuda** debe explicar qué resuelve cada módulo, cuándo usarlo, pasos, datos que guarda, efectos sobre inventario y errores comunes.
 - **Sistema** debe mostrar versión, entorno, estado de sesión/conexión, estado de sincronización, diagnóstico y dependencias activas. Nunca debe mostrar claves secretas.
+- La exportación operativa de Excel incluye Recibos, Ventas por producto, Productos, Clientes e Historial de precios. No es un respaldo completo restaurable: no incluye órdenes/documentos de compra, recepciones, movimientos Kardex, usuarios ni toda la configuración. Conserva el archivo fuera del equipo y no lo uses como única copia ante pérdida de la base de datos.
 - Las mediciones de carga del navegador no son una prueba de velocidad de internet.
 - Un respaldo descargado debe comprobarse y guardarse en un lugar seguro. La notificación de descarga no reemplaza la verificación del archivo.
 
