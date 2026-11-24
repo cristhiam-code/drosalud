@@ -190,5 +190,74 @@ class PhysicalCountContractTests(unittest.TestCase):
         self.assertIn("raise exception 'no tienes permiso para aprobar conteos'", approval)
 
 
+    def test_cancellation_requires_active_admin_before_validation_or_data_access(self):
+        cancel = POINT_OF_SALE_FIX.split("create or replace function public.cancelar_conteo_inventario", 1)[1]
+        cancel = cancel.split("$function$;", 1)[0].lower()
+
+        auth_guard = cancel.index("not public.es_admin_drosalud()")
+        auth_error = cancel.index("solo administración puede cancelar un conteo")
+        argument_validation = cancel.index("if p_solicitud_id is null")
+        first_product_lookup = cancel.index("from public.inventario_conteos_bloqueos")
+        first_write = cancel.index("update public.inventario_conteos_items")
+
+        self.assertLess(auth_guard, auth_error)
+        self.assertLess(auth_error, argument_validation)
+        self.assertLess(argument_validation, first_product_lookup)
+        self.assertLess(first_product_lookup, first_write)
+        self.assertIn("auth.uid() is null", cancel)
+        self.assertIn("not public.es_usuario_drosalud()", cancel)
+
+    def test_cancellation_locks_products_in_uuid_order_before_session(self):
+        cancel = POINT_OF_SALE_FIX.split("create or replace function public.cancelar_conteo_inventario", 1)[1]
+        cancel = cancel.split("$function$;", 1)[0].lower()
+
+        ordered_products = re.search(
+            r"select distinct b\\.producto_id.*?order by b\\.producto_id",
+            cancel,
+            re.S,
+        )
+        product_lock = re.search(
+            r"from public\\.productos p\\s+where p\\.id = v_producto\\s+for update",
+            cancel,
+        )
+        session_lock = re.search(
+            r"from public\\.inventario_conteos\\s+where id = p_conteo_id\\s+for update",
+            cancel,
+        )
+        self.assertIsNotNone(ordered_products)
+        self.assertIsNotNone(product_lock)
+        self.assertIsNotNone(session_lock)
+        self.assertLess(ordered_products.start(), product_lock.start())
+        self.assertLess(product_lock.start(), session_lock.start())
+
+    def test_cancellation_preserves_approved_items_and_cancels_only_unapproved(self):
+        cancel = POINT_OF_SALE_FIX.split("create or replace function public.cancelar_conteo_inventario", 1)[1]
+        cancel = cancel.split("$function$;", 1)[0].lower()
+
+        self.assertRegex(
+            cancel,
+            r"update public\\.inventario_conteos_items\\s+set estado = 'cancelado'\\s+where conteo_id = p_conteo_id\\s+and estado <> 'aprobado'",
+        )
+        self.assertIn("delete from public.inventario_conteos_bloqueos", cancel)
+        self.assertIn("where conteo_id = p_conteo_id", cancel)
+        self.assertIn("set estado = 'cancelado'", cancel)
+        self.assertIn("cancelado_por = auth.uid()", cancel)
+        self.assertIn("cancelado_en = now()", cancel)
+        self.assertIn("motivo_cancelacion", cancel)
+        self.assertIn("solicitud_cancelacion_id", cancel)
+
+    def test_cancellation_never_creates_kardex_adjustments_and_is_idempotent(self):
+        cancel = POINT_OF_SALE_FIX.split("create or replace function public.cancelar_conteo_inventario", 1)[1]
+        cancel = cancel.split("$function$;", 1)[0].lower()
+
+        self.assertNotIn("insert into public.inventario_movimientos", cancel)
+        self.assertNotIn("tipo = 'ajuste'", cancel)
+        self.assertIn("if v_sesion.estado = 'cancelado' then", cancel)
+        self.assertIn("v_sesion.solicitud_cancelacion_id <> p_solicitud_id", cancel)
+        self.assertIn("v_sesion.cancelado_por <> auth.uid()", cancel)
+        self.assertIn("v_sesion.motivo_cancelacion <> btrim(p_motivo)", cancel)
+        self.assertIn("if v_sesion.estado <> 'abierto' then", cancel)
+
+
 if __name__ == "__main__":
     unittest.main()
