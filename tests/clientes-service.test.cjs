@@ -68,6 +68,6 @@ test('anonimiza mediante la RPC administrativa sin cambiar argumentos', async ()
 test('rechaza clientes inválidos y propaga errores del backend', async () => {
   await assert.rejects(service.listarClientes(null), /cliente Supabase válido/);
   const error = new Error('sin autorización');
-  const client = { from() { const q = { select() { return this; }, order() { return this; }, range() { return this; }, then(resolve, reject) { return Promise.resolve({ data: null, error }).then(resolve, reject); } }; return q; } };
+  const client = { rpc: async () => ({ data: null, error }), from() { const q = { select() { return this; }, order() { return this; }, range() { return this; }, then(resolve, reject) { return Promise.resolve({ data: null, error }).then(resolve, reject); } }; return q; } };
   await assert.rejects(service.listarClientes(client), value => value === error);
 });
