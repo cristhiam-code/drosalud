@@ -25,6 +25,8 @@ class ArchitectureContractTests(unittest.TestCase):
         self.assertGreater(scripts.index("domain/dinero.js"), scripts.index("domain/precios.js"))
         self.assertIn("services/ventas.js", scripts)
         self.assertGreater(scripts.index("services/ventas.js"), scripts.index("domain/dinero.js"))
+        self.assertIn("services/caja.js", scripts)
+        self.assertGreater(scripts.index("services/caja.js"), scripts.index("services/ventas.js"))
         self.assertGreater(scripts.index("domain/precios.js"), scripts.index("domain/presentaciones.js"))
         self.assertGreater(scripts.index("domain/presentaciones.js"), scripts.index("domain/formatters.js"))
         self.assertGreater(scripts.index("domain/formatters.js"), scripts.index("base.js"))
@@ -79,6 +81,15 @@ class ArchitectureContractTests(unittest.TestCase):
         self.assertIn("clienteSupabase", source)
         self.assertNotIn("window.sb", source)
         self.assertNotIn("document.", source)
+
+    def test_cash_service_receives_client_and_shell_has_no_direct_caja_queries(self):
+        source = (SERVICES / "caja.js").read_text(encoding="utf-8")
+        self.assertIn("cliente", source)
+        self.assertNotIn("window.sb", source)
+        self.assertNotIn("document.", source)
+        start = INDEX.index("/*CAJA-INICIO*/")
+        end = INDEX.index("/*CAJA-FIN*/", start)
+        self.assertNotRegex(INDEX[start:end], r"sb\\.(rpc|from)\\s*\\(")
 
     def test_help_covers_operational_modules_without_count_references(self):
         start = INDEX.index('id="v-ayuda"')
