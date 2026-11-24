@@ -2,7 +2,7 @@ import pathlib
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-MIGRATION = (ROOT / "supabase/migrations/20261124113000_serializar_reintentos_recepcion.sql").read_text()
+MIGRATION = (ROOT / "supabase/migrations/20261124120000_autorizar_diferencia_costo_recepcion.sql").read_text()
 
 
 class PurchaseReceiptContractTests(unittest.TestCase):
@@ -23,6 +23,19 @@ class PurchaseReceiptContractTests(unittest.TestCase):
         lookup = "where operacion_id=p_operacion_id"
         self.assertIn(lock, body)
         self.assertLess(body.index(lock), body.index(lookup))
+
+    def test_cost_difference_requires_admin_and_reason_before_receiving(self):
+        body = MIGRATION.lower()
+        cost_check = "pg_catalog.abs(v_doc_item.costo_unitario_base - v_orden_item.costo_unitario_base) > 0.01"
+        admin_check = "if not public.es_admin_drosalud() then"
+        reason_check = "if nullif(pg_catalog.btrim(p_notas),'') is null then"
+        base_reception = "public.registrar_recepcion_compra("
+        self.assertIn(cost_check, body)
+        self.assertIn(admin_check, body)
+        self.assertIn(reason_check, body)
+        self.assertLess(body.index(cost_check), body.index(base_reception))
+        self.assertLess(body.index(admin_check), body.index(base_reception))
+        self.assertLess(body.index(reason_check), body.index(base_reception))
 
     def test_existing_supplier_quantity_cost_and_presentation_checks_remain(self):
         body = MIGRATION.lower()
