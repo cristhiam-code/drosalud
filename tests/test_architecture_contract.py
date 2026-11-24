@@ -161,7 +161,7 @@ class ArchitectureContractTests(unittest.TestCase):
         for method in ("listarClientes", "listarConsentimientos", "registrarConsentimiento", "actualizarCliente", "crearCliente", "listarComprasCliente", "listarLineasRecibo", "cargarResumenCompras", "anonimizarCliente"):
             self.assertIn(method, service)
         for table in ("clientes", "consentimientos_clientes"):
-            self.assertNotRegex(INDEX, r"sb\\.from\\(['\"]" + table + r"['\"]\\)")
+            self.assertNotRegex(INDEX, r"sb\.from\(['\"]" + table + r"['\"]\)")
         self.assertNotIn("sb.rpc('anonimizar_cliente_drosalud'", INDEX)
         scripts = re.findall(r'<script[^>]*src=["\']([^"\']+)["\'][^>]*>', INDEX, re.I)
         self.assertIn("services/clientes.js", scripts)
