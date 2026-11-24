@@ -8,12 +8,17 @@ const { spawnSync } = require('node:child_process');
 const root = path.resolve(__dirname, '..');
 const moduleDir = path.join(root, 'modules');
 const domainDir = path.join(root, 'domain');
+const serviceDir = path.join(root, 'services');
 const files = [
   path.join(root, 'base.js'),
   ...fs.readdirSync(domainDir)
     .filter(name => name.endsWith('.js'))
     .sort()
     .map(name => path.join(domainDir, name)),
+  ...fs.readdirSync(serviceDir)
+    .filter(name => name.endsWith('.js'))
+    .sort()
+    .map(name => path.join(serviceDir, name)),
   ...fs.readdirSync(moduleDir)
     .filter(name => name.endsWith('.js'))
     .sort()
