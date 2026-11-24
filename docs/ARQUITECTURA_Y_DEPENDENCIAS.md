@@ -104,14 +104,15 @@ La página carga actualmente los scripts en este orden:
 8. `services/caja.js` — consultas y RPC de caja/gastos con cliente inyectado.
 9. `services/informes.js` — lecturas paginadas de inventario y costos con cliente inyectado.
 10. `services/compras.js` — RPC de documentos y recepción con cliente inyectado.
-11. `xlsx.mini.min.js`, `html5-qrcode.min.js`, `qrcode.js` — bibliotecas de Excel y códigos QR.
-12. `modules/gestion-negocio.js`
-13. `modules/ayuda-sistema.js`
-14. `modules/pedidos.js`
-15. `modules/recepcion-mercancia.js`
-16. `modules/conteo-fisico-api.js`
-17. `modules/conteo-fisico.js`
-18. `modules/informes.js`
+11. `services/pedidos.js` — RPC del flujo de pedidos con cliente inyectado.
+12. `xlsx.mini.min.js`, `html5-qrcode.min.js`, `qrcode.js` — bibliotecas de Excel y códigos QR.
+13. `modules/gestion-negocio.js`
+14. `modules/ayuda-sistema.js`
+15. `modules/pedidos.js`
+16. `modules/recepcion-mercancia.js`
+17. `modules/conteo-fisico-api.js`
+18. `modules/conteo-fisico.js`
+19. `modules/informes.js`
 
 CSS modular cargado por el shell: Pedidos, Recepción, Conteo, Informes, Ayuda/Sistema, Gestión del negocio y Exportaciones.
 
@@ -221,3 +222,10 @@ Se preservó el comportamiento de tolerancia a fallos: catálogo/saldos son requ
 Se creó `services/compras.js` para las dos escrituras del módulo: guardar documento de proveedor y confirmar recepción documentada. El servicio recibe el cliente como dependencia y propaga los errores del backend. El módulo visual conserva sus validaciones de cantidad, costo, rol y motivo; los nombres RPC y sus argumentos, incluida la clave de idempotencia, se mantienen iguales.
 
 Las consultas de lectura del módulo permanecen en `modules/recepcion-mercancia.js` por ahora. No se cambió la lógica de recepción ni el orden de compra.
+
+
+## Quinta separación de servicios: pedidos
+
+Se creó `services/pedidos.js` para las cinco RPC de guardar, enviar, autorizar, rechazar y generar órdenes por proveedor. El módulo visual mantiene intactas sus reglas de sugerencia, validaciones de cantidad, asignaciones, seguimiento y recuperación ante errores; solo delega las llamadas de escritura al servicio con el cliente inyectado.
+
+Las pruebas verifican los nombres RPC, argumentos y propagación de errores. No se modificó la lógica de Pedido sugerido ni Pedido urgente.
