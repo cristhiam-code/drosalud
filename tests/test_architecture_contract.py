@@ -122,7 +122,7 @@ class ArchitectureContractTests(unittest.TestCase):
         self.assertNotRegex(help_view.lower(), r"conteo\s+(físico|fisico|inicial)")
         self.assertIn("No es una copia completa de la base de datos", help_view)
         self.assertIn("No contiene órdenes de compra", help_view)
-        self.assertIn("La valoración física total", help_view)
+        self.assertIn("no presenta un valor físico total", help_view)
 
     def test_reports_card_does_not_promise_unavailable_valuation(self):
         source = (MODULES / "informes.js").read_text(encoding="utf-8")
