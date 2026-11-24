@@ -137,7 +137,7 @@ class ArchitectureContractTests(unittest.TestCase):
         module = (MODULES / "gestion-negocio.js").read_text(encoding="utf-8")
         self.assertIn("cliente", service)
         self.assertNotIn("window.sb", service)
-        self.assertNotRegex(module, r"sb\\.(rpc|from)\\s*\\(")
+        self.assertNotRegex(module, r"sb\.(rpc|from)\s*\(")
         for method in ("cargar", "guardarProveedor", "eliminarProveedor", "guardarCompra", "listarRecibos", "listarLineasRecibo", "registrarCotizacion"):
             self.assertIn("DrosaludBusinessManagementService." + method, module)
 
