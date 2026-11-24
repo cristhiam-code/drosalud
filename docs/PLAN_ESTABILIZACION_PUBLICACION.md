@@ -9,7 +9,7 @@ Actualizado: 24 de noviembre de 2026.
 - Documentación inicial de procesos y arquitectura.
 - Ayuda ampliada con diagnóstico del sistema, roles, precios, exportación y alcance real del archivo Excel.
 - Extracción de funciones puras a domain/formatters.js, domain/presentaciones.js, domain/precios.js y domain/dinero.js.
-- Servicios services/ventas.js, services/caja.js, services/informes.js, services/compras.js y services/pedidos.js y services/gestion-negocio.js y services/catalogo.js y services/clientes.js y services/configuracion.js y services/historial.js con cliente Supabase inyectado.
+- Servicios services/ventas.js, services/caja.js, services/informes.js, services/compras.js y services/pedidos.js y services/gestion-negocio.js y services/catalogo.js y services/clientes.js y services/configuracion.js y services/historial.js y services/inventario.js con cliente Supabase inyectado.
 - Pruebas Node para dominio y servicio, contratos Python y chequeo de sintaxis ampliado.
 - Auditoría de ventas e inventario de producción en solo lectura: 62/62 líneas conciliadas con movimientos; anulaciones compensadas; saldo de vista igual a suma del Kardex.
 - Auditoría de catálogo: dos precios manuales inferiores al costo requieren validación comercial; diez saldos negativos requieren conciliación física/documental.
@@ -72,3 +72,6 @@ DROSalud se considera preparado cuando los procesos del negocio estén documenta
 
 
 - Se incorporó `services/historial.js` para lecturas y operaciones de recibos, cotizaciones, ventas por período e historial de precios.
+
+
+- Se incorporó `services/inventario.js` para consultas paginadas de existencias y ventas semanales, diagnóstico de Pedidos y recepción de inventario. Se conserva la lógica de cantidades y presentación en la interfaz.
