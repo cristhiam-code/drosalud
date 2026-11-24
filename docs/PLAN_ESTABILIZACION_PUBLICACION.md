@@ -44,6 +44,15 @@ Actualizado: 24 de noviembre de 2026.
 ## Criterio de finalización
 DROSalud se considera preparado cuando los procesos del negocio estén documentados, las dependencias sean explícitas, los tests pasen, las cifras estén conciliadas o sus excepciones estén documentadas, los usuarios puedan completar los flujos en QA y no queden cambios de producción sin aprobar.
 
+## Verificación automatizada más reciente
+
+- GitHub Actions ejecutó correctamente el commit `b72ec44`.
+- Python: **47 pruebas aprobadas**.
+- Node.js: **58 pruebas aprobadas, 0 fallidas**.
+- `scripts/check-js.cjs`: sintaxis validada en `base.js`, todos los archivos de `domain/`, `services/`, `modules/` y el JavaScript inline de `index.html`.
+- Run: https://github.com/cristhiam-code/drosalud/actions/runs/45435032129
+- La validación corresponde a los cambios de servicios de clientes, configuración, catálogo, proveedores, pedidos y recepción.
+
 ## Actualización de arquitectura QA
 
 - Pedidos ahora delega lecturas de pantalla y de Pedido sugerido, además de las RPC, a `services/pedidos.js`. La fórmula y la regla de reposición permanecen en el módulo.
