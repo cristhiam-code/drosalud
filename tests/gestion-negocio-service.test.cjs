@@ -80,6 +80,6 @@ test('consulta recibos, líneas y registra cotizaciones', async () => {
 test('propaga errores y rechaza un cliente no válido', async () => {
   await assert.rejects(service.cargar(null, 'user-1'), /cliente Supabase válido/);
   const error = new Error('sin permiso');
-  const broken = { from() { const q = { select() { return this; }, order() { return this; }, eq() { return this; }, then(resolve, reject) { return Promise.resolve({ data: null, error }).then(resolve, reject); } }; return q; } };
+  const broken = { rpc: async () => ({ data: null, error }), from() { const q = { select() { return this; }, order() { return this; }, eq() { return this; }, then(resolve, reject) { return Promise.resolve({ data: null, error }).then(resolve, reject); } }; return q; } };
   await assert.rejects(service.cargar(broken, 'user-1'), value => value === error);
 });
