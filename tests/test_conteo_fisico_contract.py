@@ -141,5 +141,37 @@ class PhysicalCountContractTests(unittest.TestCase):
         self.assertIn("Keep this request UUID so the user can retry safely after a lost response", API)
 
 
+    def test_approval_rpc_requires_authenticated_count_approval_permission(self):
+        approval = POINT_OF_SALE_FIX.split("create or replace function public.aprobar_linea_conteo", 1)[1]
+        approval = approval.split("$function$;", 1)[0].lower()
+        self.assertIn("auth.uid() is null", approval)
+        self.assertIn("not public.es_usuario_drosalud()", approval)
+        self.assertIn("not public.inventario_conteo_tiene_permiso(true)", approval)
+        self.assertIn("no tienes permiso para aprobar conteos", approval)
+        self.assertIn("quien contó o recontó el producto no puede aprobarlo", approval)
+
+    def test_permission_management_and_cancellation_are_admin_only(self):
+        permission = BASE_MIGRATION.split("create or replace function public.gestionar_permiso_conteo", 1)[1]
+        permission = permission.split("$function$;", 1)[0].lower()
+        self.assertIn("auth.uid() is null", permission)
+        self.assertIn("not public.es_usuario_drosalud()", permission)
+        self.assertIn("not public.es_admin_drosalud()", permission)
+        self.assertIn("solo administración puede cambiar permisos", permission)
+
+        cancel = POINT_OF_SALE_FIX.split("create or replace function public.cancelar_conteo_inventario", 1)[1]
+        cancel = cancel.split("$function$;", 1)[0].lower()
+        self.assertIn("not public.es_admin_drosalud()", cancel)
+        self.assertIn("solo administración puede cancelar un conteo", cancel)
+
+    def test_permission_helper_requires_active_user_and_explicit_capability_or_admin(self):
+        helper = BASE_MIGRATION.split("create or replace function public.inventario_conteo_tiene_permiso", 1)[1]
+        helper = helper.split("$function$;", 1)[0].lower()
+        self.assertIn("auth.uid() is not null", helper)
+        self.assertIn("public.es_usuario_drosalud()", helper)
+        self.assertIn("public.es_admin_drosalud()", helper)
+        self.assertIn("p.revocado_en is null", helper)
+        self.assertIn("case when p_aprobar then p.puede_aprobar else p.puede_contar end", helper)
+
+
 if __name__ == "__main__":
     unittest.main()
