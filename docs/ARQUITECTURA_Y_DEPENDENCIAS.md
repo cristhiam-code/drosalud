@@ -126,3 +126,15 @@ Este mapa es una fotografía de referencias identificadas por búsqueda estátic
 - **Media:** algunas vistas y estilos de módulos permanecen declarados dentro de `index.html`; moverlos solo cuando el HTML y sus selectores estén cubiertos por pruebas.
 - **Media:** bibliotecas de terceros se cargan como scripts globales. Mantener una lista de versiones/origen y no cambiarlas junto con refactorizaciones funcionales.
 - **No hacer:** no cambiar a un framework ni añadir un empaquetador solo para resolver la deuda de organización. Primero estabilizar límites de módulos y pruebas.
+
+
+## Primera extracción completada
+
+Se extrajeron los formateadores puros a `domain/formatters.js`:
+- `esc`: escape de texto para inserción HTML.
+- `norm`: normalización de texto para búsquedas.
+- `money`: formato monetario COP.
+
+El archivo no depende del DOM, del cliente Supabase ni del estado del negocio. Expone una interfaz congelada en `window.DrosaludFormatters`; el shell conserva los nombres `esc`, `norm` y `money` como adaptador temporal para que los módulos existentes sigan funcionando sin cambios. El script se carga después de `base.js` y antes del script inline que lo consume.
+
+Esta extracción no cambia las fórmulas ni la presentación de los valores. Se añadió un contrato de prueba para proteger el orden de carga y la independencia del dominio.
