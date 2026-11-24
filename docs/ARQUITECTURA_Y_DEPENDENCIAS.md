@@ -244,3 +244,10 @@ El servicio arma los documentos con sus líneas y órdenes vinculadas antes de d
 El servicio `services/pedidos.js` centraliza ahora las consultas que alimentan la pantalla y el cálculo de Pedido sugerido: perfil, catálogo, proveedores activos, pedidos, saldos, líneas de pedido, órdenes y sus líneas, recibos de los últimos siete días, unidades vendidas y compromisos autorizados aún no asignados.
 
 El módulo `modules/pedidos.js` conserva la regla de negocio y el armado visual del pedido sugerido. El servicio solo obtiene datos; no calcula cantidades sugeridas ni decide qué comprar. Se conservan la ventana móvil de siete días, las paginaciones, las conversiones a unidades base y el tratamiento de stock negativo. Así se separa el acceso a datos sin trasladar ni alterar la decisión de abastecimiento.
+
+
+## Octava separación de servicios: gestión de proveedores
+
+Se creó `services/gestion-negocio.js` para consultas y operaciones del módulo Compras y proveedores: listado de proveedores, solicitudes por conseguir, cotizaciones, altas/ediciones/bajas de proveedores, guardado de solicitudes, consulta de recibos y sus líneas y registro de cotizaciones.
+
+El módulo conserva validaciones de duplicados, vínculos históricos, formularios y presentación. El servicio recibe el cliente Supabase y los argumentos explícitamente; no conoce el DOM ni crea clientes. No se modifica el proceso formal de Pedidos ni el de Recepción.
