@@ -816,8 +816,24 @@ nav button{font-size:.78rem}
 <script src="html5-qrcode.min.js"></script>
 <script src="qrcode.js"></script>
 <script>
-const esPreviewKardex=location.hostname!=='drosalud.vercel.app';
-const sb=supabase.createClient(esPreviewKardex?'https://uorhpljsofnfgzblxcga.supabase.co':'https://fwkaqxzdhqpvvjhixeod.supabase.co',esPreviewKardex?'sb_publishable_wraiN0CZckSyFOp97eIIbQ_-_8NPKZb':'sb_publishable_ZJ24N_m8fFJDa2NZvERl5g_gvd4xbFz');
+// Producción solo puede ejecutarse en los tres dominios oficiales conocidos.
+// Cualquier preview, alias desconocido o host local se detiene sin crear cliente Supabase.
+const HOSTS_PRODUCCION = new Set([
+  'drosalud.vercel.app',
+  'drosalud-drosalud.vercel.app',
+  'drosalud-git-main-drosalud.vercel.app'
+]);
+const hostActual = location.hostname.toLowerCase();
+if (!HOSTS_PRODUCCION.has(hostActual)) {
+  document.title = 'Drosalud | Entorno no autorizado';
+  document.body.innerHTML = '<main style="max-width:620px;margin:12vh auto;padding:28px;font:16px system-ui;color:#17365C"><h1>Entorno no autorizado</h1><p>Esta versión de producción solo funciona desde el dominio oficial de DROSalud. No se realizó ninguna conexión a la base de datos.</p></main>';
+  throw new Error('Host no autorizado para la versión de producción de DROSalud: ' + hostActual);
+}
+const esPreviewKardex = false;
+const sb = supabase.createClient(
+  'https://fwkaqxzdhqpvvjhixeod.supabase.co',
+  'sb_publishable_ZJ24N_m8fFJDa2NZvERl5g_gvd4xbFz'
+);
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
