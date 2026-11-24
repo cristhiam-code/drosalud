@@ -167,6 +167,17 @@ class ArchitectureContractTests(unittest.TestCase):
         self.assertIn("services/clientes.js", scripts)
         self.assertGreater(scripts.index("services/clientes.js"), scripts.index("services/catalogo.js"))
 
+    def test_settings_persistence_is_delegated_to_service(self):
+        service = (SERVICES / "configuracion.js").read_text(encoding="utf-8")
+        self.assertNotIn("window.sb", service)
+        self.assertNotIn("document.", service)
+        for method in ("cargar", "guardar", "comprobar"):
+            self.assertIn(method, service)
+        self.assertNotRegex(INDEX, r"sb\\.from\\(['\"]ajustes['\"]\\)")
+        scripts = re.findall(r'<script[^>]*src=["\']([^"\']+)["\'][^>]*>', INDEX, re.I)
+        self.assertIn("services/configuracion.js", scripts)
+        self.assertGreater(scripts.index("services/configuracion.js"), scripts.index("services/clientes.js"))
+
     def test_help_covers_operational_modules_without_count_references(self):
         start = INDEX.index('id="v-ayuda"')
         end = INDEX.index('id="v-aju"', start)
