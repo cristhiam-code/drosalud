@@ -14,12 +14,13 @@ Actualizado: 24 de noviembre de 2026.
 - Auditoría de ventas e inventario de producción en solo lectura: 62/62 líneas conciliadas con movimientos; anulaciones compensadas; saldo de vista igual a suma del Kardex.
 - Auditoría de catálogo: dos precios manuales inferiores al costo requieren validación comercial; diez saldos negativos requieren conciliación física/documental.
 - Auditoría de caja/cotizaciones: 16 cierres conciliados, uno reabierto por prueba, cero gastos registrados y 16 cotizaciones vencidas sin conversión a recibo.
+- Auditoría de Informes: módulo de solo lectura con tres consultas de inventario; la valoración total está desactivada y no hay informes de ventas, margen, compras o rotación.
 
 ## Pendiente antes de considerar listo
 1. Confirmar el resultado de GitHub Actions para el último commit que contiene el servicio de ventas y las aclaraciones de exportación.
 2. Revisión visual autenticada en QA de Ayuda/Sistema, exportación, login y navegación móvil.
 3. Prueba funcional autenticada en QA de venta normal y fraccionada (caja + unidades), cotización, impresión y anulación, sin generar operaciones persistentes innecesarias.
-4. Completar la auditoría de informes y cálculos de rentabilidad. Caja y cotizaciones ya fueron revisadas; confirmar si los gastos realmente no se usan o si falta registrarlos.
+4. Definir y validar informes de ventas, margen, compras, gastos y rotación. Caja, cotizaciones e informes actuales ya fueron auditados; confirmar si los gastos realmente no se usan o si falta registrarlos.
 5. Conciliar los diez saldos negativos y los dos precios manuales bajo costo con existencias físicas y documentos originales. No corregir automáticamente.
 6. Decidir si se necesita un respaldo realmente restaurable. La exportación actual solo incluye recibos, líneas de venta, productos, clientes e historial de precios; no incluye todo el ERP.
 7. Continuar la extracción gradual de servicios y lógica del shell, sin mover aún el bootstrap de Supabase, el selector de entorno, Pedidos ni Recepción.
