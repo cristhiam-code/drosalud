@@ -9,10 +9,6 @@
   const money = v => '$'+Math.round(Number(v)||0).toLocaleString('es-CO');
   const dateTime = v => v ? new Date(v).toLocaleString('es-CO',{dateStyle:'medium',timeStyle:'short'}) : '—';
   const factor = p => Math.max(1,Number(p.unidades_por_caja)||1);
-  async function readAll(build){
-    const rows=[];let start=0;
-    while(true){const r=await build().range(start,start+999);if(r.error)throw r.error;const page=r.data||[];rows.push(...page);if(page.length<1000)return rows;start+=1000}
-  }
   function message(msg,error){
     const el=root.querySelector('[data-ir-message]');if(!el)return;
     el.textContent=msg||'';el.hidden=!msg;el.classList.toggle('ir-error',!!error);
@@ -25,28 +21,19 @@
   }
   async function loadData(){
     message('Consultando catálogo y existencias actuales…',false);
-    const results=await Promise.all([
-      readAll(()=>sb.from('productos_app').select('id,codigo,nombre,laboratorio,linea,precio_compra,precio_venta,fraccionable,unidades_por_caja,unidades_por_venta,actualizado_en').order('nombre').order('id')),
-      readAll(()=>sb.from('inventario_saldos').select('producto_id,saldo_unidades').order('producto_id'))
-    ]);
-    state.products=results[0]||[];state.balances={};
-    (results[1]||[]).forEach(x=>state.balances[x.producto_id]=Number(x.saldo_unidades)||0);
-    const costMap={};let warning='';
-    try{
-      const movements=await readAll(()=>sb.from('inventario_movimientos').select('producto_id,costo_unitario_base,creado_en').not('costo_unitario_base','is',null).order('creado_en',{ascending:false}));
-      movements.forEach(x=>{const cost=Number(x.costo_unitario_base);if(x.producto_id&&cost>0&&!costMap[x.producto_id])costMap[x.producto_id]={cost:cost,source:'Último movimiento con costo',date:x.creado_en}});
-    }catch(e){console.warn('No se pudo leer el costo de movimientos:',e);warning='No se pudo consultar el costo de los movimientos; se utilizará el costo del catálogo cuando exista.'}
-    try{
-      const history=await readAll(()=>sb.from('historial_costos').select('producto_id,costo_unitario_base,registrado_en').order('registrado_en',{ascending:false}));
-      history.forEach(x=>{const cost=Number(x.costo_unitario_base);if(!x.producto_id||!(cost>0))return;const old=costMap[x.producto_id];if(!old||new Date(x.registrado_en)>new Date(old.date||0))costMap[x.producto_id]={cost:cost,source:'Historial de costos',date:x.registrado_en}});
-    }catch(e){console.warn('No se pudo leer historial de costos:',e)}
+    const loaded=await window.DrosaludReportsService.loadInventory(sb);
+    state.products=loaded.products||[];state.balances={};
+    (loaded.balances||[]).forEach(x=>state.balances[x.producto_id]=Number(x.saldo_unidades)||0);
+    const costMap={};
+    (loaded.movements||[]).forEach(x=>{const cost=Number(x.costo_unitario_base);if(x.producto_id&&cost>0&&!costMap[x.producto_id])costMap[x.producto_id]={cost:cost,source:'Último movimiento con costo',date:x.creado_en}});
+    (loaded.history||[]).forEach(x=>{const cost=Number(x.costo_unitario_base);if(!x.producto_id||!(cost>0))return;const old=costMap[x.producto_id];if(!old||new Date(x.registrado_en)>new Date(old.date||0))costMap[x.producto_id]={cost:cost,source:'Historial de costos',date:x.registrado_en}});
     state.costs=costMap;
     state.rows=state.products.map(p=>{
       const registered=Object.prototype.hasOwnProperty.call(state.balances,p.id);const stock=registered?(Number(state.balances[p.id])||0):null;const cost=resolveCost(p,costMap[p.id]);
       const sale=Number(p.precio_venta)>0?Number(p.precio_venta)/factor(p):null;
       return {product:p,stock:stock,unitCost:cost.unit,costSource:cost.source,costDate:cost.date,value:null,saleUnit:sale,saleValue:null};
     });
-    state.loadedAt=new Date();state.warning=warning;state.limit=50;render();message('',false);
+    state.loadedAt=new Date();state.warning=loaded.warning||'';state.limit=50;render();message('',false);
   }
   function filteredRows(){
     const q=state.query.trim().toLocaleLowerCase('es');
