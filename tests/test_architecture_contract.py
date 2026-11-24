@@ -17,6 +17,12 @@ class ArchitectureContractTests(unittest.TestCase):
         self.assertTrue(module_positions)
         self.assertEqual(len([name for name in scripts if name.startswith("modules/")]), len(set(name for name in scripts if name.startswith("modules/"))))
         self.assertGreater(min(module_positions), scripts.index("base.js"))
+        self.assertIn("domain/formatters.js", scripts)
+        self.assertGreater(scripts.index("domain/formatters.js"), scripts.index("base.js"))
+        self.assertLess(
+            INDEX.index('<script src="domain/formatters.js"></script>'),
+            INDEX.index('<script>\\n// Selección de entorno'),
+        )
 
     def test_feature_modules_do_not_create_their_own_supabase_client(self):
         for path in sorted(MODULES.glob("*.js")):
@@ -34,6 +40,12 @@ class ArchitectureContractTests(unittest.TestCase):
             source = path.read_text(encoding="utf-8")
             self.assertNotRegex(source, r"^\s*import\s", f"Unexpected import in {path.name}")
             self.assertNotRegex(source, r"^\s*export\s", f"Unexpected export in {path.name}")
+
+    def test_shared_formatters_are_pure_and_have_no_runtime_dependencies(self):
+        source = (ROOT / "domain/formatters.js").read_text(encoding="utf-8")
+        for forbidden in ("document.", "window.sb", "fetch(", "localStorage"):
+            self.assertNotIn(forbidden, source)
+        self.assertIn("window.DrosaludFormatters", source)
 
     def test_architecture_and_operating_guides_are_versioned(self):
         self.assertTrue((ROOT / "docs/ARQUITECTURA_Y_DEPENDENCIAS.md").is_file())
