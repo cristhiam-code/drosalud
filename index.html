@@ -960,29 +960,20 @@ function invGenerarKardex(){
   XLSX.writeFile(wb,'kardex-drosalud.xlsx');return;
  } invImprimirKardex(formato==='pos');
 }
-async function invLeerTodo(construir){
- const salida=[];let desde=0,lote=[];
- do{
-  const{data,error}=await construir().range(desde,desde+999);
-  if(error)throw error;
-  lote=data||[];salida.push(...lote);desde+=lote.length;
- }while(lote.length===1000);
- return salida;
-}
 async function invCargarDatos(){
  // El catálogo se carga aparte: el Preview puede apuntar a una BD sin migraciones de inventario.
  // Si la columna linea aún no existe, cargar el catálogo sin ese filtro y continuar.
  let productos;
  try{
-  productos=await invLeerTodo(()=>sb.from('productos_app').select('id,codigo,nombre,laboratorio,linea,unidades_por_caja').order('nombre').order('id'));
+  productos=await window.DrosaludInventoryService.listarProductosConLinea(sb);
  }catch(e){
   if(!/linea|column/i.test(String(e.message||e)))throw e;
-  productos=await invLeerTodo(()=>sb.from('productos_app').select('id,codigo,nombre,laboratorio,unidades_por_caja').order('nombre').order('id'));
+  productos=await window.DrosaludInventoryService.listarProductosSinLinea(sb);
   productos=productos.map(p=>({...p,linea:null}));
  }
  invProductos=productos;invSaldos={};invSaldoDisponible=false;
  try{
-  const movimientos=await invLeerTodo(()=>sb.from('inventario_saldos').select('producto_id,saldo_unidades').order('producto_id'));
+  const movimientos=await window.DrosaludInventoryService.listarSaldos(sb);
   movimientos.forEach(m=>{invSaldos[m.producto_id]=Number(m.saldo_unidades||0)});
   invSaldoDisponible=true;
  }catch(e){console.warn('Kardex aún no instalado en este entorno:',e)}
@@ -1030,13 +1021,9 @@ function invFechaInicio(){
 }
 function invFechaFin(){const fin=new Date(invFechaInicio());fin.setUTCDate(fin.getUTCDate()+7);return fin.toISOString();}
 async function invCargarPedidos(){
- const recibos=await invLeerTodo(()=>sb.from('recibos_app').select('id').eq('anulado',false).gte('creado_en',invFechaInicio()).lt('creado_en',invFechaFin()).order('creado_en').order('id'));
+ const items=await window.DrosaludInventoryService.listarVentasSemana(sb,invFechaInicio(),invFechaFin());
  const ventas={};
- for(let i=0;i<recibos.length;i+=100){
-  const ids=recibos.slice(i,i+100).map(r=>r.id);
-  const items=await invLeerTodo(()=>sb.from('recibo_items_app').select('producto_id,cantidad,unidades_por_presentacion').in('recibo_id',ids).order('id'));
-  items.forEach(x=>{if(x.producto_id)ventas[x.producto_id]=(ventas[x.producto_id]||0)+(Number(x.cantidad||0)*Math.max(1,Number(x.unidades_por_presentacion)||1))});
- }
+ items.forEach(x=>{if(x.producto_id)ventas[x.producto_id]=(ventas[x.producto_id]||0)+(Number(x.cantidad||0)*Math.max(1,Number(x.unidades_por_presentacion)||1))});
  invPedidos=invProductos.filter(p=>(ventas[p.id]||0)>0).map(p=>{
   const u=ventas[p.id],f=Math.max(1,Number(p.unidades_por_caja)||1);
   return{p,unidades:u,cajas:Math.floor(u/f),sueltas:u%f};
