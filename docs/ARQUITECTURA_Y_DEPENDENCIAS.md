@@ -102,14 +102,15 @@ La página carga actualmente los scripts en este orden:
 6. `domain/dinero.js` — subtotal y porcentaje sobre costo.
 7. `services/ventas.js` — RPC de venta/cotización con cliente inyectado.
 8. `services/caja.js` — consultas y RPC de caja/gastos con cliente inyectado.
-9. `xlsx.mini.min.js`, `html5-qrcode.min.js`, `qrcode.js` — bibliotecas de Excel y códigos QR.
-10. `modules/gestion-negocio.js`
-11. `modules/ayuda-sistema.js`
-12. `modules/pedidos.js`
-13. `modules/recepcion-mercancia.js`
-14. `modules/conteo-fisico-api.js`
-15. `modules/conteo-fisico.js`
-16. `modules/informes.js`
+9. `services/informes.js` — lecturas paginadas de inventario y costos con cliente inyectado.
+10. `xlsx.mini.min.js`, `html5-qrcode.min.js`, `qrcode.js` — bibliotecas de Excel y códigos QR.
+11. `modules/gestion-negocio.js`
+12. `modules/ayuda-sistema.js`
+13. `modules/pedidos.js`
+14. `modules/recepcion-mercancia.js`
+15. `modules/conteo-fisico-api.js`
+16. `modules/conteo-fisico.js`
+17. `modules/informes.js`
 
 CSS modular cargado por el shell: Pedidos, Recepción, Conteo, Informes, Ayuda/Sistema, Gestión del negocio y Exportaciones.
 
@@ -205,3 +206,10 @@ El shell conserva el flujo visual y entrega el cliente, la cabecera y las línea
 Se creó `services/caja.js` para las consultas y operaciones de caja: jornadas pendientes, resumen diario, gastos, cierres, reaperturas e historial. El módulo recibe el cliente Supabase por argumento y no conoce el estado visual ni variables globales. El bloque de caja del shell ahora delega las operaciones de datos al servicio y conserva la presentación y las validaciones de interacción.
 
 Las pruebas usan un cliente simulado para verificar los nombres de RPC, argumentos, filtros, límites y propagación de errores. No se hicieron operaciones de caja reales durante esta extracción.
+
+
+## Tercera separación de servicios: informes
+
+Se creó `services/informes.js` para centralizar la lectura paginada del catálogo, saldos, movimientos con costo e historial de costos. El módulo visual `modules/informes.js` ya no consulta Supabase directamente: recibe los datos del servicio y conserva el cálculo de fuentes de costo, filtros y renderizado.
+
+Se preservó el comportamiento de tolerancia a fallos: catálogo/saldos son requeridos; el costo de movimientos puede generar advertencia y el historial de costos es complementario. Se añadieron pruebas de paginación, errores opcionales y propagación de errores obligatorios usando un cliente simulado.
