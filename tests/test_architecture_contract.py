@@ -89,7 +89,7 @@ class ArchitectureContractTests(unittest.TestCase):
         self.assertNotIn("document.", source)
         start = INDEX.index("/*CAJA-INICIO*/")
         end = INDEX.index("/*CAJA-FIN*/", start)
-        self.assertNotRegex(INDEX[start:end], r"sb\\.(rpc|from)\\s*\\(")
+        self.assertNotRegex(INDEX[start:end], r"sb\.(rpc|from)\s*\(")
 
     def test_help_covers_operational_modules_without_count_references(self):
         start = INDEX.index('id="v-ayuda"')
