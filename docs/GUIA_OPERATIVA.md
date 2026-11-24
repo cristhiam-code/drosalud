@@ -20,6 +20,7 @@ DROSalud registra operaciones del negocio. Cada acción tiene un resultado disti
 
 - **Venta/recibo:** registra una operación realizada. Revisa productos, cantidades, presentación, descuentos, domicilio y medio de pago antes de confirmar.
 - **Cotización:** es una oferta para el cliente; no es una venta y no debe descontar inventario.
+- La cotización muestra una fecha “válida hasta”. El estado guardado puede seguir como pendiente aunque esa fecha haya pasado; no se debe tratar como vigente después de su vencimiento.
 - **Anulación:** debe utilizar el procedimiento habilitado por el sistema. No se corrige una venta creando otra venta negativa ni editando directamente la base de datos.
 - **Fraccionamiento:** confirma si la cantidad ingresada está expresada en empaques o unidades. La equivalencia debe corresponder a la ficha del producto.
 
@@ -65,7 +66,7 @@ Una factura puede documentar más unidades que las solicitadas, o más unidades 
 
 ## Caja e informes
 
-- Caja resume ventas, medios de pago, gastos y cierre de la jornada. Verifica efectivo contado y valores electrónicos antes de cerrar.
+- Caja resume ventas, medios de pago, gastos y cierre de la jornada. El efectivo esperado se calcula como base inicial + ventas en efectivo − gastos en efectivo; las transferencias y otros medios no forman parte del efectivo contado. La diferencia es efectivo contado − efectivo esperado. Verifica efectivo contado y valores electrónicos antes de cerrar. Los gastos no registrados no aparecerán en el resumen.
 - Los informes dependen de los filtros y del período seleccionado. Revisa fechas y alcance antes de exportar.
 - Margen bruto estimado no equivale a utilidad neta: no descuenta necesariamente gastos, comisiones, domicilios ni otros costos.
 - El valor del inventario solo es confiable si los saldos y costos de referencia son completos y consistentes.
