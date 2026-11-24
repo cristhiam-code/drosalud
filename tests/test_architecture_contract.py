@@ -147,7 +147,7 @@ class ArchitectureContractTests(unittest.TestCase):
         self.assertNotIn("document.", service)
         for method in ("actualizarPrecios", "habilitarFraccionamiento", "actualizarProducto", "crearProducto", "eliminarProducto", "listarAuditoriaProducto", "contarProductos", "importarProductos"):
             self.assertIn(method, service)
-        self.assertNotRegex(INDEX, r"sb\\.from\\(['\"]productos['\"]\\)")
+        self.assertNotRegex(INDEX, r"sb\.from\(['\"]productos['\"]\)")
         self.assertNotIn("sb.rpc('actualizar_precios_drosalud_con_motivo'", INDEX)
         self.assertNotIn("sb.rpc('habilitar_fraccionamiento_producto'", INDEX)
         scripts = re.findall(r'<script[^>]*src=["\']([^"\']+)["\'][^>]*>', INDEX, re.I)
