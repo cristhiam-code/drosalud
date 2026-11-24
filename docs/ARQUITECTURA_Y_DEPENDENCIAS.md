@@ -177,3 +177,10 @@ Se añadieron pruebas de subtotal, costo cero y porcentajes positivos/negativos.
 
 
 La extracción de presentaciones también incluye ahora el cálculo de unidades base y el total del carrito para productos fraccionables y no fraccionables. La actualización de `q` del carrito sigue siendo responsabilidad del shell; el cálculo que utiliza es una función pura del dominio.
+
+
+## Primera separación de servicios: ventas
+
+Se creó `services/ventas.js` para encapsular las llamadas RPC de registrar venta y crear cotización. El cliente Supabase se recibe como argumento explícito; el servicio no lee variables globales ni accede al DOM. Así se mantiene una sola instancia del cliente y el servicio se puede probar con un cliente falso sin tocar la base de datos.
+
+El shell conserva el flujo visual y entrega el cliente, la cabecera y las líneas al servicio. Se mantiene la misma RPC, los mismos nombres de argumentos y el mismo mensaje cuando no vuelve un recibo válido. Las pruebas comprueban el contrato y la propagación de errores.
