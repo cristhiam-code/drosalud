@@ -131,7 +131,7 @@ class ArchitectureContractTests(unittest.TestCase):
     def test_services_do_not_create_or_capture_a_global_supabase_client(self):
         for path in sorted(SERVICES.glob("*.js")):
             source = path.read_text(encoding="utf-8")
-            self.assertNotRegex(source, r"\\bcreateClient\\s*\\(", f"{path.name} must receive the shared client")
+            self.assertNotRegex(source, r"\bcreateClient\s*\(", f"{path.name} must receive the shared client")
             self.assertNotIn("window.sb", source, f"{path.name} must not capture a global client")
             self.assertNotIn("document.", source, f"{path.name} must not depend on the UI")
 
