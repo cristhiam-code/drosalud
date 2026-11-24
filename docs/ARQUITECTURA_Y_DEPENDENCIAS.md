@@ -103,25 +103,28 @@ La página carga actualmente los scripts en este orden:
 7. `services/ventas.js` — RPC de venta/cotización con cliente inyectado.
 8. `services/caja.js` — consultas y RPC de caja/gastos con cliente inyectado.
 9. `services/informes.js` — lecturas paginadas de inventario y costos con cliente inyectado.
-10. `services/compras.js` — RPC de documentos y recepción con cliente inyectado.
-11. `services/pedidos.js` — RPC del flujo de pedidos con cliente inyectado.
-12. `xlsx.mini.min.js`, `html5-qrcode.min.js`, `qrcode.js` — bibliotecas de Excel y códigos QR.
-13. `modules/gestion-negocio.js`
-14. `modules/ayuda-sistema.js`
-15. `modules/pedidos.js`
-16. `modules/recepcion-mercancia.js`
-17. `modules/conteo-fisico-api.js`
-18. `modules/conteo-fisico.js`
-19. `modules/informes.js`
+10. `services/compras.js` — lecturas y RPC de documentos y recepción.
+11. `services/pedidos.js` — lecturas de pedidos/saldos/ventas y RPC del flujo de pedidos.
+12. `services/gestion-negocio.js` — proveedores, solicitudes por conseguir y cotizaciones.
+13. `services/catalogo.js` — persistencia de productos, precios y fraccionamiento.
+14. `services/clientes.js` — clientes, consentimientos e historial.
+15. `xlsx.mini.min.js`, `html5-qrcode.min.js`, `qrcode.js` — bibliotecas de Excel y códigos QR.
+16. `modules/gestion-negocio.js`
+17. `modules/ayuda-sistema.js`
+18. `modules/pedidos.js`
+19. `modules/recepcion-mercancia.js`
+20. `modules/conteo-fisico-api.js`
+21. `modules/conteo-fisico.js`
+22. `modules/informes.js`
 
 CSS modular cargado por el shell: Pedidos, Recepción, Conteo, Informes, Ayuda/Sistema, Gestión del negocio y Exportaciones.
 
 | Módulo actual | Dependencias globales observadas estáticamente |
 |---|---|
-| Gestión del negocio | `sb`, `CO`, `show` |
+| Gestión del negocio | `sb.auth` para identidad; `DrosaludBusinessManagementService`, DOM, `show` |
 | Ayuda/Sistema | DOM y API de rendimiento del navegador; no consume `sb` |
-| Pedidos | `sb`, `C`, `CO`, `esc`, `money`, `go`, `show` |
-| Recepción | `sb`, `P`, `C`, `CO`, `esAdminDrosalud`, `esc`, `money`, `show`, `XLSX` |
+| Pedidos | `sb.auth` para identidad; `DrosaludOrdersService`, `C`, `CO`, `esc`, `money`, `go`, `show` |
+| Recepción | `DrosaludPurchasesService` (cliente inyectado desde `sb`), `P`, `C`, `CO`, `esAdminDrosalud`, `esc`, `money`, `show`, `XLSX` |
 | Conteo API | `sb` |
 | Conteo UI | `sb`, `CO`, `esc` |
 | Informes | `sb`, `C`, `CO`, `esc`, `money`, `XLSX` |
