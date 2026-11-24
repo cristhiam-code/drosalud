@@ -122,7 +122,11 @@ class ArchitectureContractTests(unittest.TestCase):
         module = (MODULES / "pedidos.js").read_text(encoding="utf-8")
         self.assertIn("cliente", service)
         self.assertNotIn("window.sb", service)
-        self.assertNotIn("sb.rpc(", module)
+        self.assertNotRegex(module, r"sb\\.(rpc|from)\\s*\\(")
+        self.assertIn("cargarDatosModulo", service)
+        self.assertIn("cargarDatosSugerencia", service)
+        self.assertIn("DrosaludOrdersService.cargarDatosModulo", module)
+        self.assertIn("DrosaludOrdersService.cargarDatosSugerencia", module)
         for method in ("guardarPedido", "enviarPedido", "autorizarPedido", "rechazarPedido", "generarOrdenesCompra"):
             self.assertIn("DrosaludOrdersService." + method, module)
 
