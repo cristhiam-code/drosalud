@@ -823,6 +823,7 @@ nav button{font-size:.78rem}
 <div id="modal" hidden><div id="sheet" role="dialog" aria-modal="true"></div></div>
 <script src="supabase.js"></script>
 <script src="base.js"></script>
+<script src="domain/formatters.js"></script>
 <script src="xlsx.mini.min.js"></script>
 <script src="html5-qrcode.min.js"></script>
 <script src="qrcode.js"></script>
@@ -858,9 +859,7 @@ const sb = supabase.createClient(
   esPreviewKardex ? 'sb_publishable_wraiN0CZckSyFOp97eIIbQ_-_8NPKZb' : 'sb_publishable_ZJ24N_m8fFJDa2NZvERl5g_gvd4xbFz'
 );
 const $=s=>document.querySelector(s);
-const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-const money=n=>'$'+Math.round(n).toLocaleString('es-CO');
+const {esc,norm,money}=window.DrosaludFormatters;
 const DEF={m:25,r:100,biz:'DROGUERIA DROSALUD.SAS',nit:'900.109.443-0',ciu:'Cúcuta',tel:'3112581564',dir:'',msg:'Gracias por su compra',nota:'Resolución de facturación electrónica N° 1845101586525 de 2025-11-12. Vigencia 24 meses.',sHora:true,sCed:true,sTel:true,sPago:true,big:false,sLogo:true,mMin:10,colorPri:'#0756B5',colorBg:'#F4F8FF',colorCard:'#FFFFFF',colorInk:'#17365C',colorSecondary:'#08A9D6',colorAccent:'#22B573',colorMuted:'#718096',colorBorder:'#DCE7F1',colorSoft:'#E7F2FC',colorNavBg:'#FFFFFF',colorNavInk:'#17365C',colorHover:'#E7F2FC',colorSelected:'#D8EAFE',colorFocus:'#08A9D6',colorSuccess:'#22B573',colorWarning:'#D97706',colorError:'#C62828',cotDias:3,cotNota:'Precios sujetos a cambio y disponibilidad.',respDias:30,breb:'3112581564',pagoTitular:'',pagoCot:true,pagoRec:'siempre',qrTexto:'',qrImg:'',vendedorDef:'',msgRetomar:'Hola {nombre}, ¿cómo estás? Te escribimos de Drosalud. Hace un tiempo no sabemos de ti, ¿te ayudamos con algo? Tu salud, nuestra prioridad.'};
 const VERSION='2026-11-19.1-conteo-fisico';
 window.DrosaludRuntimeInfo={version:VERSION,environment:esPreviewKardex?'Pruebas':'Producción'};
