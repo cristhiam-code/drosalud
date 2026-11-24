@@ -615,22 +615,19 @@
 
   async function savePedido(items, tipo, notas, existingId = null) {
     if (!items.length) throw new Error('Agrega al menos un producto con cantidad mayor que cero.');
-    const { data, error } = await sb.rpc('guardar_pedido', {
+    return window.DrosaludOrdersService.guardarPedido(sb,{
       p_pedido_id: existingId,
       p_tipo: tipo,
       p_notas: notas || null,
       p_items: items
     });
-    if (error) throw error;
-    return data;
   }
 
   async function saveSuggested(send) {
     const items = readSuggestedItems();
     const id = await savePedido(items,'sugerido','Propuesta automática de rotación · cobertura de 7 días');
     if (send) {
-      const {error} = await sb.rpc('enviar_pedido',{p_pedido_id:id});
-      if (error) {
+      try { await window.DrosaludOrdersService.enviarPedido(sb,id); } catch (error) {
         try {
           await loadData();
           const current = state.pedidos.find(pedido => pedido.id === id);
@@ -718,10 +715,9 @@
         producto_id:product?.id || item.producto_id || null
       };
     });
-    const {error} = await sb.rpc('autorizar_pedido',{
+    await window.DrosaludOrdersService.autorizarPedido(sb,{
       p_pedido_id:pedidoId,p_items:items
     });
-    if (error) throw error;
     await reload();
     message('Pedido autorizado. Ahora puedes asignarlo a proveedores.');
   }
@@ -730,10 +726,9 @@
     const reason = window.prompt('Motivo del rechazo:');
     if (reason === null) return;
     if (!reason.trim()) throw new Error('Escribe el motivo del rechazo.');
-    const {error} = await sb.rpc('rechazar_pedido',{
+    await window.DrosaludOrdersService.rechazarPedido(sb,{
       p_pedido_id:pedidoId,p_motivo:reason.trim()
     });
-    if (error) throw error;
     await reload();
     message('Pedido rechazado. El motivo quedó registrado.');
   }
@@ -757,10 +752,9 @@
     if (!assignments.length) throw new Error('No hay cantidades pendientes para asignar.');
     const operationId = state.operationIds[pedidoId] || crypto.randomUUID();
     state.operationIds[pedidoId] = operationId;
-    const {data,error} = await sb.rpc('generar_ordenes_compra_pedido',{
+    const data = await window.DrosaludOrdersService.generarOrdenesCompra(sb,{
       p_pedido_id:pedidoId,p_asignaciones:assignments,p_operacion_id:operationId
     });
-    if (error) throw error;
     await reload();
     delete state.operationIds[pedidoId];
     const count = Array.isArray(data?.ordenes) ? data.ordenes.length : 0;
