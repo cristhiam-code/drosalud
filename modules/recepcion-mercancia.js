@@ -20,21 +20,12 @@
     return '<span class="rm-state '+cls+'">'+esc(map[state]||state||'—')+'</span>';
   }
   async function fetchData(){
-    const [o,d,l,r,c,a]=await Promise.all([
-      sb.from('ordenes_compra').select('id,numero,proveedor_id,estado,documento_proveedor,creado_en,proveedor:proveedores(nombre),items:ordenes_compra_items(id,producto_id,unidades_solicitadas,unidades_recibidas,costo_unitario_base,producto:productos(id,nombre,codigo,unidades_por_caja))').in('estado',['aprobada','parcial','recibida']).order('creado_en',{ascending:false}),
-      sb.from('documentos_proveedor').select('id,proveedor_id,tipo_documento,numero_documento,fecha_emision,subtotal,descuentos,impuestos,flete,total,estado,notas,creado_en,proveedor:proveedores(nombre)').order('creado_en',{ascending:false}).limit(300),
-      sb.from('documentos_proveedor_items').select('id,documento_id,orden_item_id,producto_id,descripcion_documento,presentacion_documento,unidades_por_presentacion,cantidad_documentada,unidades_documentadas,precio_por_presentacion,costo_unitario_base,producto:productos(nombre,codigo)').order('creado_en',{ascending:true}).limit(1500),
-      sb.from('recepciones_compra').select('id,numero,orden_id,proveedor_id,documento_id,documento_proveedor,recibido_en,proveedor:proveedores(nombre),items:recepciones_compra_items(id,orden_item_id,producto_id,unidades,costo_unitario_base,producto:productos(nombre,codigo))').order('recibido_en',{ascending:false}).limit(500),
-      sb.from('historial_costos').select('id,producto_id,proveedor_id,costo_unitario_base,costo_presentacion,unidades_por_presentacion,origen,referencia_id,registrado_por,registrado_en').order('registrado_en',{ascending:false}).limit(300),
-      esAdminDrosalud() ? sb.from('auditoria_precios').select('id,producto_id,producto_nombre,campo,valor_anterior,valor_nuevo,usuario_email,rol,motivo,creado_en').order('creado_en',{ascending:false}).limit(300) : Promise.resolve({data:[],error:null})
-    ]);
-    for(const x of [o,d,l,r,c,a]) if(x.error) throw x.error;
-    orders=o.data||[]; docs=d.data||[]; receipts=r.data||[]; costs=c.data||[]; audit=a.data||[];
-    const links=await sb.from('documentos_proveedor_ordenes').select('documento_id,orden_id');
-    if(links.error) throw links.error;
-    const linesByDoc=new Map();
-    (l.data||[]).forEach(x=>{if(!linesByDoc.has(x.documento_id))linesByDoc.set(x.documento_id,[]);linesByDoc.get(x.documento_id).push(x)});
-    docs=docs.map(x=>({...x,items:linesByDoc.get(x.id)||[],ordenes:(links.data||[]).filter(y=>y.documento_id===x.id).map(y=>y.orden_id)}));
+    const datos = await window.DrosaludPurchasesService.listarDatos(sb, esAdminDrosalud());
+    orders = datos.ordenes;
+    docs = datos.documentos;
+    receipts = datos.recepciones;
+    costs = datos.costos;
+    audit = datos.auditoria;
   }
   function exportExcel(){
     if(typeof XLSX==='undefined'||!XLSX.utils?.aoa_to_sheet){status('No está disponible la librería de Excel.',true);return}
