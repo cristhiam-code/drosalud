@@ -2,7 +2,7 @@ import pathlib
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-MIGRATION = (ROOT / "supabase/migrations/20261124110000_validar_producto_documento_recepcion.sql").read_text()
+MIGRATION = (ROOT / "supabase/migrations/20261124113000_serializar_reintentos_recepcion.sql").read_text()
 
 
 class PurchaseReceiptContractTests(unittest.TestCase):
@@ -16,6 +16,13 @@ class PurchaseReceiptContractTests(unittest.TestCase):
         self.assertIn(rejection, body)
         self.assertLess(body.index(product_match), body.index(base_reception))
         self.assertLess(body.index(rejection), body.index(base_reception))
+
+    def test_same_operation_is_serialized_before_idempotency_lookup(self):
+        body = MIGRATION.lower()
+        lock = "pg_advisory_xact_lock(pg_catalog.hashtextextended(p_operacion_id::text,0))"
+        lookup = "where operacion_id=p_operacion_id"
+        self.assertIn(lock, body)
+        self.assertLess(body.index(lock), body.index(lookup))
 
     def test_existing_supplier_quantity_cost_and_presentation_checks_remain(self):
         body = MIGRATION.lower()
