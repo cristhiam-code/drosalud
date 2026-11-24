@@ -185,7 +185,7 @@ class ArchitectureContractTests(unittest.TestCase):
         for method in ("listarCotizaciones", "listarLineasCotizacion", "eliminarRecibo", "anularRecibo", "listarVentasPeriodo", "listarLineasRecibos", "listarLineasRecibo", "listarCambiosPrecio"):
             self.assertIn(method, service)
         for table in ("cotizaciones_venta_app", "cotizacion_venta_items_app", "historial_precios"):
-            self.assertNotRegex(INDEX, r"sb\\.from\\(['\"]" + table + r"['\"]\\)")
+            self.assertNotRegex(INDEX, r"sb\.from\(['\"]" + table + r"['\"]\)")
         self.assertNotRegex(INDEX, r"sb\\.from\\(['\"]recibos['\"]\\)")
         scripts = re.findall(r'<script[^>]*src=["\']([^"\']+)["\'][^>]*>', INDEX, re.I)
         self.assertIn("services/historial.js", scripts)
