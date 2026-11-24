@@ -88,3 +88,41 @@ Esta es la estructura objetivo, no una afirmación de que todos esos archivos ya
 - Los flujos de venta, impresión, fraccionamiento, pedido, recepción y Kardex mantienen su comportamiento.
 - `npm test` y el CI pasan.
 - La validación funcional autenticada en QA se completa antes de considerar lista una publicación.
+
+
+## Mapa real de carga y dependencias (auditoría estática)
+
+La página carga actualmente los scripts en este orden:
+
+1. `supabase.js` — biblioteca cliente.
+2. `base.js` — inicialización compartida y lógica central.
+3. `xlsx.mini.min.js`, `html5-qrcode.min.js`, `qrcode.js` — bibliotecas de Excel y códigos QR.
+4. `modules/gestion-negocio.js`
+5. `modules/ayuda-sistema.js`
+6. `modules/pedidos.js`
+7. `modules/recepcion-mercancia.js`
+8. `modules/conteo-fisico-api.js`
+9. `modules/conteo-fisico.js`
+10. `modules/informes.js`
+
+CSS modular cargado por el shell: Pedidos, Recepción, Conteo, Informes, Ayuda/Sistema, Gestión del negocio y Exportaciones.
+
+| Módulo actual | Dependencias globales observadas estáticamente |
+|---|---|
+| Gestión del negocio | `sb`, `CO`, `show` |
+| Ayuda/Sistema | DOM y API de rendimiento del navegador; no consume `sb` |
+| Pedidos | `sb`, `C`, `CO`, `esc`, `money`, `go`, `show` |
+| Recepción | `sb`, `P`, `C`, `CO`, `esAdminDrosalud`, `esc`, `money`, `show`, `XLSX` |
+| Conteo API | `sb` |
+| Conteo UI | `sb`, `CO`, `esc` |
+| Informes | `sb`, `C`, `CO`, `esc`, `money`, `XLSX` |
+
+Este mapa es una fotografía de referencias identificadas por búsqueda estática; debe actualizarse al cambiar los módulos. No demuestra por sí solo que una referencia se use en todos los caminos de ejecución.
+
+## Deuda técnica priorizada
+
+- **Alta:** `index.html` sigue concentrando el shell, selección de entorno, creación del cliente, vistas y parte de la lógica; `base.js` también es grande. Reducirlos gradualmente sin alterar impresión ni POS.
+- **Alta:** varios módulos acceden a variables y funciones globales del shell (`sb`, `show`, `esc`, `money`, estados compartidos). Documentar y reemplazar esas dependencias por interfaces explícitas, módulo por módulo.
+- **Media:** algunas vistas y estilos de módulos permanecen declarados dentro de `index.html`; moverlos solo cuando el HTML y sus selectores estén cubiertos por pruebas.
+- **Media:** bibliotecas de terceros se cargan como scripts globales. Mantener una lista de versiones/origen y no cambiarlas junto con refactorizaciones funcionales.
+- **No hacer:** no cambiar a un framework ni añadir un empaquetador solo para resolver la deuda de organización. Primero estabilizar límites de módulos y pruebas.
