@@ -128,6 +128,13 @@ class ArchitectureContractTests(unittest.TestCase):
         source = (MODULES / "informes.js").read_text(encoding="utf-8")
         self.assertIn("El valor total no está disponible", source)
 
+    def test_services_do_not_create_or_capture_a_global_supabase_client(self):
+        for path in sorted(SERVICES.glob("*.js")):
+            source = path.read_text(encoding="utf-8")
+            self.assertNotRegex(source, r"\\bcreateClient\\s*\\(", f"{path.name} must receive the shared client")
+            self.assertNotIn("window.sb", source, f"{path.name} must not capture a global client")
+            self.assertNotIn("document.", source, f"{path.name} must not depend on the UI")
+
     def test_architecture_and_operating_guides_are_versioned(self):
         self.assertTrue((ROOT / "docs/ARQUITECTURA_Y_DEPENDENCIAS.md").is_file())
         self.assertTrue((ROOT / "docs/GUIA_OPERATIVA.md").is_file())
