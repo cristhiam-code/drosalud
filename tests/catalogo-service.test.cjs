@@ -71,6 +71,6 @@ test('consulta auditoría, cuenta e importa productos', async () => {
 test('rechaza cliente inválido y propaga errores de backend', async () => {
   await assert.rejects(service.contarProductos(null), /cliente Supabase válido/);
   const error = new Error('sin autorización');
-  const client = { rpc: async () => ({ data: null, error }) };
+  const client = { from() { return {}; }, rpc: async () => ({ data: null, error }) };
   await assert.rejects(service.actualizarPrecios(client, {}), value => value === error);
 });
