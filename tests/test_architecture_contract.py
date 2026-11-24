@@ -5,6 +5,7 @@ import unittest
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 INDEX = (ROOT / "index.html").read_text(encoding="utf-8")
 MODULES = ROOT / "modules"
+SERVICES = ROOT / "services"
 
 
 class ArchitectureContractTests(unittest.TestCase):
@@ -22,6 +23,8 @@ class ArchitectureContractTests(unittest.TestCase):
         self.assertIn("domain/precios.js", scripts)
         self.assertIn("domain/dinero.js", scripts)
         self.assertGreater(scripts.index("domain/dinero.js"), scripts.index("domain/precios.js"))
+        self.assertIn("services/ventas.js", scripts)
+        self.assertGreater(scripts.index("services/ventas.js"), scripts.index("domain/dinero.js"))
         self.assertGreater(scripts.index("domain/precios.js"), scripts.index("domain/presentaciones.js"))
         self.assertGreater(scripts.index("domain/presentaciones.js"), scripts.index("domain/formatters.js"))
         self.assertGreater(scripts.index("domain/formatters.js"), scripts.index("base.js"))
@@ -70,6 +73,12 @@ class ArchitectureContractTests(unittest.TestCase):
         for forbidden in ("document.", "window.sb", "fetch(", "localStorage"):
             self.assertNotIn(forbidden, source)
         self.assertIn("window.DrosaludMoney", source)
+
+    def test_sales_service_receives_supabase_as_an_explicit_dependency(self):
+        source = (SERVICES / "ventas.js").read_text(encoding="utf-8")
+        self.assertIn("clienteSupabase", source)
+        self.assertNotIn("window.sb", source)
+        self.assertNotIn("document.", source)
 
     def test_architecture_and_operating_guides_are_versioned(self):
         self.assertTrue((ROOT / "docs/ARQUITECTURA_Y_DEPENDENCIAS.md").is_file())
