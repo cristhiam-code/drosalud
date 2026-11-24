@@ -154,6 +154,19 @@ class ArchitectureContractTests(unittest.TestCase):
         self.assertIn("services/catalogo.js", scripts)
         self.assertGreater(scripts.index("services/catalogo.js"), scripts.index("services/gestion-negocio.js"))
 
+    def test_customer_data_access_is_delegated_to_service(self):
+        service = (SERVICES / "clientes.js").read_text(encoding="utf-8")
+        self.assertNotIn("window.sb", service)
+        self.assertNotIn("document.", service)
+        for method in ("listarClientes", "listarConsentimientos", "registrarConsentimiento", "actualizarCliente", "crearCliente", "listarComprasCliente", "listarLineasRecibo", "cargarResumenCompras", "anonimizarCliente"):
+            self.assertIn(method, service)
+        for table in ("clientes", "consentimientos_clientes"):
+            self.assertNotRegex(INDEX, r"sb\\.from\\(['\"]" + table + r"['\"]\\)")
+        self.assertNotIn("sb.rpc('anonimizar_cliente_drosalud'", INDEX)
+        scripts = re.findall(r'<script[^>]*src=["\']([^"\']+)["\'][^>]*>', INDEX, re.I)
+        self.assertIn("services/clientes.js", scripts)
+        self.assertGreater(scripts.index("services/clientes.js"), scripts.index("services/catalogo.js"))
+
     def test_help_covers_operational_modules_without_count_references(self):
         start = INDEX.index('id="v-ayuda"')
         end = INDEX.index('id="v-aju"', start)
