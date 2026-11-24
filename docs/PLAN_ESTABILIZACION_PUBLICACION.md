@@ -24,13 +24,13 @@ Actualizado: 24 de noviembre de 2026.
 - El PR #91 sigue en borrador y no se ha integrado ni desplegado a producción.
 
 ## Pendiente antes de considerar listo
-1. Confirmar el resultado de GitHub Actions para el último commit que contiene el servicio de ventas y las aclaraciones de exportación.
+1. Confirmar GitHub Actions para el último commit que contiene la separación de lecturas y escrituras de Pedidos, Recepción y Gestión de proveedores.
 2. Revisión visual autenticada en QA de Ayuda/Sistema, exportación, login y navegación móvil.
 3. Prueba funcional autenticada en QA de venta normal y fraccionada (caja + unidades), cotización, impresión y anulación, sin generar operaciones persistentes innecesarias.
 4. Definir y validar informes de ventas, margen, compras, gastos y rotación. Caja, cotizaciones e informes actuales ya fueron auditados; confirmar si los gastos realmente no se usan o si falta registrarlos.
 5. Conciliar los diez saldos negativos y los dos precios manuales bajo costo con existencias físicas y documentos originales. No corregir automáticamente.
 6. Decidir si se necesita un respaldo realmente restaurable. La exportación actual solo incluye recibos, líneas de venta, productos, clientes e historial de precios; no incluye todo el ERP.
-7. Continuar la extracción gradual de servicios y lógica del shell, sin mover aún el bootstrap de Supabase, el selector de entorno, Pedidos ni Recepción.
+7. Continuar la extracción gradual de servicios del shell principal (ventas, catálogo, clientes, historial y configuración), sin mover el bootstrap de Supabase ni el selector de entorno.
 8. Revisar impresión térmica y móvil en QA, especialmente el formato de recibos y Kardex.
 9. Hacer una revisión final de permisos, RLS, RPC y diferencias de esquema entre QA y producción.
 
@@ -43,3 +43,11 @@ Actualizado: 24 de noviembre de 2026.
 
 ## Criterio de finalización
 DROSalud se considera preparado cuando los procesos del negocio estén documentados, las dependencias sean explícitas, los tests pasen, las cifras estén conciliadas o sus excepciones estén documentadas, los usuarios puedan completar los flujos en QA y no queden cambios de producción sin aprobar.
+
+## Actualización de arquitectura QA
+
+- Pedidos ahora delega lecturas de pantalla y de Pedido sugerido, además de las RPC, a `services/pedidos.js`. La fórmula y la regla de reposición permanecen en el módulo.
+- Recepción delega lecturas y escrituras a `services/compras.js`; ya no tiene consultas directas a Supabase.
+- Gestión de proveedores delega lecturas, altas, cambios, bajas y cotizaciones a `services/gestion-negocio.js`; las validaciones de duplicados y los formularios permanecen en el módulo.
+- Las pruebas de contrato se ampliaron para impedir que estos tres módulos vuelvan a consultar o escribir directamente en Supabase.
+- La revisión automatizada de estos últimos cambios sigue pendiente de un nuevo resultado de GitHub Actions. No se considera aprobada hasta que el check termine correctamente.
