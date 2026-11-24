@@ -27,6 +27,8 @@ class ArchitectureContractTests(unittest.TestCase):
         self.assertGreater(scripts.index("services/ventas.js"), scripts.index("domain/dinero.js"))
         self.assertIn("services/caja.js", scripts)
         self.assertGreater(scripts.index("services/caja.js"), scripts.index("services/ventas.js"))
+        self.assertIn("services/informes.js", scripts)
+        self.assertGreater(scripts.index("services/informes.js"), scripts.index("services/caja.js"))
         self.assertGreater(scripts.index("domain/precios.js"), scripts.index("domain/presentaciones.js"))
         self.assertGreater(scripts.index("domain/presentaciones.js"), scripts.index("domain/formatters.js"))
         self.assertGreater(scripts.index("domain/formatters.js"), scripts.index("base.js"))
@@ -90,6 +92,15 @@ class ArchitectureContractTests(unittest.TestCase):
         start = INDEX.index("/*CAJA-INICIO*/")
         end = INDEX.index("/*CAJA-FIN*/", start)
         self.assertNotRegex(INDEX[start:end], r"sb\.(rpc|from)\s*\(")
+
+    def test_reports_module_uses_injected_data_service(self):
+        service = (SERVICES / "informes.js").read_text(encoding="utf-8")
+        module = (MODULES / "informes.js").read_text(encoding="utf-8")
+        self.assertIn("cliente.from", service)
+        self.assertNotIn("window.sb", service)
+        self.assertNotIn("document.", service)
+        self.assertNotRegex(module, r"sb\\.(rpc|from)\\s*\\(")
+        self.assertIn("DrosaludReportsService.loadInventory", module)
 
     def test_help_covers_operational_modules_without_count_references(self):
         start = INDEX.index('id="v-ayuda"')
