@@ -66,3 +66,14 @@ test('rechaza cliente inválido y propaga errores de consulta', async () => {
   const client = { from() { return { select() { return this; }, order() { return this; }, range() { return Promise.resolve({ data: null, error }); } }; } };
   await assert.rejects(service.listarSaldos(client), value => value === error);
 });
+
+test('registra recepción de inventario con la misma clave de operación', async () => {
+  const calls = [];
+  const client = {
+    from() {},
+    async rpc(name, args) { calls.push({ name, args }); return { data: { ok: true }, error: null }; }
+  };
+  const args = { p_producto_id: 'p1', p_unidades: 4, p_notas: 'Factura verificada', p_operacion_id: 'op-1' };
+  assert.deepEqual(await service.registrarRecepcion(client, args), { ok: true });
+  assert.deepEqual(calls, [{ name: 'registrar_recepcion_inventario', args }]);
+});
