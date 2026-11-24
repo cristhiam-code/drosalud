@@ -2,76 +2,78 @@
 
 Actualizado: 24 de noviembre de 2026.
 
-## Completado en QA
-- Separación explícita de entorno y bloqueo de hosts no reconocidos.
-- Pruebas del conteo ya realizadas anteriormente; no crear ni repetir sesiones.
-- Controles de integridad en compras/recepción: producto de documento, idempotencia y autorización de diferencia de costo.
-- Documentación inicial de procesos y arquitectura.
-- Ayuda ampliada con diagnóstico del sistema, roles, precios, exportación y alcance real del archivo Excel.
-- Extracción de funciones puras a domain/formatters.js, domain/presentaciones.js, domain/precios.js y domain/dinero.js.
-- Servicios services/ventas.js, services/caja.js, services/informes.js, services/compras.js y services/pedidos.js y services/gestion-negocio.js y services/catalogo.js y services/clientes.js y services/configuracion.js y services/historial.js y services/inventario.js con cliente Supabase inyectado.
-- Pruebas Node para dominio y servicio, contratos Python y chequeo de sintaxis ampliado.
-- Auditoría de ventas e inventario de producción en solo lectura: 62/62 líneas conciliadas con movimientos; anulaciones compensadas; saldo de vista igual a suma del Kardex.
-- Auditoría de catálogo: dos precios manuales inferiores al costo requieren validación comercial; diez saldos negativos requieren conciliación física/documental.
-- Auditoría de caja/cotizaciones: 16 cierres conciliados, uno reabierto por prueba, cero gastos registrados y 16 cotizaciones vencidas sin conversión a recibo.
-- Auditoría de Informes: módulo de solo lectura con tres consultas de inventario; la valoración total está desactivada y no hay informes de ventas, margen, compras o rotación.
-- Auditoría de seguridad: RLS activo en todas las tablas públicas revisadas, ninguna función SECURITY DEFINER ejecutable por anon y roles admin/vendedor activos.
+## Objetivo
 
-## Última validación automatizada
+Dejar el ERP organizado, verificable y documentado para que las operaciones de ventas, inventario, compras, recepción, caja e informes sean coherentes y puedan probarse en QA antes de cualquier publicación. Esta estabilización no autoriza cambios en producción.
 
-- GitHub Actions: Pruebas y sintaxis SUCCESS en commit 032cc73 (run 45432608432), con 43 pruebas Python, 35 pruebas Node y chequeo de sintaxis JavaScript.
-- El último despliegue de código de QA READY sigue siendo 30416b1. El código de la rama avanzó después (incluye el servicio de Pedidos), pero Vercel bloqueó los nuevos despliegues por límite de compilaciones; por eso el alias de preview está desactualizado y no sirve para validar el último commit.
-- El PR #91 sigue en borrador y no se ha integrado ni desplegado a producción.
+## Completado y verificado
 
-## Pendiente antes de considerar listo
-1. Confirmar GitHub Actions para el último commit que contiene la separación de lecturas y escrituras de Pedidos, Recepción y Gestión de proveedores.
-2. Revisión visual autenticada en QA de Ayuda/Sistema, exportación, login y navegación móvil.
-3. Prueba funcional autenticada en QA de venta normal y fraccionada (caja + unidades), cotización, impresión y anulación, sin generar operaciones persistentes innecesarias.
-4. Definir y validar informes de ventas, margen, compras, gastos y rotación. Caja, cotizaciones e informes actuales ya fueron auditados; confirmar si los gastos realmente no se usan o si falta registrarlos.
-5. Conciliar los diez saldos negativos y los dos precios manuales bajo costo con existencias físicas y documentos originales. No corregir automáticamente.
-6. Decidir si se necesita un respaldo realmente restaurable. La exportación actual solo incluye recibos, líneas de venta, productos, clientes e historial de precios; no incluye todo el ERP.
-7. Continuar la extracción gradual de servicios del shell principal (ventas, catálogo, clientes, historial y configuración), sin mover el bootstrap de Supabase ni el selector de entorno.
-8. Revisar impresión térmica y móvil en QA, especialmente el formato de recibos y Kardex.
-9. Hacer una revisión final de permisos, RLS, RPC y diferencias de esquema entre QA y producción.
+### Entornos y seguridad
+- Selector explícito de QA/producción mediante lista cerrada de hosts y bloqueo de hosts no reconocidos.
+- Entorno QA separado de la base productiva.
+- Tres controles de integridad de compras/recepción aplicados y verificados únicamente en Supabase QA: correspondencia producto-documento, idempotencia concurrente y autorización/motivo para diferencias de costo.
+- RLS activo en las tablas públicas revisadas; ninguna función SECURITY DEFINER revisada ejecutable por anon.
+- No se modificaron datos, esquema, permisos, variables ni configuración de producción.
 
-## Condiciones para publicar
-- PR #91 permanece en borrador y no se fusiona sin aprobación.
-- No modificar main ni producción durante la estabilización.
-- Todas las pruebas y revisiones funcionales deben estar completas en QA.
-- Comparar el diff y las migraciones una por una; verificar respaldo antes de cualquier cambio productivo.
-- La publicación y las migraciones de producción requieren autorización expresa.
+### Código y dependencias
+- Reglas puras separadas en `domain/`: formato, presentaciones, precios y cálculos monetarios.
+- Servicios con cliente Supabase inyectado en `services/`: ventas, caja, informes, compras, pedidos, gestión del negocio, catálogo, clientes, configuración, historial e inventario.
+- Módulos delegan progresivamente acceso a datos a los servicios; las reglas de negocio y validaciones de interfaz permanecen en los módulos cuando corresponde.
+- Pruebas Node nativas, pruebas Python de contratos de arquitectura y chequeo de sintaxis JavaScript. No se agregaron dependencias externas.
+- Ayuda y Sistema explican los procesos principales, perfiles, exportación y sus límites, estado de conexión, sesión, base de datos, entorno y mediciones de carga.
+
+### Auditorías de datos (producción, solo lectura)
+- Ventas e inventario: 62/62 líneas de venta con movimiento correcto; anulaciones compensadas y saldos Kardex conciliados.
+- Excepciones de catálogo: diez saldos negativos y dos precios manuales bajo costo; requieren conciliación física/documental y validación comercial. No se corrigieron automáticamente.
+- Caja y cotizaciones: 16 cierres conciliados, uno reabierto por una prueba anterior, cero gastos registrados y 16 cotizaciones vencidas sin conversión a recibo.
+- Compras/recepción: 41/41 líneas de recepción conciliadas con exactamente un movimiento Kardex correcto. Se identificaron excedentes documentales, diferencias de costo y dos movimientos históricos sin referencia; requieren cotejo con documentos originales. No se modificaron.
+- Informes: actualmente es un módulo de consulta de inventario; la valoración total está desactivada y no están implementados informes completos de ventas, margen, compras o rotación.
+
+### Conteo
+- La prueba funcional de QA ya se realizó y quedó cerrada. No crear ni repetir sesiones.
+
+## Validación automatizada vigente
+
+- Rama: `qa/entorno-seguro-ci`.
+- Commit: `b75458f7883162d3bdac7769b788df296f46e543`.
+- GitHub Actions push #330 y pull_request #331: **SUCCESS**.
+- Última ejecución: 49 pruebas Python y 68 pruebas Node aprobadas; 0 fallidas; chequeo de sintaxis incluido.
+- Run: https://github.com/cristhiam-code/drosalud/actions/runs/45435936182
+- Los fallos anteriores #273/#274 correspondían al commit `e3551e7`: tres pruebas verificaban de forma incorrecta el texto del error de cliente Supabase inválido. El commit actual supera esas pruebas.
+- Las ejecuciones canceladas no son fallos de pruebas: el workflow define `concurrency.cancel-in-progress: true` y cancela ejecuciones anteriores de la misma referencia cuando llega una nueva.
+- Queda una advertencia no bloqueante por acciones de GitHub que aún usan Node.js 20. Actualizar versiones de acciones en un cambio separado y volver a validar.
+
+## Validación funcional pendiente
+
+El preview READY más reciente de Vercel para QA apunta al commit `4651da2`, anterior al commit actual. Por tanto, los cambios actuales todavía no tienen validación visual autenticada. No se fuerza un despliegue mientras siga el antecedente de límite de compilaciones.
+
+Cuando exista un preview del commit vigente, realizar una revisión breve y controlada de:
+1. Inicio de sesión y confirmación visible del entorno QA.
+2. Ayuda y Sistema: guía, estado, exportación, versión y mediciones.
+3. Venta normal y venta fraccionada (caja más unidades), sin generar registros innecesarios.
+4. Cotización, historial y anulación, verificando sus efectos.
+5. Pedido sugerido y urgente, sin cambiar sus reglas.
+6. Documento de proveedor y recepción, comprobando cantidades, costos, autorización y prevención de duplicados.
+7. Caja, informes y exportaciones.
+8. Impresión térmica de recibo y Kardex, y navegación móvil.
+
+## Pendientes de negocio y datos
+
+- Cotejar con documentos originales las diferencias de cantidades/costos de compras, los dos movimientos históricos sin referencia y los documentos cuyo total no coincide con sus líneas. No corregir sin evidencia.
+- Conciliar los diez saldos negativos con inventario físico y soportes de movimientos.
+- Revisar los dos precios manuales inferiores al costo con criterio comercial.
+- Definir si se requiere un respaldo completo restaurable. La exportación actual contiene recibos, ventas por producto, productos, clientes e historial de precios; no incluye todo el ERP.
+- Definir necesidades y reglas para informes de ventas, margen, compras, gastos y rotación.
+- Revisar permisos, RLS, RPC y diferencias de esquema QA/producción antes de cualquier publicación.
+
+## Publicación controlada
+
+- PR #91 permanece en borrador y no se fusiona ni despliega a producción sin aprobación expresa.
+- El PR #91 actualmente apunta a la rama base `feature/conteo-fisico-inventario`, no a `main`. Confirmar el destino correcto antes de una futura integración; no se ha cambiado automáticamente.
+- No modificar `main`, permisos productivos ni datos de producción durante esta estabilización.
+- Antes de publicar, comparar el diff y las migraciones una por una, confirmar respaldo restaurable y repetir las pruebas en el entorno de destino.
+- Cualquier migración o despliegue productivo requiere autorización expresa.
 
 ## Criterio de finalización
-DROSalud se considera preparado cuando los procesos del negocio estén documentados, las dependencias sean explícitas, los tests pasen, las cifras estén conciliadas o sus excepciones estén documentadas, los usuarios puedan completar los flujos en QA y no queden cambios de producción sin aprobar.
 
-## Verificación automatizada más reciente
-
-- GitHub Actions ejecutó correctamente el commit `b72ec44`.
-- Python: **47 pruebas aprobadas**.
-- Node.js: **58 pruebas aprobadas, 0 fallidas**.
-- `scripts/check-js.cjs`: sintaxis validada en `base.js`, todos los archivos de `domain/`, `services/`, `modules/` y el JavaScript inline de `index.html`.
-- Run: https://github.com/cristhiam-code/drosalud/actions/runs/45435032129
-- La validación corresponde a los cambios de servicios de clientes, configuración, catálogo, proveedores, pedidos y recepción.
-
-## Actualización de arquitectura QA
-
-- Pedidos ahora delega lecturas de pantalla y de Pedido sugerido, además de las RPC, a `services/pedidos.js`. La fórmula y la regla de reposición permanecen en el módulo.
-- Recepción delega lecturas y escrituras a `services/compras.js`; ya no tiene consultas directas a Supabase.
-- Gestión de proveedores delega lecturas, altas, cambios, bajas y cotizaciones a `services/gestion-negocio.js`; las validaciones de duplicados y los formularios permanecen en el módulo.
-- Las pruebas de contrato se ampliaron para impedir que estos tres módulos vuelvan a consultar o escribir directamente en Supabase.
-- La revisión automatizada de estos últimos cambios sigue pendiente de un nuevo resultado de GitHub Actions. No se considera aprobada hasta que el check termine correctamente.
-
-
-- Se incorporó `services/catalogo.js` para persistencia de productos, precios, fraccionamiento, auditoría e importación. La interfaz mantiene sus validaciones y las reglas de negocio.
-
-
-- Se incorporó `services/clientes.js` para acceso a clientes, consentimientos y su historial. Las reglas de privacidad y los controles de duplicados siguen en la interfaz y el backend.
-
-
-- Se separó el acceso a Ajustes en `services/configuracion.js`, manteniendo la confirmación de guardado y la protección contra sobrescritura si falta el registro principal.
-
-
-- Se incorporó `services/historial.js` para lecturas y operaciones de recibos, cotizaciones, ventas por período e historial de precios.
-
-
-- Se incorporó `services/inventario.js` para consultas paginadas de existencias y ventas semanales, diagnóstico de Pedidos y recepción de inventario. Se conserva la lógica de cantidades y presentación en la interfaz.
+DROSalud estará preparado para una decisión de publicación cuando: el CI del commit vigente pase; el preview correspondiente supere la revisión funcional; los procesos y permisos estén documentados; las cifras estén conciliadas o sus excepciones estén respaldadas; y no queden cambios productivos sin revisar. Tener CI verde por sí solo no significa que el ERP esté listo para operar en producción.
