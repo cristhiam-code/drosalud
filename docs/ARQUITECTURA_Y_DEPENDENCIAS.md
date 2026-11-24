@@ -200,7 +200,7 @@ El shell conserva el flujo visual y entrega el cliente, la cabecera y las línea
 - `domain/` contiene funciones puras y comprobables; no accede a Supabase ni al DOM.
 - `services/ventas.js` recibe el cliente Supabase como argumento; no lo crea ni lo obtiene de una variable global.
 - `services/` recibe el cliente Supabase por inyección explícita y no crea clientes propios. Caja e Informes delegan sus lecturas; Ventas, Compras/Recepción y Pedidos delegan sus RPC de escritura.
-- `modules/` conserva temporalmente dependencias globales para algunas lecturas, especialmente Pedidos y Recepción. La fórmula de Pedido sugerido, el flujo de Pedido urgente, las validaciones de recepción y los permisos del vendedor no se modificaron; solo se encapsularon las llamadas de escritura.
+- `modules/` conserva temporalmente dependencias globales para otras áreas que siguen dentro del shell principal. Pedidos, Recepción y Gestión de proveedores ya delegan sus lecturas y escrituras en servicios. La fórmula de Pedido sugerido, el flujo de Pedido urgente, las validaciones de recepción y los permisos del vendedor se mantienen en los módulos.
 - El orden anterior se valida con pruebas de contrato y `scripts/check-js.cjs` revisa sintaxis en `domain/`, `services/`, `modules/`, `base.js` y scripts inline.
 
 
@@ -220,16 +220,12 @@ Se preservó el comportamiento de tolerancia a fallos: catálogo/saldos son requ
 
 ## Cuarta separación de servicios: compras y recepción
 
-Se creó `services/compras.js` para las dos escrituras del módulo: guardar documento de proveedor y confirmar recepción documentada. El servicio recibe el cliente como dependencia y propaga los errores del backend. El módulo visual conserva sus validaciones de cantidad, costo, rol y motivo; los nombres RPC y sus argumentos, incluida la clave de idempotencia, se mantienen iguales.
-
-Las consultas de lectura del módulo permanecen en `modules/recepcion-mercancia.js` por ahora. No se cambió la lógica de recepción ni el orden de compra.
+Se creó `services/compras.js` para las lecturas y escrituras del módulo: consultar órdenes, documentos, líneas, recepciones, historial de costos y auditoría; guardar documentos de proveedor y confirmar recepción documentada. El módulo visual conserva sus validaciones de cantidad, costo, rol y motivo. Se mantienen los nombres RPC y argumentos, incluida la clave de idempotencia. No se cambió la lógica de recepción ni el orden de compra.
 
 
 ## Quinta separación de servicios: pedidos
 
-Se creó `services/pedidos.js` para las cinco RPC de guardar, enviar, autorizar, rechazar y generar órdenes por proveedor. El módulo visual mantiene intactas sus reglas de sugerencia, validaciones de cantidad, asignaciones, seguimiento y recuperación ante errores; solo delega las llamadas de escritura al servicio con el cliente inyectado.
-
-Las pruebas verifican los nombres RPC, argumentos y propagación de errores. No se modificó la lógica de Pedido sugerido ni Pedido urgente.
+Se creó `services/pedidos.js` para las consultas y cinco RPC de guardar, enviar, autorizar, rechazar y generar órdenes por proveedor. El módulo visual mantiene intactas sus reglas de sugerencia, validaciones de cantidad, asignaciones, seguimiento y recuperación ante errores. El servicio recibe el cliente inyectado; la lógica de negocio de reposición sigue en el módulo.
 
 
 ## Sexta separación de servicios: lecturas de compras y recepción
