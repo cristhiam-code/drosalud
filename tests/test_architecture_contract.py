@@ -178,6 +178,19 @@ class ArchitectureContractTests(unittest.TestCase):
         self.assertIn("services/configuracion.js", scripts)
         self.assertGreater(scripts.index("services/configuracion.js"), scripts.index("services/clientes.js"))
 
+    def test_history_and_quote_queries_are_delegated_to_service(self):
+        service = (SERVICES / "historial.js").read_text(encoding="utf-8")
+        self.assertNotIn("window.sb", service)
+        self.assertNotIn("document.", service)
+        for method in ("listarCotizaciones", "listarLineasCotizacion", "eliminarRecibo", "anularRecibo", "listarVentasPeriodo", "listarLineasRecibos", "listarLineasRecibo", "listarCambiosPrecio"):
+            self.assertIn(method, service)
+        for table in ("cotizaciones_venta_app", "cotizacion_venta_items_app", "historial_precios"):
+            self.assertNotRegex(INDEX, r"sb\\.from\\(['\"]" + table + r"['\"]\\)")
+        self.assertNotRegex(INDEX, r"sb\\.from\\(['\"]recibos['\"]\\)")
+        scripts = re.findall(r'<script[^>]*src=["\']([^"\']+)["\'][^>]*>', INDEX, re.I)
+        self.assertIn("services/historial.js", scripts)
+        self.assertGreater(scripts.index("services/historial.js"), scripts.index("services/configuracion.js"))
+
     def test_help_covers_operational_modules_without_count_references(self):
         start = INDEX.index('id="v-ayuda"')
         end = INDEX.index('id="v-aju"', start)
