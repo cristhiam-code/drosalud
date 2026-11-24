@@ -174,3 +174,6 @@ Se extrajeron a `domain/dinero.js`:
 Esto aclara que el porcentaje configurado en “Ganancia sobre la compra” es un *recargo sobre costo*, no un margen porcentual sobre el precio de venta. El módulo recibe los datos como argumentos y no depende de UI ni Supabase. El shell mantiene los nombres `sub` y `mg` como adaptadores temporales.
 
 Se añadieron pruebas de subtotal, costo cero y porcentajes positivos/negativos.
+
+
+La extracción de presentaciones también incluye ahora el cálculo de unidades base y el total del carrito para productos fraccionables y no fraccionables. La actualización de `q` del carrito sigue siendo responsabilidad del shell; el cálculo que utiliza es una función pura del dominio.
