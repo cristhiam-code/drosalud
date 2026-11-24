@@ -6,6 +6,7 @@
   "scripts": {
     "check:js": "node scripts/check-js.cjs",
     "test:python": "python -m unittest discover -s tests -v",
-    "test": "npm run test:python && npm run check:js"
+    "test": "npm run test:python && npm run test:domain && npm run check:js",
+    "test:domain": "node --test tests/*.test.cjs"
   }
 }
