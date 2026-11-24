@@ -826,6 +826,7 @@ nav button{font-size:.78rem}
 <script src="domain/formatters.js"></script>
 <script src="domain/presentaciones.js"></script>
 <script src="domain/precios.js"></script>
+<script src="domain/dinero.js"></script>
 <script src="xlsx.mini.min.js"></script>
 <script src="html5-qrcode.min.js"></script>
 <script src="qrcode.js"></script>
@@ -879,7 +880,7 @@ function renderPrev(){const it=[{nombre:'ACETAMINOFEN 500 MG * 100 TAB',cantidad
 const {precioSugerido,precioVentaProducto}=window.DrosaludPricing;
 const price=c=>precioSugerido(c,cfg);
 const pv=p=>precioVentaProducto(p,cfg);
-const sub=it=>it.reduce((s,i)=>s+Number(i.precio_venta)*i.cantidad,0);
+const {subtotalLineas:sub}=window.DrosaludMoney;
 let tt;function toast(m){let e=$('#toast');if(!e){e=document.createElement('div');e.id='toast';document.body.appendChild(e)}e.textContent=m;e.hidden=false;clearTimeout(tt);tt=setTimeout(()=>{e.hidden=true},String(m).length>70?7000:2600)}
 const msgErr=e=>{const m=String((e&&e.message)||e||''),c=String((e&&e.code)||'');
 if(/Failed to fetch|NetworkError|Load failed|fetch failed/i.test(m))return 'Sin conexión con la base de datos. Revisa tu internet. Si llevas más de una semana sin usar la app, Supabase pudo pausarla: entra a su panel y toca Restore project.';
@@ -1364,7 +1365,7 @@ if(ok)draft.qrTexto=txt}
 if(!draft.qrTexto)draft.qrImg=await reducir(url,420);
 qrStatus();renderPrev()}
 function iniVend(){const v=$('#vend');if(!v)return;let l=null,lst=[];try{l=localStorage.getItem('lastVend');lst=JSON.parse(localStorage.getItem('vendList')||'[]')}catch(e){}v.value=l!==null?l:(cfg.vendedorDef||'');const names=[...new Set([cfg.vendedorDef,...lst].filter(Boolean))];$('#vds').innerHTML=names.map(n=>`<option value="${esc(n)}">`).join('')}
-const mg=(p,c)=>c>0?(p-c)/c*100:0;
+const {porcentajeSobreCosto:mg}=window.DrosaludMoney;
 const warnM=(p,c)=>p<c?' <b class="warn">⚠ por debajo del costo</b>':(mg(p,c)<cfg.mMin?` <b class="warn">⚠ ganancia ${Math.round(mg(p,c))}%</b>`:'');
 let CST={},CR=[];let catLow=false,hv='ventas',hisShown=100;
 function lowList(){return P.filter(p=>p.precio_venta!=null&&mg(Number(p.precio_venta),Number(p.precio_compra))<cfg.mMin)}
