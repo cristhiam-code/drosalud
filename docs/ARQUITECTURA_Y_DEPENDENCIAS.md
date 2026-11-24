@@ -138,3 +138,16 @@ Se extrajeron los formateadores puros a `domain/formatters.js`:
 El archivo no depende del DOM, del cliente Supabase ni del estado del negocio. Expone una interfaz congelada en `window.DrosaludFormatters`; el shell conserva los nombres `esc`, `norm` y `money` como adaptador temporal para que los módulos existentes sigan funcionando sin cambios. El script se carga después de `base.js` y antes del script inline que lo consume.
 
 Esta extracción no cambia las fórmulas ni la presentación de los valores. Se añadió un contrato de prueba para proteger el orden de carga y la independencia del dominio.
+
+
+## Segunda extracción completada: presentaciones y cantidades de venta
+
+Se extrajeron a `domain/presentaciones.js` las funciones puras:
+- Factor de unidades por presentación.
+- Conversión de cantidad de cajas a empaques.
+- Conversión de precio por unidad a precio por caja.
+- Preparación de las líneas que se envían a venta/cotización para productos normales y fraccionables.
+
+El módulo no accede al DOM, Supabase, almacenamiento local ni estado global del carrito. El shell conserva el contrato de nombres mediante `window.DrosaludPresentations` y una asignación local, de modo que las pantallas y los módulos existentes mantienen sus llamadas.
+
+Se agregaron pruebas Node nativas para casos normales, caja, unidades sueltas, caja más unidades sueltas y carrito vacío. No se agregó ninguna dependencia externa. `npm test` ahora incluye pruebas Python, pruebas puras del dominio y revisión de sintaxis JavaScript.
