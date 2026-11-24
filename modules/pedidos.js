@@ -665,8 +665,7 @@
     }));
     const id = await savePedido(items,tipo,notas,state.editing?.id || null);
     if (send) {
-      const {error} = await sb.rpc('enviar_pedido',{p_pedido_id:id});
-      if (error) {
+      try { await window.DrosaludOrdersService.enviarPedido(sb,id); } catch (error) {
         try {
           await loadData();
           const current = state.pedidos.find(pedido => pedido.id === id);
@@ -905,8 +904,7 @@
       } else if (action === 'edit') {
         editPedido(button.dataset.pedidoId);
       } else if (action === 'send') {
-        const {error} = await sb.rpc('enviar_pedido',{p_pedido_id:button.dataset.pedidoId});
-        if (error) throw error;
+        await window.DrosaludOrdersService.enviarPedido(sb,button.dataset.pedidoId);
         await reload(); message('Pedido enviado a autorización.');
       } else if (action === 'authorize') {
         await authorize(button.dataset.pedidoId);
