@@ -27,6 +27,7 @@ DROSalud registra operaciones del negocio. Cada acción tiene un resultado disti
 
 - Busca por código y nombre antes de crear una referencia.
 - El costo de compra y el precio de venta son datos distintos.
+- El porcentaje de “Ganancia sobre la compra” es un recargo sobre el costo: costo × (1 + porcentaje/100). No es el margen sobre el precio de venta. El redondeo configurado se aplica hacia arriba y un precio manual existente tiene prioridad sobre la sugerencia.
 - La cantidad por empaque determina la conversión a unidades base.
 - Si una presentación requiere código y trazabilidad propios, se registra como producto separado.
 - No cambies el código ni la equivalencia de una referencia que ya tiene movimientos sin evaluar el impacto histórico.
