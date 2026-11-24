@@ -103,14 +103,15 @@ La página carga actualmente los scripts en este orden:
 7. `services/ventas.js` — RPC de venta/cotización con cliente inyectado.
 8. `services/caja.js` — consultas y RPC de caja/gastos con cliente inyectado.
 9. `services/informes.js` — lecturas paginadas de inventario y costos con cliente inyectado.
-10. `xlsx.mini.min.js`, `html5-qrcode.min.js`, `qrcode.js` — bibliotecas de Excel y códigos QR.
-11. `modules/gestion-negocio.js`
-12. `modules/ayuda-sistema.js`
-13. `modules/pedidos.js`
-14. `modules/recepcion-mercancia.js`
-15. `modules/conteo-fisico-api.js`
-16. `modules/conteo-fisico.js`
-17. `modules/informes.js`
+10. `services/compras.js` — RPC de documentos y recepción con cliente inyectado.
+11. `xlsx.mini.min.js`, `html5-qrcode.min.js`, `qrcode.js` — bibliotecas de Excel y códigos QR.
+12. `modules/gestion-negocio.js`
+13. `modules/ayuda-sistema.js`
+14. `modules/pedidos.js`
+15. `modules/recepcion-mercancia.js`
+16. `modules/conteo-fisico-api.js`
+17. `modules/conteo-fisico.js`
+18. `modules/informes.js`
 
 CSS modular cargado por el shell: Pedidos, Recepción, Conteo, Informes, Ayuda/Sistema, Gestión del negocio y Exportaciones.
 
@@ -213,3 +214,10 @@ Las pruebas usan un cliente simulado para verificar los nombres de RPC, argument
 Se creó `services/informes.js` para centralizar la lectura paginada del catálogo, saldos, movimientos con costo e historial de costos. El módulo visual `modules/informes.js` ya no consulta Supabase directamente: recibe los datos del servicio y conserva el cálculo de fuentes de costo, filtros y renderizado.
 
 Se preservó el comportamiento de tolerancia a fallos: catálogo/saldos son requeridos; el costo de movimientos puede generar advertencia y el historial de costos es complementario. Se añadieron pruebas de paginación, errores opcionales y propagación de errores obligatorios usando un cliente simulado.
+
+
+## Cuarta separación de servicios: compras y recepción
+
+Se creó `services/compras.js` para las dos escrituras del módulo: guardar documento de proveedor y confirmar recepción documentada. El servicio recibe el cliente como dependencia y propaga los errores del backend. El módulo visual conserva sus validaciones de cantidad, costo, rol y motivo; los nombres RPC y sus argumentos, incluida la clave de idempotencia, se mantienen iguales.
+
+Las consultas de lectura del módulo permanecen en `modules/recepcion-mercancia.js` por ahora. No se cambió la lógica de recepción ni el orden de compra.
