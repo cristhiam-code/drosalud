@@ -26,7 +26,7 @@ class PhysicalCountContractTests(unittest.TestCase):
     def test_preview_is_visibly_marked_and_uses_qa_project(self):
         self.assertIn('id="qa-env-banner"', INDEX)
         self.assertIn("ENTORNO DE PRUEBAS", INDEX)
-        self.assertIn("document.title='[PRUEBAS] Drosalud'", INDEX)
+        self.assertIn("document.title = '[PRUEBAS] Drosalud'", INDEX)
         self.assertIn("HOSTS_QA = new Set([", INDEX)
         self.assertIn("'drosalud-git-feature-conteo-fisico-inventario-drosalud.vercel.app'", INDEX)
         self.assertIn("'drosalud.vercel.app'", INDEX)
@@ -65,7 +65,7 @@ class PhysicalCountContractTests(unittest.TestCase):
         self.assertRegex(approval, r"from public\.productos p\s+where p\.id\s*=\s*v_producto\s+for update")
         self.assertIn("delete from public.inventario_conteos_bloqueos", approval)
         self.assertIn("insert into public.inventario_movimientos", approval)
-        self.assertIn("update public.inventario_conteos_items set movimiento_id=v_movimiento", approval)
+        self.assertRegex(approval, r"update public\.inventario_conteos_items\s+set movimiento_id\s*=\s*v_movimiento")
         self.assertLess(approval.index("for update"), approval.index("delete from public.inventario_conteos_bloqueos"))
 
     def test_cancellation_locks_products_in_stable_order(self):
