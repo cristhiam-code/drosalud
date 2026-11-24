@@ -83,3 +83,23 @@ test('no genera líneas vacías si el carrito fraccionable está en cero', () =>
     unidades: 0, precioUnidad: 1000
   }), []);
 });
+
+
+test('calcula unidades base y total del carrito fraccionable', () => {
+  const item = {
+    fraccionable: true,
+    cajas: 1,
+    unidadesCaja: 10,
+    precioCaja: 10000,
+    unidades: 3,
+    precioUnidad: 1200
+  };
+  assert.equal(presentations.unidadesCarrito(item), 13);
+  assert.equal(presentations.totalCarrito(item), 13600);
+});
+
+test('mantiene el cálculo del carrito para productos no fraccionables', () => {
+  const item = { fraccionable: false, q: 2, p: 4500 };
+  assert.equal(presentations.unidadesCarrito(item), 2);
+  assert.equal(presentations.totalCarrito(item), 9000);
+});
