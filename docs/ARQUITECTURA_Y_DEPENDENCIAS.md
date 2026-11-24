@@ -109,14 +109,15 @@ La página carga actualmente los scripts en este orden:
 13. `services/catalogo.js` — persistencia de productos, precios y fraccionamiento.
 14. `services/clientes.js` — clientes, consentimientos e historial.
 15. `services/configuracion.js` — lectura, guardado y verificación de ajustes.
-16. `xlsx.mini.min.js`, `html5-qrcode.min.js`, `qrcode.js` — bibliotecas de Excel y códigos QR.
-17. `modules/gestion-negocio.js`
-18. `modules/ayuda-sistema.js`
-19. `modules/pedidos.js`
-20. `modules/recepcion-mercancia.js`
-21. `modules/conteo-fisico-api.js`
-22. `modules/conteo-fisico.js`
-23. `modules/informes.js`
+16. `services/historial.js` — consultas de ventas, recibos, cotizaciones y cambios de precio.
+17. `xlsx.mini.min.js`, `html5-qrcode.min.js`, `qrcode.js` — bibliotecas de Excel y códigos QR.
+18. `modules/gestion-negocio.js`
+19. `modules/ayuda-sistema.js`
+20. `modules/pedidos.js`
+21. `modules/recepcion-mercancia.js`
+22. `modules/conteo-fisico-api.js`
+23. `modules/conteo-fisico.js`
+24. `modules/informes.js`
 
 CSS modular cargado por el shell: Pedidos, Recepción, Conteo, Informes, Ayuda/Sistema, Gestión del negocio y Exportaciones.
 
@@ -270,3 +271,10 @@ La interfaz conserva la búsqueda de duplicados, la validación del consentimien
 ## Undécima separación de servicios: configuración
 
 Se creó `services/configuracion.js` para cargar, guardar y comprobar el registro principal de ajustes. El servicio valida que exista el registro `id=1`, confirma el guardado mediante lectura de la respuesta y compara el objeto normalizado para detectar cambios inesperados. El shell conserva valores predeterminados, migración de paleta antigua, reglas administrativas y presentación. La exportación sigue verificando la fecha confirmada después de descargar el archivo.
+
+
+## Duodécima separación de servicios: historial y cotizaciones
+
+Se creó `services/historial.js` para consultas de cotizaciones y sus líneas, ventas por período, líneas de recibos en lotes, detalle de recibo e historial de cambios de precio. También concentra la eliminación y anulación de recibos, conservando la validación de confirmación y el mensaje de error cuando el recibo no se actualiza.
+
+El shell conserva filtros, cálculos de resumen, presentación e interacción de los recibos. Los filtros de fechas, paginación de mil registros y lotes de cuarenta recibos para obtener líneas se mantienen.
