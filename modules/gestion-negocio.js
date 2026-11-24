@@ -9,13 +9,8 @@
  async function owner(){const {data,error}=await sb.auth.getUser();if(error)throw error;if(!data.user)throw new Error('Inicia sesión nuevamente.');return data.user.id}
  async function load(){
   const uid=await owner();
-  const [p,b,q]=await Promise.all([
-   sb.from('proveedores').select('*').order('nombre'),
-   sb.from('compras_pendientes').select('*').eq('owner_id',uid).order('creado_en',{ascending:false}),
-   sb.from('cotizaciones_proveedor').select('*').eq('owner_id',uid).order('consultado_en',{ascending:false})
-  ]);
-  for(const x of [p,b,q])if(x.error)throw x.error;
-  providers=p.data||[];buys=b.data||[];quotes=q.data||[];
+  const data=await window.DrosaludBusinessManagementService.cargar(sb,uid);
+  providers=data.proveedores;buys=data.compras;quotes=data.cotizaciones;
   render();
  }
  function render(){
@@ -42,16 +37,14 @@
    (phone(row.telefono).length>=7&&phone(p.whatsapp)===phone(row.telefono))
   ));
   if(duplicate)throw new Error('Este proveedor ya está registrado ('+duplicate.nombre+'). Busca el registro existente y edítalo; no crees otro.');
-  const res=id?await sb.from('proveedores').update(row).eq('id',id).eq('owner_id',uid).select('id').maybeSingle():await sb.from('proveedores').insert(row).select('id').single();
-  if(res.error)throw res.error;if(id&&!res.data)throw new Error('El proveedor no se actualizó. No se encontró el registro o tu usuario no tiene permiso.');$n('#modal').hidden=true;await load();
+  await window.DrosaludBusinessManagementService.guardarProveedor(sb,row,id,uid);$n('#modal').hidden=true;await load();
  }
  async function deleteProvider(id){
   const uid=await owner(),p=providers.find(x=>x.id===id);if(!p)return;
   const hasBuys=buys.some(x=>x.proveedor_id===id),hasQuotes=quotes.some(x=>x.proveedor_id===id);
   if(hasBuys||hasQuotes)throw new Error('No se puede eliminar '+p.nombre+' porque tiene compras o cotizaciones asociadas. Edítalo y cámbialo a Inactivo para conservar el historial.');
   if(!confirm('¿Eliminar definitivamente al proveedor "'+p.nombre+'"? Esta acción no se puede deshacer.'))return;
-  const {error}=await sb.from('proveedores').delete().eq('id',id).eq('owner_id',uid);
-  if(error)throw error;
+  await window.DrosaludBusinessManagementService.eliminarProveedor(sb,id,uid);
   await load();
  }
  function providerForm(id){const p=providers.find(x=>x.id===id)||{};modal(form(id?'Editar proveedor':'Nuevo proveedor',[
@@ -69,29 +62,26 @@
   const row={owner_id:uid,producto_nombre:v('producto_nombre'),cantidad:n('cantidad')||1,proveedor_id:v('proveedor_id')||null,costo_estimado:n('costo_estimado'),costo_real:reciboItemId?null:costoReal,estado:v('estado'),notas:v('notas'),recibo_id:reciboId,recibo_item_id:reciboItemId};
   if(!row.producto_nombre)throw new Error('Escribe el medicamento.');
   if(costoReal!==null&&reciboItemId){
-   const {error}=await sb.rpc('guardar_compra_con_costo_real',{
+   await window.DrosaludBusinessManagementService.guardarCompra(sb,true,{
     p_compra_id:id||null,p_producto_nombre:row.producto_nombre,p_cantidad:row.cantidad,
     p_proveedor_id:row.proveedor_id,p_costo_estimado:row.costo_estimado,
     p_estado:row.estado,p_notas:row.notas,p_recibo_id:reciboId,
     p_recibo_item_id:reciboItemId,p_costo_real:costoReal
    });
-   if(error)throw error;
   }else{
-   const {error}=await sb.rpc('guardar_compra_pendiente',{
+   await window.DrosaludBusinessManagementService.guardarCompra(sb,false,{
     p_compra_id:id||null,p_producto_nombre:row.producto_nombre,p_cantidad:row.cantidad,
     p_proveedor_id:row.proveedor_id,p_costo_estimado:row.costo_estimado,
     p_estado:row.estado,p_notas:row.notas,p_recibo_id:row.recibo_id,
     p_recibo_item_id:row.recibo_item_id,p_costo_real:row.costo_real,
     p_actualizar_costo_real:true
    });
-   if(error)throw error;
   }
   $n('#modal').hidden=true;await load();
  }
  async function buyForm(id){
   const b=buys.find(x=>x.id===id)||{};
-  const {data:receipts,error}=await sb.from('recibos').select('id,numero,cliente_nombre,creado_en').order('creado_en',{ascending:false}).limit(100);
-  if(error)throw error;
+  const receipts=await window.DrosaludBusinessManagementService.listarRecibos(sb);
   const opts=[{value:'',label:'Sin vincular a un recibo'},...(receipts||[]).map(r=>({value:r.id,label:'Recibo '+r.numero+' · '+(r.cliente_nombre||'Sin cliente')+' · '+new Date(r.creado_en).toLocaleDateString('es-CO')}))];
   modal(form(id?'Actualizar solicitud':'Medicamento por conseguir',[
    {key:'producto_nombre',label:'Medicamento o producto',required:true},
@@ -108,9 +98,8 @@
   async function itemsForReceipt(receiptId,selected){
    item.innerHTML='<option value="">Cargando líneas…</option>';
    if(!receiptId){item.innerHTML='<option value="">Selecciona primero un recibo</option>';return}
-   const {data,error}=await sb.from('recibo_items_app').select('id,nombre,cantidad,precio_venta').eq('recibo_id',receiptId).order('id');
-   if(error)throw error;
-   item.innerHTML='<option value="">No actualizar costo de una línea</option>'+(data||[]).map(x=>'<option value="'+x.id+'">'+escN(x.nombre)+' × '+x.cantidad+' · '+moneyN(x.precio_venta)+'</option>').join('');
+   const data=await window.DrosaludBusinessManagementService.listarLineasRecibo(sb,receiptId);
+   item.innerHTML='<option value="">No actualizar costo de una línea</option>'+data.map(x=>'<option value="'+x.id+'">'+escN(x.nombre)+' × '+x.cantidad+' · '+moneyN(x.precio_venta)+'</option>').join('');
    if(selected)item.value=selected;
   }
   receipt.addEventListener('change',()=>run(()=>itemsForReceipt(receipt.value,'')));
@@ -126,7 +115,7 @@
    {key:'disponible',label:'Disponibilidad',type:'select',default:'true',options:[{value:'true',label:'Disponible'},{value:'false',label:'No disponible'}]},
    {key:'notas',label:'Notas'}
   ],{proveedor_id:providers[0].id,disponible:'true'}));
-  $n('#neg-save').onclick=()=>run(async()=>{const uid=await owner(),price=Number($n('#nf-precio_unitario').value);if(!(price>=0))throw new Error('Ingresa un precio válido.');const {error}=await sb.from('cotizaciones_proveedor').insert({owner_id:uid,compra_id:b.id,proveedor_id:$n('#nf-proveedor_id').value,precio_unitario:price,disponible:$n('#nf-disponible').value==='true',notas:$n('#nf-notas').value});if(error)throw error;$n('#modal').hidden=true;await load()});
+  $n('#neg-save').onclick=()=>run(async()=>{const uid=await owner(),price=Number($n('#nf-precio_unitario').value);if(!(price>=0))throw new Error('Ingresa un precio válido.');await window.DrosaludBusinessManagementService.registrarCotizacion(sb,{owner_id:uid,compra_id:b.id,proveedor_id:$n('#nf-proveedor_id').value,precio_unitario:price,disponible:$n('#nf-disponible').value==='true',notas:$n('#nf-notas').value});$n('#modal').hidden=true;await load()});
  }
  async function run(fn){try{await fn()}catch(e){console.error(e);alert(e.message||'No se pudo guardar. Revisa la conexión y la migración SQL.')}} 
  function setTab(t){tab=t;$n('#neg-pend').hidden=t!=='pend';$n('#neg-prov').hidden=t!=='prov';document.querySelectorAll('[data-neg-tab]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.negTab===t)))}
