@@ -199,7 +199,8 @@ El shell conserva el flujo visual y entrega el cliente, la cabecera y las línea
 
 - `domain/` contiene funciones puras y comprobables; no accede a Supabase ni al DOM.
 - `services/ventas.js` recibe el cliente Supabase como argumento; no lo crea ni lo obtiene de una variable global.
-- `modules/` conserva temporalmente las dependencias globales existentes. No se han cambiado Pedidos, Recepción ni los permisos del vendedor.
+- `services/` recibe el cliente Supabase por inyección explícita y no crea clientes propios. Caja e Informes delegan sus lecturas; Ventas, Compras/Recepción y Pedidos delegan sus RPC de escritura.
+- `modules/` conserva temporalmente dependencias globales para algunas lecturas, especialmente Pedidos y Recepción. La fórmula de Pedido sugerido, el flujo de Pedido urgente, las validaciones de recepción y los permisos del vendedor no se modificaron; solo se encapsularon las llamadas de escritura.
 - El orden anterior se valida con pruebas de contrato y `scripts/check-js.cjs` revisa sintaxis en `domain/`, `services/`, `modules/`, `base.js` y scripts inline.
 
 
