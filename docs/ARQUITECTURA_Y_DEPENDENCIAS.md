@@ -108,14 +108,15 @@ La página carga actualmente los scripts en este orden:
 12. `services/gestion-negocio.js` — proveedores, solicitudes por conseguir y cotizaciones.
 13. `services/catalogo.js` — persistencia de productos, precios y fraccionamiento.
 14. `services/clientes.js` — clientes, consentimientos e historial.
-15. `xlsx.mini.min.js`, `html5-qrcode.min.js`, `qrcode.js` — bibliotecas de Excel y códigos QR.
-16. `modules/gestion-negocio.js`
-17. `modules/ayuda-sistema.js`
-18. `modules/pedidos.js`
-19. `modules/recepcion-mercancia.js`
-20. `modules/conteo-fisico-api.js`
-21. `modules/conteo-fisico.js`
-22. `modules/informes.js`
+15. `services/configuracion.js` — lectura, guardado y verificación de ajustes.
+16. `xlsx.mini.min.js`, `html5-qrcode.min.js`, `qrcode.js` — bibliotecas de Excel y códigos QR.
+17. `modules/gestion-negocio.js`
+18. `modules/ayuda-sistema.js`
+19. `modules/pedidos.js`
+20. `modules/recepcion-mercancia.js`
+21. `modules/conteo-fisico-api.js`
+22. `modules/conteo-fisico.js`
+23. `modules/informes.js`
 
 CSS modular cargado por el shell: Pedidos, Recepción, Conteo, Informes, Ayuda/Sistema, Gestión del negocio y Exportaciones.
 
@@ -264,3 +265,8 @@ El shell mantiene la validación de campos, códigos duplicados, equivalencias, 
 Se creó `services/clientes.js` para consultar clientes, consentimientos y resúmenes de compra; registrar consentimientos; crear y actualizar fichas; consultar recibos y líneas; y ejecutar la anonimización administrativa mediante su RPC existente.
 
 La interfaz conserva la búsqueda de duplicados, la validación del consentimiento, los formularios y la presentación del historial. El servicio recibe el cliente Supabase explícitamente y propaga errores. No se cambió el contenido del aviso de privacidad ni las reglas que determinan cuándo se solicita autorización.
+
+
+## Undécima separación de servicios: configuración
+
+Se creó `services/configuracion.js` para cargar, guardar y comprobar el registro principal de ajustes. El servicio valida que exista el registro `id=1`, confirma el guardado mediante lectura de la respuesta y compara el objeto normalizado para detectar cambios inesperados. El shell conserva valores predeterminados, migración de paleta antigua, reglas administrativas y presentación. La exportación sigue verificando la fecha confirmada después de descargar el archivo.
