@@ -237,3 +237,10 @@ Las pruebas verifican los nombres RPC, argumentos y propagación de errores. No 
 El servicio `services/compras.js` también concentra ahora las lecturas que necesita Recepción: órdenes abiertas, documentos del proveedor, líneas documentales, recepciones, historial de costos, vínculos documento-orden y auditoría de precios cuando el perfil es administrador.
 
 El servicio arma los documentos con sus líneas y órdenes vinculadas antes de devolver los datos. El módulo `modules/recepcion-mercancia.js` se limita a recibir el resultado y renderizarlo; ya no consulta directamente tablas ni ejecuta RPC. Las consultas de auditoría siguen condicionadas al perfil administrador. Se conservan las tablas, columnas, filtros, límites y ordenamientos anteriores.
+
+
+## Séptima separación de servicios: lecturas de Pedidos
+
+El servicio `services/pedidos.js` centraliza ahora las consultas que alimentan la pantalla y el cálculo de Pedido sugerido: perfil, catálogo, proveedores activos, pedidos, saldos, líneas de pedido, órdenes y sus líneas, recibos de los últimos siete días, unidades vendidas y compromisos autorizados aún no asignados.
+
+El módulo `modules/pedidos.js` conserva la regla de negocio y el armado visual del pedido sugerido. El servicio solo obtiene datos; no calcula cantidades sugeridas ni decide qué comprar. Se conservan la ventana móvil de siete días, las paginaciones, las conversiones a unidades base y el tratamiento de stock negativo. Así se separa el acceso a datos sin trasladar ni alterar la decisión de abastecimiento.
