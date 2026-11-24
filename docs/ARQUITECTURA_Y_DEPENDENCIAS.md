@@ -163,3 +163,14 @@ Se extrajeron a `domain/precios.js` las reglas puras:
 El módulo recibe la configuración como argumento; no lee `cfg`, no consulta productos y no accede a Supabase. El shell conserva las funciones `price(c)` y `pv(producto)` como adaptadores temporales para mantener la API existente.
 
 Se agregaron pruebas para precio manual, margen sugerido, redondeo hacia arriba y costo vacío/cero.
+
+
+## Cuarta extracción completada: cálculos monetarios
+
+Se extrajeron a `domain/dinero.js`:
+- Subtotal de líneas de recibo, calculado con precio por unidad base multiplicado por cantidad.
+- Porcentaje de ganancia sobre costo de compra: `(precio de venta - costo) / costo × 100`, con protección para costo cero/no positivo.
+
+Esto aclara que el porcentaje configurado en “Ganancia sobre la compra” es un *recargo sobre costo*, no un margen porcentual sobre el precio de venta. El módulo recibe los datos como argumentos y no depende de UI ni Supabase. El shell mantiene los nombres `sub` y `mg` como adaptadores temporales.
+
+Se añadieron pruebas de subtotal, costo cero y porcentajes positivos/negativos.
