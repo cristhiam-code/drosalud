@@ -141,6 +141,19 @@ class ArchitectureContractTests(unittest.TestCase):
         for method in ("cargar", "guardarProveedor", "eliminarProveedor", "guardarCompra", "listarRecibos", "listarLineasRecibo", "registrarCotizacion"):
             self.assertIn("DrosaludBusinessManagementService." + method, module)
 
+    def test_catalog_persistence_is_delegated_to_service(self):
+        service = (SERVICES / "catalogo.js").read_text(encoding="utf-8")
+        self.assertNotIn("window.sb", service)
+        self.assertNotIn("document.", service)
+        for method in ("actualizarPrecios", "habilitarFraccionamiento", "actualizarProducto", "crearProducto", "eliminarProducto", "listarAuditoriaProducto", "contarProductos", "importarProductos"):
+            self.assertIn(method, service)
+        self.assertNotRegex(INDEX, r"sb\\.from\\(['\"]productos['\"]\\)")
+        self.assertNotIn("sb.rpc('actualizar_precios_drosalud_con_motivo'", INDEX)
+        self.assertNotIn("sb.rpc('habilitar_fraccionamiento_producto'", INDEX)
+        scripts = re.findall(r'<script[^>]*src=["\']([^"\']+)["\'][^>]*>', INDEX, re.I)
+        self.assertIn("services/catalogo.js", scripts)
+        self.assertGreater(scripts.index("services/catalogo.js"), scripts.index("services/gestion-negocio.js"))
+
     def test_help_covers_operational_modules_without_count_references(self):
         start = INDEX.index('id="v-ayuda"')
         end = INDEX.index('id="v-aju"', start)
