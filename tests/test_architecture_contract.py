@@ -109,6 +109,13 @@ class ArchitectureContractTests(unittest.TestCase):
         for topic in ("Facturación POS", "Productos", "Clientes", "Pedidos", "Compras y proveedores", "Recepción", "Generar Kardex", "Informes y reportes", "Historial", "Cotizaciones", "Caja", "Ajustes", "Usuarios y permisos", "Exportaciones y respaldo"):
             self.assertIn(topic, help_view)
         self.assertNotRegex(help_view.lower(), r"conteo\s+(físico|fisico|inicial)")
+        self.assertIn("No es una copia completa de la base de datos", help_view)
+        self.assertIn("No contiene órdenes de compra", help_view)
+        self.assertIn("La valoración física total", help_view)
+
+    def test_reports_card_does_not_promise_unavailable_valuation(self):
+        source = (MODULES / "informes.js").read_text(encoding="utf-8")
+        self.assertIn("El valor total no está disponible", source)
 
     def test_architecture_and_operating_guides_are_versioned(self):
         self.assertTrue((ROOT / "docs/ARQUITECTURA_Y_DEPENDENCIAS.md").is_file())
