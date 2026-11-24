@@ -65,8 +65,19 @@
     if (error) throw error;
   }
 
+
+  async function registrarRecepcion(cliente, argumentos) {
+    validar(cliente);
+    if (typeof cliente.rpc !== 'function') {
+      throw new Error('El servicio de inventario requiere un cliente Supabase con RPC.');
+    }
+    const { data, error } = await cliente.rpc('registrar_recepcion_inventario', argumentos);
+    if (error) throw error;
+    return data;
+  }
+
   window.DrosaludInventoryService = Object.freeze({
     listarProductosConLinea, listarProductosSinLinea, listarSaldos,
-    listarVentasSemana, comprobarPedidos
+    listarVentasSemana, comprobarPedidos, registrarRecepcion
   });
 })();
