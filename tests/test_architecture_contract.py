@@ -15,6 +15,7 @@ class ArchitectureContractTests(unittest.TestCase):
         self.assertLess(scripts.index("supabase.js"), scripts.index("base.js"))
         module_positions = [i for i, name in enumerate(scripts) if name.startswith("modules/")]
         self.assertTrue(module_positions)
+        self.assertEqual(len([name for name in scripts if name.startswith("modules/")]), len(set(name for name in scripts if name.startswith("modules/"))))
         self.assertGreater(min(module_positions), scripts.index("base.js"))
 
     def test_feature_modules_do_not_create_their_own_supabase_client(self):
