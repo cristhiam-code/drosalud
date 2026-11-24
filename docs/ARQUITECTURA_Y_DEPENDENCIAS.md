@@ -110,14 +110,15 @@ La página carga actualmente los scripts en este orden:
 14. `services/clientes.js` — clientes, consentimientos e historial.
 15. `services/configuracion.js` — lectura, guardado y verificación de ajustes.
 16. `services/historial.js` — consultas de ventas, recibos, cotizaciones y cambios de precio.
-17. `xlsx.mini.min.js`, `html5-qrcode.min.js`, `qrcode.js` — bibliotecas de Excel y códigos QR.
-18. `modules/gestion-negocio.js`
-19. `modules/ayuda-sistema.js`
-20. `modules/pedidos.js`
-21. `modules/recepcion-mercancia.js`
-22. `modules/conteo-fisico-api.js`
-23. `modules/conteo-fisico.js`
-24. `modules/informes.js`
+17. `services/inventario.js` — consultas de catálogo, saldos, ventas semanales y recepción de inventario.
+18. `xlsx.mini.min.js`, `html5-qrcode.min.js`, `qrcode.js` — bibliotecas de Excel y códigos QR.
+19. `modules/gestion-negocio.js`
+20. `modules/ayuda-sistema.js`
+21. `modules/pedidos.js`
+22. `modules/recepcion-mercancia.js`
+23. `modules/conteo-fisico-api.js`
+24. `modules/conteo-fisico.js`
+25. `modules/informes.js`
 
 CSS modular cargado por el shell: Pedidos, Recepción, Conteo, Informes, Ayuda/Sistema, Gestión del negocio y Exportaciones.
 
@@ -278,3 +279,10 @@ Se creó `services/configuracion.js` para cargar, guardar y comprobar el registr
 Se creó `services/historial.js` para consultas de cotizaciones y sus líneas, ventas por período, líneas de recibos en lotes, detalle de recibo e historial de cambios de precio. También concentra la eliminación y anulación de recibos, conservando la validación de confirmación y el mensaje de error cuando el recibo no se actualiza.
 
 El shell conserva filtros, cálculos de resumen, presentación e interacción de los recibos. Los filtros de fechas, paginación de mil registros y lotes de cuarenta recibos para obtener líneas se mantienen.
+
+
+## Decimotercera separación de servicios: inventario
+
+Se creó `services/inventario.js` para las lecturas paginadas del catálogo que usa Kardex, saldos registrados, unidades vendidas en la semana calendario de Colombia y la comprobación del esquema de Pedidos. También encapsula la RPC existente de recepción de inventario, conservando sus argumentos y la clave de operación.
+
+La interfaz mantiene filtros por laboratorio/línea, conversión de cajas y unidades, armado del informe, impresión y la lógica de cantidades sugeridas de esta vista. Se conserva el comportamiento de compatibilidad cuando la columna `linea` no existe y cuando el esquema de inventario aún no está instalado en QA.
