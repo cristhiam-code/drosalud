@@ -19,6 +19,18 @@
       * (item.presentacion === 'Caja' ? unidadesPresentacion(item) : 1);
   }
 
+  function unidadesCarrito(item) {
+    return item.fraccionable
+      ? ((Number(item.cajas) || 0) * item.unidadesCaja + (Number(item.unidades) || 0))
+      : item.q;
+  }
+
+  function totalCarrito(item) {
+    return item.fraccionable
+      ? ((Number(item.cajas) || 0) * item.precioCaja + (Number(item.unidades) || 0) * item.precioUnidad)
+      : (item.p * item.q);
+  }
+
   function itemsCarritoParaGuardar(item) {
     if (!item.fraccionable) {
       return [{
@@ -59,6 +71,8 @@
     unidadesPresentacion,
     cantidadPresentacion,
     precioPresentacion,
+    unidadesCarrito,
+    totalCarrito,
     itemsCarritoParaGuardar
   });
 })();
