@@ -17,6 +17,12 @@ Actualizado: 24 de noviembre de 2026.
 - Auditoría de Informes: módulo de solo lectura con tres consultas de inventario; la valoración total está desactivada y no hay informes de ventas, margen, compras o rotación.
 - Auditoría de seguridad: RLS activo en todas las tablas públicas revisadas, ninguna función SECURITY DEFINER ejecutable por anon y roles admin/vendedor activos.
 
+## Última validación automatizada
+
+- GitHub Actions: Pruebas y sintaxis SUCCESS en commit 70aa573 (run 45432028559), con 41 pruebas Python y Node más chequeo de sintaxis.
+- El último despliegue de código de QA READY es 30416b1 y conserva el alias de preview. Un commit posterior solo de pruebas recibió el límite temporal de compilaciones de Vercel; no cambió la aplicación.
+- El PR #91 sigue en borrador y no se ha integrado ni desplegado a producción.
+
 ## Pendiente antes de considerar listo
 1. Confirmar el resultado de GitHub Actions para el último commit que contiene el servicio de ventas y las aclaraciones de exportación.
 2. Revisión visual autenticada en QA de Ayuda/Sistema, exportación, login y navegación móvil.
