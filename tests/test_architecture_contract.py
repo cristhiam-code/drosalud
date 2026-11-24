@@ -31,6 +31,8 @@ class ArchitectureContractTests(unittest.TestCase):
         self.assertGreater(scripts.index("services/informes.js"), scripts.index("services/caja.js"))
         self.assertIn("services/compras.js", scripts)
         self.assertGreater(scripts.index("services/compras.js"), scripts.index("services/informes.js"))
+        self.assertIn("services/pedidos.js", scripts)
+        self.assertGreater(scripts.index("services/pedidos.js"), scripts.index("services/compras.js"))
         self.assertGreater(scripts.index("domain/precios.js"), scripts.index("domain/presentaciones.js"))
         self.assertGreater(scripts.index("domain/presentaciones.js"), scripts.index("domain/formatters.js"))
         self.assertGreater(scripts.index("domain/formatters.js"), scripts.index("base.js"))
@@ -112,6 +114,15 @@ class ArchitectureContractTests(unittest.TestCase):
         self.assertNotIn("sb.rpc(", module)
         self.assertIn("DrosaludPurchasesService.registrarDocumentoProveedor", module)
         self.assertIn("DrosaludPurchasesService.registrarRecepcionDocumentada", module)
+
+    def test_orders_module_delegates_writes_to_injected_service(self):
+        service = (SERVICES / "pedidos.js").read_text(encoding="utf-8")
+        module = (MODULES / "pedidos.js").read_text(encoding="utf-8")
+        self.assertIn("cliente", service)
+        self.assertNotIn("window.sb", service)
+        self.assertNotIn("sb.rpc(", module)
+        for method in ("guardarPedido", "enviarPedido", "autorizarPedido", "rechazarPedido", "generarOrdenesCompra"):
+            self.assertIn("DrosaludOrdersService." + method, module)
 
     def test_help_covers_operational_modules_without_count_references(self):
         start = INDEX.index('id="v-ayuda"')
