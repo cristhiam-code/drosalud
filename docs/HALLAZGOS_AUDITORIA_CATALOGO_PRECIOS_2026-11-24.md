@@ -33,3 +33,9 @@ No hubo ventas posteriores a esos cambios de costo. Los registros sugieren que c
 ## Recomendación
 
 No modificar precios ni factores automáticamente. Antes de vender estas referencias, administración debe comprobar la factura/remisión, unidades por empaque y precio comercial. Una vez confirmado, actualizar el precio con motivo mediante el flujo autorizado. Los 13 productos sin código también deben revisarse individualmente; no todos necesariamente requieren código de barras (por ejemplo, servicios).
+
+## Trazabilidad de costos
+
+- 37 productos tienen al menos un registro en `historial_costos`; 1.158 no tienen historial de costos de recepción, lo que es compatible con referencias antiguas que no ingresaron por el flujo documental actual.
+- En los 37 registros con historial, la fórmula costo de presentación / unidades por presentación coincide con el costo unitario base.
+- Un producto tiene costo actual distinto del último costo de recepción: GINKGO BILOBA. La diferencia está explicada por un cambio posterior registrado en `historial_precios`: de $46.850 a $53.000 el 19-nov-2026. Por tanto, no es una modificación sin rastro.
