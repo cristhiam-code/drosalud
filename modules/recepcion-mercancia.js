@@ -132,8 +132,7 @@
       if(vals.some(v=>v!==''&&(!Number.isFinite(Number(v))||Number(v)<0))){status('Los importes no pueden ser negativos.',true);return}
       busy=true;b.disabled=true;b.textContent='Guardando documento…';
       try{
-        const {error}=await sb.rpc('registrar_documento_proveedor',{p_orden_id:order.id,p_tipo_documento:$('[data-doc-type]',overlay).value,p_numero_documento:number,p_fecha_emision:$('[data-doc-date]',overlay).value||null,p_subtotal:vals[0]===''?null:Number(vals[0]),p_descuentos:Number(vals[1]||0),p_impuestos:Number(vals[2]||0),p_flete:Number(vals[3]||0),p_total:vals[4]===''?null:Number(vals[4]),p_notas:$('[data-doc-notes]',overlay).value.trim()||null,p_items:items});
-        if(error)throw error;
+        await window.DrosaludPurchasesService.registrarDocumentoProveedor(sb,{p_orden_id:order.id,p_tipo_documento:$('[data-doc-type]',overlay).value,p_numero_documento:number,p_fecha_emision:$('[data-doc-date]',overlay).value||null,p_subtotal:vals[0]===''?null:Number(vals[0]),p_descuentos:Number(vals[1]||0),p_impuestos:Number(vals[2]||0),p_flete:Number(vals[3]||0),p_total:vals[4]===''?null:Number(vals[4]),p_notas:$('[data-doc-notes]',overlay).value.trim()||null,p_items:items});
         overlay.remove();active='documentos';await load();status('Documento guardado. Aún no se ha modificado el inventario.');
       }catch(err){status(err.message||'No se pudo guardar el documento.',true);b.disabled=false;b.textContent='Reintentar guardar'}
       finally{busy=false}
@@ -167,8 +166,7 @@
       if(costDiffs.length&&(!esAdminDrosalud()||!reason)){status('El costo de la factura difiere de la orden. Se requiere autorización de administración y un motivo escrito.',true);return}
       busy=true;b.disabled=true;b.textContent='Registrando recepción…';
       try{
-        const {error}=await sb.rpc('registrar_recepcion_compra_documentada',{p_orden_id:linked?.id||doc.ordenes?.[0],p_documento_id:doc.id,p_items:payload,p_operacion_id:op,p_notas:$('[data-rcv-notes]',overlay).value.trim()||null});
-        if(error)throw error;
+        await window.DrosaludPurchasesService.registrarRecepcionDocumentada(sb,{p_orden_id:linked?.id||doc.ordenes?.[0],p_documento_id:doc.id,p_items:payload,p_operacion_id:op,p_notas:$('[data-rcv-notes]',overlay).value.trim()||null});
         overlay.remove();active='recepciones';await load();window.invCargarDatos?.();status('Recepción confirmada. Las unidades aceptadas ingresaron al inventario y Kardex.');
       }catch(err){status(err.message||'No se pudo registrar la recepción.',true);b.disabled=false;b.textContent='Reintentar recepción'}
       finally{busy=false}
