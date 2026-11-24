@@ -1041,15 +1041,13 @@ async function loadPedidos(){
  root.innerHTML='<div class="pedidos-loading">Comprobando el esquema del módulo…</div>';
  try{
   if(!window.DrosaludPedidos)throw new Error('No se pudo cargar el módulo de pedidos.');
-  const {error}=await sb.from('pedidos_resumen').select('id').limit(1);
-  if(error){
+  try{await window.DrosaludInventoryService.comprobarPedidos(sb)}catch(error){
    if(/does not exist|schema cache|could not find the table/i.test(String(error.message||error))){
     root.innerHTML='<div class="pedidos-panel"><h3>Pedidos en preparación</h3><p class="pedidos-warning">La estructura de base de datos de Pedidos aún no está instalada en este entorno. El módulo está protegido y no realizará cambios hasta completar esa instalación.</p></div>';
     return;
    }
    throw error;
-  }
-  await window.DrosaludPedidos.load();
+  }await window.DrosaludPedidos.load();
  }catch(e){
   console.error('Carga del módulo Pedidos:',e);
   root.innerHTML='<div class="pedidos-panel"><h3>No se pudo abrir Pedidos</h3><p class="pedidos-warning">'+esc(e.message||'Error de conexión')+'</p></div>';
@@ -1072,8 +1070,7 @@ async function invRegistrarRecepcion(){
  const b=$('#inv-recibir');b.disabled=true;
  try{
   const datos=JSON.stringify([id,u,nota]);if(!invRecepcionIntento||invRecepcionIntento.datos!==datos)invRecepcionIntento={datos,id:crypto.randomUUID()};
-  const{error}=await sb.rpc('registrar_recepcion_inventario',{p_producto_id:id,p_unidades:u,p_notas:nota||null,p_operacion_id:invRecepcionIntento.id});
-  if(error)throw error;
+  await window.DrosaludInventoryService.registrarRecepcion(sb,{p_producto_id:id,p_unidades:u,p_notas:nota||null,p_operacion_id:invRecepcionIntento.id});
   $('#inv-unidades').value='';$('#inv-notas').value='';invRecepcionIntento=null;
   toast('Recepción registrada');$('#recep-status').textContent='Recepción guardada. El saldo fue actualizado.';await invCargarDatos();
  }catch(e){console.error(e);$('#recep-status').textContent='No se pudo registrar la recepción: '+(e.message||'Error desconocido');toast(e.message||'No se pudo registrar la recepción')}
