@@ -99,7 +99,7 @@ class ArchitectureContractTests(unittest.TestCase):
         self.assertIn("cliente.from", service)
         self.assertNotIn("window.sb", service)
         self.assertNotIn("document.", service)
-        self.assertNotRegex(module, r"sb\\.(rpc|from)\\s*\\(")
+        self.assertNotRegex(module, r"sb\.(rpc|from)\s*\(")
         self.assertIn("DrosaludReportsService.loadInventory", module)
 
     def test_help_covers_operational_modules_without_count_references(self):
