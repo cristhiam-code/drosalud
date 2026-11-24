@@ -212,16 +212,16 @@ class PhysicalCountContractTests(unittest.TestCase):
         cancel = cancel.split("$function$;", 1)[0].lower()
 
         ordered_products = re.search(
-            r"select distinct b\\.producto_id.*?order by b\\.producto_id",
+            r"select distinct b\.producto_id.*?order by b\.producto_id",
             cancel,
             re.S,
         )
         product_lock = re.search(
-            r"from public\\.productos p\\s+where p\\.id = v_producto\\s+for update",
+            r"from public\.productos p\s+where p\.id = v_producto\s+for update",
             cancel,
         )
         session_lock = re.search(
-            r"from public\\.inventario_conteos\\s+where id = p_conteo_id\\s+for update",
+            r"from public\.inventario_conteos\s+where id = p_conteo_id\s+for update",
             cancel,
         )
         self.assertIsNotNone(ordered_products)
@@ -236,7 +236,7 @@ class PhysicalCountContractTests(unittest.TestCase):
 
         self.assertRegex(
             cancel,
-            r"update public\\.inventario_conteos_items\\s+set estado = 'cancelado'\\s+where conteo_id = p_conteo_id\\s+and estado <> 'aprobado'",
+            r"update public\.inventario_conteos_items\s+set estado = 'cancelado'\s+where conteo_id = p_conteo_id\s+and estado <> 'aprobado'",
         )
         self.assertIn("delete from public.inventario_conteos_bloqueos", cancel)
         self.assertIn("where conteo_id = p_conteo_id", cancel)
