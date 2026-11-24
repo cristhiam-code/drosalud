@@ -191,6 +191,19 @@ class ArchitectureContractTests(unittest.TestCase):
         self.assertIn("services/historial.js", scripts)
         self.assertGreater(scripts.index("services/historial.js"), scripts.index("services/configuracion.js"))
 
+    def test_inventory_queries_and_receipt_rpc_are_delegated_to_service(self):
+        service = (SERVICES / "inventario.js").read_text(encoding="utf-8")
+        self.assertNotIn("window.sb", service)
+        self.assertNotIn("document.", service)
+        for method in ("listarProductosConLinea", "listarProductosSinLinea", "listarSaldos", "listarVentasSemana", "comprobarPedidos", "registrarRecepcion"):
+            self.assertIn(method, service)
+        for table in ("productos_app", "inventario_saldos", "recibos_app", "recibo_items_app", "pedidos_resumen"):
+            self.assertNotRegex(INDEX, r"sb\\.from\\(['\"]" + table + r"['\"]\\)")
+        self.assertNotIn("sb.rpc('registrar_recepcion_inventario'", INDEX)
+        scripts = re.findall(r'<script[^>]*src=["\']([^"\']+)["\'][^>]*>', INDEX, re.I)
+        self.assertIn("services/inventario.js", scripts)
+        self.assertGreater(scripts.index("services/inventario.js"), scripts.index("services/historial.js"))
+
     def test_help_covers_operational_modules_without_count_references(self):
         start = INDEX.index('id="v-ayuda"')
         end = INDEX.index('id="v-aju"', start)
