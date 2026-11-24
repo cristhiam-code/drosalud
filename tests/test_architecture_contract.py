@@ -19,6 +19,8 @@ class ArchitectureContractTests(unittest.TestCase):
         self.assertGreater(min(module_positions), scripts.index("base.js"))
         self.assertIn("domain/formatters.js", scripts)
         self.assertIn("domain/presentaciones.js", scripts)
+        self.assertIn("domain/precios.js", scripts)
+        self.assertGreater(scripts.index("domain/precios.js"), scripts.index("domain/presentaciones.js"))
         self.assertGreater(scripts.index("domain/presentaciones.js"), scripts.index("domain/formatters.js"))
         self.assertGreater(scripts.index("domain/formatters.js"), scripts.index("base.js"))
         self.assertLess(
@@ -54,6 +56,12 @@ class ArchitectureContractTests(unittest.TestCase):
         for forbidden in ("document.", "window.sb", "fetch(", "localStorage"):
             self.assertNotIn(forbidden, source)
         self.assertIn("window.DrosaludPresentations", source)
+
+    def test_pricing_domain_is_independent_from_ui_and_database(self):
+        source = (ROOT / "domain/precios.js").read_text(encoding="utf-8")
+        for forbidden in ("document.", "window.sb", "fetch(", "localStorage"):
+            self.assertNotIn(forbidden, source)
+        self.assertIn("window.DrosaludPricing", source)
 
     def test_architecture_and_operating_guides_are_versioned(self):
         self.assertTrue((ROOT / "docs/ARQUITECTURA_Y_DEPENDENCIAS.md").is_file())
