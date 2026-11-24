@@ -254,3 +254,10 @@ El módulo conserva validaciones de duplicados, vínculos históricos, formulari
 Se creó `services/catalogo.js` para operaciones de persistencia del catálogo: actualización de precios con motivo, habilitación de fraccionamiento, edición/creación/eliminación de productos, consulta de auditoría de precios, conteo de productos e importación por lotes.
 
 El shell mantiene la validación de campos, códigos duplicados, equivalencias, permisos visibles, confirmación del fraccionamiento y mensajes de usuario. El servicio conserva las mismas tablas, RPC, argumentos y respuestas del backend. El cálculo de precios y conversiones continúa en `domain/`; el servicio no calcula precios ni depende del DOM.
+
+
+## Décima separación de servicios: clientes y consentimiento
+
+Se creó `services/clientes.js` para consultar clientes, consentimientos y resúmenes de compra; registrar consentimientos; crear y actualizar fichas; consultar recibos y líneas; y ejecutar la anonimización administrativa mediante su RPC existente.
+
+La interfaz conserva la búsqueda de duplicados, la validación del consentimiento, los formularios y la presentación del historial. El servicio recibe el cliente Supabase explícitamente y propaga errores. No se cambió el contenido del aviso de privacidad ni las reglas que determinan cuándo se solicita autorización.
