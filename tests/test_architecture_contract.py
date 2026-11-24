@@ -30,7 +30,7 @@ class ArchitectureContractTests(unittest.TestCase):
         self.assertGreater(scripts.index("domain/formatters.js"), scripts.index("base.js"))
         inline_start = INDEX.index('<script>\n// Selección de entorno')
         for name in scripts:
-            if name.startswith("domain/"):
+            if name.startswith(("domain/", "services/")):
                 self.assertLess(INDEX.index(f'<script src="{name}"></script>'), inline_start)
 
     def test_feature_modules_do_not_create_their_own_supabase_client(self):
