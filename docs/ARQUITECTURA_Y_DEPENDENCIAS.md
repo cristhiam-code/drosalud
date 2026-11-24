@@ -101,14 +101,15 @@ La página carga actualmente los scripts en este orden:
 5. `domain/precios.js` — precio sugerido y precio manual.
 6. `domain/dinero.js` — subtotal y porcentaje sobre costo.
 7. `services/ventas.js` — RPC de venta/cotización con cliente inyectado.
-8. `xlsx.mini.min.js`, `html5-qrcode.min.js`, `qrcode.js` — bibliotecas de Excel y códigos QR.
-9. `modules/gestion-negocio.js`
-10. `modules/ayuda-sistema.js`
-11. `modules/pedidos.js`
-12. `modules/recepcion-mercancia.js`
-13. `modules/conteo-fisico-api.js`
-14. `modules/conteo-fisico.js`
-15. `modules/informes.js`
+8. `services/caja.js` — consultas y RPC de caja/gastos con cliente inyectado.
+9. `xlsx.mini.min.js`, `html5-qrcode.min.js`, `qrcode.js` — bibliotecas de Excel y códigos QR.
+10. `modules/gestion-negocio.js`
+11. `modules/ayuda-sistema.js`
+12. `modules/pedidos.js`
+13. `modules/recepcion-mercancia.js`
+14. `modules/conteo-fisico-api.js`
+15. `modules/conteo-fisico.js`
+16. `modules/informes.js`
 
 CSS modular cargado por el shell: Pedidos, Recepción, Conteo, Informes, Ayuda/Sistema, Gestión del negocio y Exportaciones.
 
@@ -197,3 +198,10 @@ El shell conserva el flujo visual y entrega el cliente, la cabecera y las línea
 - `services/ventas.js` recibe el cliente Supabase como argumento; no lo crea ni lo obtiene de una variable global.
 - `modules/` conserva temporalmente las dependencias globales existentes. No se han cambiado Pedidos, Recepción ni los permisos del vendedor.
 - El orden anterior se valida con pruebas de contrato y `scripts/check-js.cjs` revisa sintaxis en `domain/`, `services/`, `modules/`, `base.js` y scripts inline.
+
+
+## Segunda separación de servicios: caja
+
+Se creó `services/caja.js` para las consultas y operaciones de caja: jornadas pendientes, resumen diario, gastos, cierres, reaperturas e historial. El módulo recibe el cliente Supabase por argumento y no conoce el estado visual ni variables globales. El bloque de caja del shell ahora delega las operaciones de datos al servicio y conserva la presentación y las validaciones de interacción.
+
+Las pruebas usan un cliente simulado para verificar los nombres de RPC, argumentos, filtros, límites y propagación de errores. No se hicieron operaciones de caja reales durante esta extracción.
