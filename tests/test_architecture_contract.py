@@ -80,6 +80,14 @@ class ArchitectureContractTests(unittest.TestCase):
         self.assertNotIn("window.sb", source)
         self.assertNotIn("document.", source)
 
+    def test_help_covers_operational_modules_without_count_references(self):
+        start = INDEX.index('id="v-ayuda"')
+        end = INDEX.index('id="v-aju"', start)
+        help_view = INDEX[start:end]
+        for topic in ("Facturación POS", "Productos", "Clientes", "Pedidos", "Compras y proveedores", "Recepción", "Generar Kardex", "Informes y reportes", "Historial", "Cotizaciones", "Caja", "Ajustes", "Usuarios y permisos", "Exportaciones y respaldo"):
+            self.assertIn(topic, help_view)
+        self.assertNotRegex(help_view.lower(), r"conteo\\s+(físico|fisico|inicial)")
+
     def test_architecture_and_operating_guides_are_versioned(self):
         self.assertTrue((ROOT / "docs/ARQUITECTURA_Y_DEPENDENCIAS.md").is_file())
         self.assertTrue((ROOT / "docs/GUIA_OPERATIVA.md").is_file())
