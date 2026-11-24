@@ -95,15 +95,20 @@ Esta es la estructura objetivo, no una afirmación de que todos esos archivos ya
 La página carga actualmente los scripts en este orden:
 
 1. `supabase.js` — biblioteca cliente.
-2. `base.js` — inicialización compartida y lógica central.
-3. `xlsx.mini.min.js`, `html5-qrcode.min.js`, `qrcode.js` — bibliotecas de Excel y códigos QR.
-4. `modules/gestion-negocio.js`
-5. `modules/ayuda-sistema.js`
-6. `modules/pedidos.js`
-7. `modules/recepcion-mercancia.js`
-8. `modules/conteo-fisico-api.js`
-9. `modules/conteo-fisico.js`
-10. `modules/informes.js`
+2. `base.js` — inicialización compartida y compatibilidad heredada.
+3. `domain/formatters.js` — escape, normalización y formato monetario.
+4. `domain/presentaciones.js` — conversiones y cálculos de carrito.
+5. `domain/precios.js` — precio sugerido y precio manual.
+6. `domain/dinero.js` — subtotal y porcentaje sobre costo.
+7. `services/ventas.js` — RPC de venta/cotización con cliente inyectado.
+8. `xlsx.mini.min.js`, `html5-qrcode.min.js`, `qrcode.js` — bibliotecas de Excel y códigos QR.
+9. `modules/gestion-negocio.js`
+10. `modules/ayuda-sistema.js`
+11. `modules/pedidos.js`
+12. `modules/recepcion-mercancia.js`
+13. `modules/conteo-fisico-api.js`
+14. `modules/conteo-fisico.js`
+15. `modules/informes.js`
 
 CSS modular cargado por el shell: Pedidos, Recepción, Conteo, Informes, Ayuda/Sistema, Gestión del negocio y Exportaciones.
 
@@ -184,3 +189,11 @@ La extracción de presentaciones también incluye ahora el cálculo de unidades 
 Se creó `services/ventas.js` para encapsular las llamadas RPC de registrar venta y crear cotización. El cliente Supabase se recibe como argumento explícito; el servicio no lee variables globales ni accede al DOM. Así se mantiene una sola instancia del cliente y el servicio se puede probar con un cliente falso sin tocar la base de datos.
 
 El shell conserva el flujo visual y entrega el cliente, la cabecera y las líneas al servicio. Se mantiene la misma RPC, los mismos nombres de argumentos y el mismo mensaje cuando no vuelve un recibo válido. Las pruebas comprueban el contrato y la propagación de errores.
+
+
+## Estado actual de la separación
+
+- `domain/` contiene funciones puras y comprobables; no accede a Supabase ni al DOM.
+- `services/ventas.js` recibe el cliente Supabase como argumento; no lo crea ni lo obtiene de una variable global.
+- `modules/` conserva temporalmente las dependencias globales existentes. No se han cambiado Pedidos, Recepción ni los permisos del vendedor.
+- El orden anterior se valida con pruebas de contrato y `scripts/check-js.cjs` revisa sintaxis en `domain/`, `services/`, `modules/`, `base.js` y scripts inline.
