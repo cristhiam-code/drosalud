@@ -151,3 +151,15 @@ Se extrajeron a `domain/presentaciones.js` las funciones puras:
 El módulo no accede al DOM, Supabase, almacenamiento local ni estado global del carrito. El shell conserva el contrato de nombres mediante `window.DrosaludPresentations` y una asignación local, de modo que las pantallas y los módulos existentes mantienen sus llamadas.
 
 Se agregaron pruebas Node nativas para casos normales, caja, unidades sueltas, caja más unidades sueltas y carrito vacío. No se agregó ninguna dependencia externa. `npm test` ahora incluye pruebas Python, pruebas puras del dominio y revisión de sintaxis JavaScript.
+
+
+## Tercera extracción completada: precios
+
+Se extrajeron a `domain/precios.js` las reglas puras:
+- Calcular el precio sugerido a partir del costo, porcentaje de ganancia y regla de redondeo configurada.
+- Respetar el precio de venta manual cuando ya existe.
+- Devolver ausencia de precio cuando no existe precio manual ni costo positivo.
+
+El módulo recibe la configuración como argumento; no lee `cfg`, no consulta productos y no accede a Supabase. El shell conserva las funciones `price(c)` y `pv(producto)` como adaptadores temporales para mantener la API existente.
+
+Se agregaron pruebas para precio manual, margen sugerido, redondeo hacia arriba y costo vacío/cero.
