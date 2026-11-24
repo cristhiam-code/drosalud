@@ -97,7 +97,7 @@
     return '<section class="ir-module"><header class="ir-heading"><div><span class="ir-kicker">ANÁLISIS DEL NEGOCIO</span><h2>Informes y reportes</h2><p>Selecciona qué información necesitas consultar.</p></div><button type="button" class="btn alt" data-ir-refresh>Actualizar datos</button></header>'+
       '<div class="ir-menu-grid">'+
       '<button type="button" class="ir-menu-card" data-ir-tab="valor"><span class="ir-menu-icon">▤</span><strong>Valor del inventario</strong><small>La valoración estará disponible después de registrar y confirmar el inventario físico inicial.</small><span class="ir-menu-link">Consultar informe →</span></button>'+
-      '<button type="button" class="ir-menu-card" data-ir-tab="existencias"><span class="ir-menu-icon">▦</span><strong>Existencias</strong><small>Revisa cuánto hay de cada producto y consulta su costo y valor.</small><span class="ir-menu-link">Consultar informe →</span></button>'+
+      '<button type="button" class="ir-menu-card" data-ir-tab="existencias"><span class="ir-menu-icon">▦</span><strong>Existencias</strong><small>Revisa los saldos registrados y el costo unitario de referencia. El valor total no está disponible con la información actual.</small><span class="ir-menu-link">Consultar informe →</span></button>'+
       '<button type="button" class="ir-menu-card" data-ir-tab="faltantes"><span class="ir-menu-icon">⚑</span><strong>Faltantes</strong><small>Identifica productos agotados, con saldo negativo o sin movimientos registrados.</small><span class="ir-menu-link">Consultar informe →</span></button>'+
       '</div><p class="ir-footnote">Informes conectados a los datos actuales de Drosalud. Son consultas de solo lectura.</p></section>';
   }
